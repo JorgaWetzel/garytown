@@ -21,7 +21,7 @@ $OSReleaseID = '22H2' #Used to Determine Driver Pack
 $OSName = 'Windows 10 22H2 x64'
 $OSEdition = 'Pro'
 $OSActivation = 'Retail'
-$OSLanguage = 'en-us'
+$OSLanguage = 'de-de'
 
 #Used to Determine Driver Pack
 $Product = (Get-MyComputerProduct)
