@@ -6,7 +6,7 @@ Creates Setup Complete Files
 $ScriptName = 'hope.garytown.com'
 $ScriptVersion = '24.1.22.1'
 
-iex (irm functions.garytown.com)
+iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
 #region functions
 function Set-SetupCompleteCreateStartHOPEonUSB {
     
@@ -38,7 +38,7 @@ function Set-SetupCompleteCreateStartHOPEonUSB {
     New-Item -Path $PSFilePath -ItemType File -Force
     Add-Content -path $PSFilePath "Write-Output 'Starting SetupComplete HOPE Script Process'"
     Add-Content -path $PSFilePath "Write-Output 'iex (irm hope.garytown.com)'"
-    Add-Content -path $PSFilePath 'iex (irm hope.garytown.com)'
+    Add-Content -path $PSFilePath 'iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Hope.ps1)'
 }
 
 Function Restore-SetupCompleteOriginal {
@@ -74,7 +74,7 @@ if ($env:SystemDrive -eq 'X:') {
     Set-SetupCompleteCreateStartHOPEonUSB
     
     Write-Host -ForegroundColor Green "Starting win11.garytown.com"
-    iex (irm win11.garytown.com)
+    iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/win11.ps1)
 
     #Create Marker so it knows this is a "HOPE" computer - No longer need thanks to the custom setup complete above.
     #new-item -Path C:\OSDCloud\configs -Name hope.JSON -ItemType file
@@ -101,7 +101,7 @@ if ($env:SystemDrive -ne 'X:') {
     #Set-DOPoliciesGPORegistry
     
     Write-Host -ForegroundColor Gray "**Running Test.garytown.com**" 
-    iex (irm test.garytown.com)
+    iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/test.ps1)
      
     #Set Time Zone to Automatic Update
     
