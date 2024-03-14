@@ -58,4 +58,4 @@ $Global:MyOSDCloud = [ordered]@{
 
 
 
-Start-OSDCloud -OSVersion 'Windows 11' -OSBuild 22H2 -OSEdition Pro -OSLicense Retail -OSLanguage en-us -ZTI
+Start-OSDCloud -OSVersion 'Windows 11' -OSBuild 23H2 -OSEdition Pro -OSLicense Retail -OSLanguage de-de -ZTI
