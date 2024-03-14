@@ -62,13 +62,13 @@ function Format-OSDCloudGUI {
     #Set OSDCloud Vars
 
     #Customize the OSDCloud Defaults
-    $OSDModuleResource.OSDCloud.Default.Activation = 'Volume'
-    $OSDModuleResource.OSDCloud.Default.Edition = 'Enterprise'
-    $OSDModuleResource.OSDCloud.Default.ImageIndex = '6'
-    $OSDModuleResource.OSDCloud.Default.Language = 'en-us'
+    $OSDModuleResource.OSDCloud.Default.Activation = 'Retail'
+    $OSDModuleResource.OSDCloud.Default.Edition = 'Pro'
+    $OSDModuleResource.OSDCloud.Default.ImageIndex = '8'
+    $OSDModuleResource.OSDCloud.Default.Language = 'de-de'
     $OSDModuleResource.OSDCloud.Default.Name = 'Windows 10 22H2 x64'
-    $OSDModuleResource.OSDCloud.Default.ReleaseID = '22H2'
-    $OSDModuleResource.OSDCloud.Default.Version = 'Windows 10'
+    $OSDModuleResource.OSDCloud.Default.ReleaseID = '23H2'
+    $OSDModuleResource.OSDCloud.Default.Version = 'Windows 11'
     #Customize the OSDCloud Values
     $OSDModuleResource.OSDCloud.Values.Activation = 'Volume'
     $OSDModuleResource.OSDCloud.Values.Edition = 'Enterprise'
