@@ -4,7 +4,7 @@ Creates Setup Complete Files
 #>
 
 $ScriptName = 'hope.garytown.com'
-$ScriptVersion = '24.1.22.1'
+$ScriptVersion = '14.03.2024'
 
 iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
 #region functions
