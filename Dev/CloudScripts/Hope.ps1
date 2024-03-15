@@ -38,7 +38,7 @@ function Set-SetupCompleteCreateStartHOPEonUSB {
     New-Item -Path $PSFilePath -ItemType File -Force
     Add-Content -path $PSFilePath "Write-Output 'Starting SetupComplete HOPE Script Process'"
     Add-Content -path $PSFilePath "Write-Output 'iex (irm hope.garytown.com)'"
-    Add-Content -path $PSFilePath 'iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Hope.ps1)'
+    Add-Content -path $PSFilePath 'iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Hope.ps1)'
 }
 
 Function Restore-SetupCompleteOriginal {
