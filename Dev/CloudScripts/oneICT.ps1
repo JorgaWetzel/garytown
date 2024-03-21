@@ -51,7 +51,9 @@ Function Restore-SetupCompleteOriginal {
 }
 #endregion
 
-
+#Start the Transcript
+$Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-OSDCloud.log"
+$null = Start-Transcript -Path (Join-Path "$env:SystemRoot\Temp" $Transcript) -ErrorAction Ignore
 
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
