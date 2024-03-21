@@ -151,6 +151,11 @@ if ($env:SystemDrive -ne 'X:') {
 
     # setup RunOnce to execute provisioning.ps1 script
     # disable privacy experience
+    $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/provisioning.ps1"
+    $destinationFolder = "C:\Windows\Setup\Scripts\SetupComplete"
+    $destinationPath = Join-Path -Path $destinationFolder -ChildPath "provisioning.ps1"
+    Invoke-WebRequest -Uri $url -OutFile $destinationPath
+    
     $settings =
     [PSCustomObject]@{
         Path  = "SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
