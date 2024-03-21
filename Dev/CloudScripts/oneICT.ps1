@@ -139,6 +139,66 @@ if ($env:SystemDrive -ne 'X:') {
     Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
     Set-TimeZoneFromIP
 
+    #Set OOBE Language
+    $LanguageXMLPath = "C:\Windows\System32\oobe\info\defaults\DefaultInputMethod.xml"
+    $LanguageConfigContent = @"
+    <InputLocale>de-CH</InputLocale>
+    <SystemLocale>de-CH</SystemLocale>
+    <UILanguage>de-CH</UILanguage>
+    <UserLocale>de-CH</UserLocale>
+    "@
+    Set-Content -Path $LanguageXMLPath -Value $LanguageConfigContent -Force
+
+    # setup RunOnce to execute provisioning.ps1 script
+    # disable privacy experience
+    $settings =
+    [PSCustomObject]@{
+        Path  = "SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
+        Name  = "execute_provisioning"
+        Value = "cmd /c powershell.exe -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\SetupComplete\provisioning.ps1 -first" -f
+    },
+    [PSCustomObject]@{
+        Path  = "SOFTWARE\Policies\Microsoft\Windows\OOBE"
+        Name  = "DisablePrivacyExperience"
+        Value = 1
+    } | group Path
+
+    Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+    [Environment]::SetEnvironmentVariable("Path", $env:Path + ";$ENV:ALLUSERSPROFILE\chocolatey\bin", "Machine")
+    C:\ProgramData\chocolatey\bin\choco.exe install chocolatey-core.extension -y --no-progress --ignore-checksums
+    C:\ProgramData\chocolatey\bin\choco.exe source add --name="'oneICT'" --source="'https://chocoserver:8443/repository/ChocolateyInternal/'" --allow-self-service --user="'chocolatey'" --password="'wVGULoJGh1mxbRpChJQV'" --priority=1
+    C:\ProgramData\chocolatey\bin\choco.exe source add --name="'Chocolatey'" --source="'https://chocolatey.org/api/v2/'" --allow-self-service --priority=2
+    C:\ProgramData\chocolatey\bin\choco.exe install chocolateygui -y --source="'oneICT'" --no-progress
+    C:\ProgramData\chocolatey\bin\choco.exe feature enable -n allowGlobalConfirmation
+    C:\ProgramData\chocolatey\bin\choco.exe feature enable -n allowEmptyChecksums
+    
+    $manufacturer = (gwmi win32_computersystem).Manufacturer
+    "Das ist ein $manufacturer PC"
+    
+    if ($manufacturer -match "VMware"){
+    Write-Host "Installing VMware tools..."
+    C:\ProgramData\chocolatey\bin\choco.exe install vmware-tools -y --no-progress --ignore-checksums
+    }
+    
+    # add tcp rout to oneICT Server
+    if((Get-Content $env:windir\System32\drivers\etc\hosts |?{$_ -match "195.49.62.108"}) -eq $null){
+        Add-Content $ENV:WinDir\System32\Drivers\etc\hosts "## oneICT chocolatey repo"
+        Add-Content $ENV:WinDir\System32\Drivers\etc\hosts "195.49.62.108 chocoserver"
+        }
+
+    
+    foreach ($setting in $settings) {
+        $registry = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($setting.Name, $true)
+        if ($null -eq $registry) {
+            $registry = [Microsoft.Win32.Registry]::LocalMachine.CreateSubKey($setting.Name, $true)
+        }
+        $setting.Group | % {
+            $registry.SetValue($_.name, $_.value)
+        }
+        $registry.Dispose()
+    }
+
     Write-Host -ForegroundColor Gray "**Completed Hope.garytown.com sub script**" 
     $null = Stop-Transcript -ErrorAction Ignore
+
 }
