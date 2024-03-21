@@ -98,8 +98,8 @@ if ($env:SystemDrive -ne 'X:') {
     #Set DO
     #Set-DOPoliciesGPORegistry
     
-    Write-Host -ForegroundColor Gray "**Running Test.garytown.com**" 
-    iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/test.ps1)
+    #Write-Host -ForegroundColor Gray "**Running Test.garytown.com**" 
+    #iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/test.ps1)
      
     #Set Time Zone to Automatic Update
     
@@ -125,11 +125,11 @@ if ($env:SystemDrive -ne 'X:') {
     Start-WindowsUpdateDriver
 
     #Store Updates
-    Write-Host -ForegroundColor Gray "**Running Winget Updates**"
-    Write-Host -ForegroundColor Gray "Invoke-UpdateScanMethodMSStore"
-    Invoke-UpdateScanMethodMSStore
-    Write-Host -ForegroundColor Gray "winget upgrade --all --accept-package-agreements --accept-source-agreements"
-    winget upgrade --all --accept-package-agreements --accept-source-agreements
+    #Write-Host -ForegroundColor Gray "**Running Winget Updates**"
+    #Write-Host -ForegroundColor Gray "Invoke-UpdateScanMethodMSStore"
+    #Invoke-UpdateScanMethodMSStore
+    #Write-Host -ForegroundColor Gray "winget upgrade --all --accept-package-agreements --accept-source-agreements"
+    #winget upgrade --all --accept-package-agreements --accept-source-agreements
 
     #Modified Version of Andrew's Debloat Script
     Write-Host -ForegroundColor Gray "**Running Debloat Script**" 
