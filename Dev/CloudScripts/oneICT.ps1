@@ -51,14 +51,7 @@ Function Restore-SetupCompleteOriginal {
 }
 #endregion
 
-#Start the Transcript
-$Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-OSDCloud.log"
-$null = Start-Transcript -Path (Join-Path "$env:SystemRoot\Temp" $Transcript) -ErrorAction Ignore
-
-
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
-
-
 
 <#
 if ($env:SystemDrive -ne 'X:') {
@@ -86,6 +79,9 @@ if ($env:SystemDrive -eq 'X:') {
 
 #Non-WinPE
 if ($env:SystemDrive -ne 'X:') {
+    #Start the Transcript
+    $Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-OSDCloud.log"
+    $null = Start-Transcript -Path (Join-Path "$env:SystemRoot\Temp" $Transcript) -ErrorAction Ignore
     #Remove Personal Teams
     Write-Host -ForegroundColor Gray "**Removing Default Chat Tool**" 
     try {
