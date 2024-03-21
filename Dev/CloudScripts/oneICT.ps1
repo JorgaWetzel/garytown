@@ -144,4 +144,5 @@ if ($env:SystemDrive -ne 'X:') {
     Set-TimeZoneFromIP
 
     Write-Host -ForegroundColor Gray "**Completed Hope.garytown.com sub script**" 
+    $null = Stop-Transcript -ErrorAction Ignore
 }
