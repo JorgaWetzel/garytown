@@ -64,7 +64,6 @@ if ($status) {
 }
 else {
     # chocolatey software installation
-
 	##
 	# Chocolatey part
 	##
@@ -76,17 +75,16 @@ else {
 	"7zip.install",
 	"firefox",
 	"vlc",
-  "jre8",
-  "powertoys",
-  "firefox",
-  "office365business",
-  "onedrive",
-  "Pdf24",
-  "TeamViewer",
-  "vcredist140",
-  "zoom",
+	"jre8",
+	"powertoys",
+	"firefox",
+	"office365business",
+	"onedrive",
+	"Pdf24",
+	"TeamViewer",
+	"vcredist140",
+	"zoom",
 	"notepadplusplus.install"
-
 	$packages | %{
 		choco install $_ -y --no-progress --ignore-checksums
 	}
@@ -100,7 +98,7 @@ else {
 #  51394 : Unpin to start
 # Download syspin.exe
 $url32   = 'http://www.technosys.net/download.aspx?file=syspin.exe'
-$output = "`$env:TEMP\syspin.exe"
+$output = "$env:TEMP\syspin.exe"
 Invoke-WebRequest -Uri $url32 -OutFile $output
 
 function Remove-AppFromTaskbar($appname) {
