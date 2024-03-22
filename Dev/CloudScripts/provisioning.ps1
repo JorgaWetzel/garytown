@@ -20,7 +20,9 @@ osdcloud-InstallWinGet
     }
 # osdcloud-InstallPwsh
 # Write-Host -ForegroundColor Green "[+] pwsh.osdcloud.com Complete"
-
+#osdcloud-UpdateDefenderStack
+#osdcloud-NetFX
+#osdcloud-HPIAExecute
 
 $usb_drive_name = 'USB Drive'
 
