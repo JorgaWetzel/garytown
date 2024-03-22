@@ -112,12 +112,12 @@ if ($env:SystemDrive -ne 'X:') {
     Set-Win11ReqBypassRegValues
     
     #Windows Updates
-    Write-Host -ForegroundColor Gray "**Running Defender Updates**"
-    Update-DefenderStack
-    Write-Host -ForegroundColor Gray "**Running Windows Updates**"
-    Start-WindowsUpdate
-    Write-Host -ForegroundColor Gray "**Running Driver Updates**"
-    Start-WindowsUpdateDriver
+    #Write-Host -ForegroundColor Gray "**Running Defender Updates**"
+    #Update-DefenderStack
+    #Write-Host -ForegroundColor Gray "**Running Windows Updates**"
+    #Start-WindowsUpdate
+    #Write-Host -ForegroundColor Gray "**Running Driver Updates**"
+    #Start-WindowsUpdateDriver
 
     #Store Updates
     #Write-Host -ForegroundColor Gray "**Running Winget Updates**"
