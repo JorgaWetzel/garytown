@@ -14,6 +14,10 @@ osdcloud-TrustPSGallery
 osdcloud-InstallPowerShellModule -Name Pester
 osdcloud-InstallPowerShellModule -Name PSReadLine
 osdcloud-InstallWinGet
+    if (Get-Command 'WinGet' -ErrorAction SilentlyContinue) {
+        Write-Host -ForegroundColor Green '[+] winget upgrade --all --accept-source-agreements --accept-package-agreements'
+        winget upgrade --all --accept-source-agreements --accept-package-agreements
+    }
 # osdcloud-InstallPwsh
 # Write-Host -ForegroundColor Green "[+] pwsh.osdcloud.com Complete"
 
