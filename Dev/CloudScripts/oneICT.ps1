@@ -50,8 +50,7 @@ if ($env:SystemDrive -eq 'X:') {
 
     #Create Custom SetupComplete
     Set-SetupCompleteCreateStart
-
-    restart-computer
+    # restart-computer
 }
 
 #Non-WinPE
