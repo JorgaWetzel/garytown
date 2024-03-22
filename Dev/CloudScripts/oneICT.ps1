@@ -25,29 +25,29 @@ if ($env:SystemDrive -eq 'X:') {
 
     #Create Custom SetupComplete
     $ScriptsPath = "C:\Windows\Setup\Scripts"
-$PSFilePath = "$ScriptsPath\SetupComplete.ps1"
-$CmdFilePath = "$ScriptsPath\SetupComplete.cmd"
-
-# Stelle sicher, dass die SetupComplete.ps1 existiert
-if (!(Test-Path -Path $PSFilePath)) {
-    New-Item -Path $PSFilePath -ItemType File -Force
-}
-# Füge den grundlegenden Inhalt zur SetupComplete.ps1 hinzu, wenn nicht schon vorhanden
-Add-Content -Path $PSFilePath "Write-Output 'Starting SetupComplete HOPE Script Process'"
-Add-Content -Path $PSFilePath "Write-Output 'iex (irm hope.garytown.com)'"
-Add-Content -Path $PSFilePath 'iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/oneICT.ps1)'
-
-# Stelle sicher, dass die SetupComplete.cmd existiert und setze den Inhalt
-if (!(Test-Path -Path $CmdFilePath)) {
-    New-Item -Path $CmdFilePath -ItemType File -Force
-}
-$cmdContent = "%windir%\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass -File $PSFilePath"
-Set-Content -Path $CmdFilePath -Value $cmdContent -Force
-
-# Bearbeite die SetupComplete.ps1, um "Stop-Transcript" und "Restart-Computer -Force" zu verschieben
-$psContent = Get-Content -Path $PSFilePath
-$transcriptLine = $psContent | Where-Object { $_ -match "Stop-Transcript" }
-$restartLine = $psContent | Where-Object { $_ -match "Restart-Computer -Force" }
+    $PSFilePath = "$ScriptsPath\SetupComplete.ps1"
+    $CmdFilePath = "$ScriptsPath\SetupComplete.cmd"
+    
+    # Stelle sicher, dass die SetupComplete.ps1 existiert
+    if (!(Test-Path -Path $PSFilePath)) {
+        New-Item -Path $PSFilePath -ItemType File -Force
+    }
+    # Füge den grundlegenden Inhalt zur SetupComplete.ps1 hinzu, wenn nicht schon vorhanden
+    Add-Content -Path $PSFilePath "Write-Output 'Starting SetupComplete HOPE Script Process'"
+    Add-Content -Path $PSFilePath "Write-Output 'iex (irm hope.garytown.com)'"
+    Add-Content -Path $PSFilePath 'iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/oneICT.ps1)'
+    
+    # Stelle sicher, dass die SetupComplete.cmd existiert und setze den Inhalt
+    if (!(Test-Path -Path $CmdFilePath)) {
+        New-Item -Path $CmdFilePath -ItemType File -Force
+    }
+    $cmdContent = "%windir%\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass -File $PSFilePath"
+    Set-Content -Path $CmdFilePath -Value $cmdContent -Force
+    
+    # Bearbeite die SetupComplete.ps1, um "Stop-Transcript" und "Restart-Computer -Force" zu verschieben
+    $psContent = Get-Content -Path $PSFilePath
+    $transcriptLine = $psContent | Where-Object { $_ -match "Stop-Transcript" }
+    $restartLine = $psContent | Where-Object { $_ -match "Restart-Computer -Force" }
 if ($transcriptLine -ne $null -and $restartLine -ne $null) {
     # Entferne die Zeilen aus dem Originalinhalt
     $psContent = $psContent | Where-Object { $_ -notmatch "Stop-Transcript|Restart-Computer -Force" }
