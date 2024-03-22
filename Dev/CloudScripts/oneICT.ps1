@@ -35,7 +35,7 @@ if (!(Test-Path -Path $PSFilePath)) {
 # Füge den grundlegenden Inhalt zur SetupComplete.ps1 hinzu, wenn nicht schon vorhanden
 Add-Content -Path $PSFilePath "Write-Output 'Starting SetupComplete HOPE Script Process'"
 Add-Content -Path $PSFilePath "Write-Output 'iex (irm hope.garytown.com)'"
-Add-Content -Path $PSFilePath 'iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/oneict.ps1)'
+Add-Content -Path $PSFilePath 'iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/oneICT.ps1)'
 
 # Stelle sicher, dass die SetupComplete.cmd existiert und setze den Inhalt
 if (!(Test-Path -Path $CmdFilePath)) {
@@ -180,7 +180,7 @@ if ($env:SystemDrive -ne 'X:') {
     C:\ProgramData\chocolatey\bin\choco.exe install chocolatey-core.extension -y --no-progress --ignore-checksums
     C:\ProgramData\chocolatey\bin\choco.exe source add --name="'oneICT'" --source="'https://chocoserver:8443/repository/ChocolateyInternal/'" --allow-self-service --user="'chocolatey'" --password="'wVGULoJGh1mxbRpChJQV'" --priority=1
     C:\ProgramData\chocolatey\bin\choco.exe source add --name="'Chocolatey'" --source="'https://chocolatey.org/api/v2/'" --allow-self-service --priority=2
-    C:\ProgramData\chocolatey\bin\choco.exe install chocolateygui -y --source="'oneICT'" --no-progress
+    # C:\ProgramData\chocolatey\bin\choco.exe install chocolateygui -y --source="'oneICT'" --no-progress
     C:\ProgramData\chocolatey\bin\choco.exe feature enable -n allowGlobalConfirmation
     C:\ProgramData\chocolatey\bin\choco.exe feature enable -n allowEmptyChecksums
     
