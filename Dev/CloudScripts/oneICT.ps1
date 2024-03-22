@@ -64,11 +64,7 @@ if ($transcriptLine -ne $null -and $restartLine -ne $null) {
     #Add-Content -Path $PSFilePath "Write-Output 'Weiterer neuer Inhalt'"
     Add-Content -Path $PSFilePath "Stop-Transcript"
     Add-Content -Path $PSFilePath "Restart-Computer -Force"
-}
-
-
-
-    
+}    
     # restart-computer
 }
 
