@@ -121,16 +121,6 @@ $url32   = 'http://www.technosys.net/download.aspx?file=syspin.exe'
 $output = "$env:TEMP\syspin.exe"
 Invoke-WebRequest -Uri $url32 -OutFile $output
 
-function Remove-AppFromTaskbar($appname) {
-    ((New-Object -Com Shell.Application).NameSpace('shell:::{4234d49b-0245-4df3-b780-3893943456e1}').Items() | Where-Object { $_.Name -eq $appname }).Verbs() | Where-Object { $_.Name.replace('&', '') -match 'Unpin from taskbar' -or $_.Name.replace('&','') -match 'Von Taskleiste lösen'} | ForEach-Object { $_.DoIt(); $exec = $true }
-}
-
-Remove-AppFromTaskbar "Microsoft Store"
-Remove-AppFromTaskbar 'HP Support Assistant'
-#Remove-AppFromTaskbar 'Microsoft Teams'
-Remove-AppFromTaskbar 'Microsoft Store'
-
-
 # Pin the shortcut to the taskbar
 # & "$env:TEMP\syspin.exe" "C:\Program Files\Google\Chrome\Application\chrome.exe" 5386
 & "$env:TEMP\syspin.exe" "C:\Program Files\Microsoft Office\root\Office16\OUTLOOK.EXE" 5386
@@ -143,6 +133,15 @@ Remove-AppFromTaskbar 'Microsoft Store'
 & "$env:TEMP\syspin.exe" "$env:ALLUSERSPROFILE\Microsoft\Windows\Start Menu\Programs\Word.lnk" 51201
 & "$env:TEMP\syspin.exe" "$env:ALLUSERSPROFILE\Microsoft\Windows\Start Menu\Programs\Excel.lnk" 51201
 & "$env:TEMP\syspin.exe" "$env:ALLUSERSPROFILE\Microsoft\Windows\Start Menu\Programs\Firefox.lnk" 51201
+
+function Remove-AppFromTaskbar($appname) {
+    ((New-Object -Com Shell.Application).NameSpace('shell:::{4234d49b-0245-4df3-b780-3893943456e1}').Items() | Where-Object { $_.Name -eq $appname }).Verbs() | Where-Object { $_.Name.replace('&', '') -match 'Unpin from taskbar' -or $_.Name.replace('&','') -match 'Von Taskleiste lösen'} | ForEach-Object { $_.DoIt(); $exec = $true }
+}
+
+Remove-AppFromTaskbar "Microsoft Store"
+# Remove-AppFromTaskbar 'HP Support Assistant'
+# Remove-AppFromTaskbar 'Microsoft Teams'
+Remove-AppFromTaskbar 'Microsoft Store'
 
 
     do {
