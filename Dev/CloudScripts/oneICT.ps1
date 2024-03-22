@@ -66,14 +66,26 @@ Set-ExecutionPolicy Bypass -Force
 #WinPE Stuff
 if ($env:SystemDrive -eq 'X:') {
     #Create Custom SetupComplete on USBDrive, this will get copied and run during SetupComplete Phase thanks to OSD Function: Set-SetupCompleteOSDCloudUSB
-    Set-SetupCompleteCreateStartHOPEonUSB
+    # Set-SetupCompleteCreateStartHOPEonUSB
     
     Write-Host -ForegroundColor Green "Starting win11.garytown.com"
     iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/win11.ps1)
 
     #Create Marker so it knows this is a "HOPE" computer - No longer need thanks to the custom setup complete above.
     #new-item -Path C:\OSDCloud\configs -Name hope.JSON -ItemType file
-    Restore-SetupCompleteOriginal
+    # Restore-SetupCompleteOriginal
+
+    $ScriptsPath = "C:\Windows\Setup\scripts"
+    $RunScript = @(@{ Script = "SetupComplete"; BatFile = 'SetupComplete.cmd'; ps1file = 'SetupComplete.ps1';Type = 'Setup'; Path = "$ScriptsPath"})
+    $PSFilePath = "$($RunScript.Path)\$($RunScript.ps1File)"
+
+    if (Test-Path -Path $PSFilePath){
+        Add-Content -Path $PSFilePath "Write-OutPut 'Running Scripts in Custom OSDCloud SetupComplete Folder'"
+        Add-Content -Path $PSFilePath '$SetupCompletePath = "C:\OSDCloud\Scripts\SetupComplete\SetupComplete.cmd"'
+        Add-Content -Path $PSFilePath 'if (Test-Path $SetupCompletePath){$SetupComplete = Get-ChildItem $SetupCompletePath -Filter SetupComplete.cmd}'
+        Add-Content -Path $PSFilePath 'if ($SetupComplete){cmd.exe /start /wait /c $SetupComplete.FullName}'
+        Add-Content -Path $PSFilePath "Write-Output '-------------------------------------------------------------'"
+            }
     restart-computer
 }
 
