@@ -193,22 +193,7 @@ if ($env:SystemDrive -ne 'X:') {
     }
     
     # add tcp rout to oneICT Server
-    if((Get-Content $env:windir\System32\drivers\etc\hosts |?{$_ -match "195.49.62.108"}) -eq $null){
-        Add-Content $ENV:WinDir\System32\Drivers\etc\hosts "## oneICT chocolatey repo"
-        Add-Content $ENV:WinDir\System32\Drivers\etc\hosts "195.49.62.108 chocoserver"
-        }
-
-    
-    foreach ($setting in $settings) {
-        $registry = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($setting.Name, $true)
-        if ($null -eq $registry) {
-            $registry = [Microsoft.Win32.Registry]::LocalMachine.CreateSubKey($setting.Name, $true)
-        }
-        $setting.Group | % {
-            $registry.SetValue($_.name, $_.value)
-        }
-        $registry.Dispose()
-    }
+    Add-Content -Path "C:\Windows\System32\drivers\etc\hosts" -Value "195.49.62.108 chocoserver"
 
     Write-Host -ForegroundColor Gray "**Completed Hope.garytown.com sub script**" 
     $null = Stop-Transcript -ErrorAction Ignore
