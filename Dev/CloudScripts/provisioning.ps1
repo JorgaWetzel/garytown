@@ -2,7 +2,21 @@ param(
     [switch]$first
 )
 
-Invoke-RestMethod -Uri go.osdcloud.com/enterprise
+$null = Stop-Transcript -ErrorAction Ignore
+
+Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
+Invoke-Expression -Command (Invoke-RestMethod -Uri functions.osdcloud.com)
+
+osdcloud-SetExecutionPolicy
+osdcloud-SetPowerShellProfile
+osdcloud-InstallPackageManagement
+osdcloud-TrustPSGallery
+osdcloud-InstallPowerShellModule -Name Pester
+osdcloud-InstallPowerShellModule -Name PSReadLine
+osdcloud-InstallWinGet
+# osdcloud-InstallPwsh
+# Write-Host -ForegroundColor Green "[+] pwsh.osdcloud.com Complete"
+
 
 $usb_drive_name = 'USB Drive'
 
