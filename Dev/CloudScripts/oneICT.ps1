@@ -59,6 +59,38 @@ if ($transcriptLine -ne $null -and $restartLine -ne $null) {
     #Add-Content -Path $PSFilePath "Write-Output 'Weiterer neuer Inhalt'"
     Add-Content -Path $PSFilePath "Stop-Transcript"
     Add-Content -Path $PSFilePath "Restart-Computer -Force"
+
+# Definiere den Inhalt der Unattend.xml Datei
+$UnattendContent = @"
+<?xml version="1.0" encoding="utf-8"?>
+<unattend xmlns="urn:schemas-microsoft-com:unattend">
+    <settings pass="specialize">
+        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <TimeZone>W. Europe Standard Time</TimeZone>
+            <RegisteredOrganization></RegisteredOrganization>
+            <RegisteredOwner>Administrator</RegisteredOwner>
+        </component>
+        <component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <InputLocale>0807:00000807</InputLocale>
+            <SystemLocale>en-US</SystemLocale>
+            <UserLocale>de-CH</UserLocale>
+        </component>
+    </settings>
+</unattend>
+"@
+
+# Definiere den Pfad zur Unattend.xml
+$UnattendPath = "C:\Windows\Panther\Unattend.xml"
+
+# Erstelle den Panther Ordner, falls er nicht existiert
+if (-Not (Test-Path "C:\Windows\Panther")) {
+    New-Item -Path "C:\Windows\Panther" -ItemType Directory -Force | Out-Null
+}
+
+# Schreibe den Inhalt in die Unattend.xml Datei
+$UnattendContent | Out-File -FilePath $UnattendPath -Encoding utf8 -Force
+
+Write-Output "Die Unattend.xml wurde platziert unter: $UnattendPath"
 }    
     # restart-computer
 }
