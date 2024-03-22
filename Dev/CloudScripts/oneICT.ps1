@@ -32,16 +32,25 @@ if ($env:SystemDrive -eq 'X:') {
     if (!(Test-Path -Path $PSFilePath)) {
         New-Item -Path $PSFilePath -ItemType File -Force
     }
-    Add-Content -Path $PSFilePath "Write-Output 'Starting SetupComplete HOPE Script Process'"
-    Add-Content -Path $PSFilePath "Write-Output 'iex (irm hope.garytown.com)'"
-    Add-Content -Path $PSFilePath 'iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/oneict.ps1)'
-    
     # Erstelle die SetupComplete.cmd, wenn sie nicht existiert, und füge den gewünschten Inhalt hinzu
     if (!(Test-Path -Path $CmdFilePath)) {
         New-Item -Path $CmdFilePath -ItemType File -Force
     }
     $cmdContent = "%windir%\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass -File $PSFilePath"
     Set-Content -Path $CmdFilePath -Value $cmdContent -Force
+    
+    # Bearbeite die SetupComplete.ps1, um "Restart-Computer -Force" zu verschieben
+    $psContent = Get-Content -Path $PSFilePath
+    $restartLine = $psContent | Where-Object { $_ -match "Restart-Computer -Force" }
+    if ($restartLine -ne $null) {
+        # Entferne die Zeile aus dem Originalinhalt
+        $psContent = $psContent | Where-Object { $_ -ne $restartLine }
+        # Füge die Zeile am Ende des Inhalts hinzu
+        $psContent += $restartLine
+        # Schreibe den neuen Inhalt zurück in die Datei
+        Set-Content -Path $PSFilePath -Value $psContent
+    }
+
     
     # restart-computer
 }
