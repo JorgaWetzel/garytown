@@ -93,11 +93,10 @@ if ($env:SystemDrive -ne 'X:') {
     #iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/test.ps1)
      
     #Set Time Zone to Automatic Update
-    
     # Write-Host -ForegroundColor Gray "**Setting Time Zone for Auto Update**" 
-    # Enable-AutoZimeZoneUpdate
+    Enable-AutoZimeZoneUpdate
     # Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
-    # Set-DefaultProfilePersonalPref
+    Set-DefaultProfilePersonalPref
     
     #Try to prevent crap from auto installing
     Write-Host -ForegroundColor Gray "**Disabling Cloud Content**" 
