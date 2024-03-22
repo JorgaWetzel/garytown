@@ -75,8 +75,8 @@ if ($transcriptLine -ne $null -and $restartLine -ne $null) {
 #Non-WinPE
 if ($env:SystemDrive -ne 'X:') {
     #Start the Transcript
-    $Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-OSDCloud.log"
-    $null = Start-Transcript -Path (Join-Path "$env:SystemRoot\Temp" $Transcript) -ErrorAction Ignore
+    $Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-OSDOOBE.log"
+    $null = Start-Transcript -Path (Join-Path "C:\OSDCloud\Logs" $Transcript) -ErrorAction Ignore
     #Remove Personal Teams
     Write-Host -ForegroundColor Gray "**Removing Default Chat Tool**" 
     try {
@@ -145,7 +145,7 @@ if ($env:SystemDrive -ne 'X:') {
     # setup RunOnce to execute provisioning.ps1 script
     # disable privacy experience
     $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/provisioning.ps1"
-    $destinationFolder = "C:\Windows\Setup\Scripts\SetupComplete"
+    $destinationFolder = "C:\Windows\Setup\Scripts"
     $destinationPath = Join-Path -Path $destinationFolder -ChildPath "provisioning.ps1"
     Invoke-WebRequest -Uri $url -OutFile $destinationPath
     
@@ -153,7 +153,7 @@ if ($env:SystemDrive -ne 'X:') {
         [PSCustomObject]@{
             Path  = "SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
             Name  = "execute_provisioning"
-            Value = "cmd /c powershell.exe -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\SetupComplete\provisioning.ps1"
+            Value = "cmd /c powershell.exe -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\provisioning.ps1"
         },
         [PSCustomObject]@{
             Path  = "SOFTWARE\Policies\Microsoft\Windows\OOBE"
