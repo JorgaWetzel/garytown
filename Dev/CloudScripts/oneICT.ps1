@@ -10,6 +10,20 @@ iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/
 #region functions
 function Set-SetupCompleteCreateStart {
     
+
+}
+
+
+Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
+
+Set-ExecutionPolicy Bypass -Force
+
+#WinPE Stuff
+if ($env:SystemDrive -eq 'X:') {
+    Write-Host -ForegroundColor Green "Starting win11.garytown.com"
+    iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/win11.ps1)
+
+    #Create Custom SetupComplete
     $ScriptsPath = "C:\Windows\Setup\Scripts"
     $PSFilePath = "$ScriptsPath\SetupComplete.ps1"
     $CmdFilePath = "$ScriptsPath\SetupComplete.cmd"
@@ -28,28 +42,7 @@ function Set-SetupCompleteCreateStart {
     }
     $cmdContent = "%windir%\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass -File $PSFilePath"
     Set-Content -Path $CmdFilePath -Value $cmdContent -Force
-}
-#endregion
-
-Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
-
-<#
-if ($env:SystemDrive -ne 'X:') {
-    Write-Host -ForegroundColor Yellow "Restart after Script Completes?"
-    $Restart = Read-Host "y or n, then Enter"
-}
-#>
-
-
-Set-ExecutionPolicy Bypass -Force
-
-#WinPE Stuff
-if ($env:SystemDrive -eq 'X:') {
-    Write-Host -ForegroundColor Green "Starting win11.garytown.com"
-    iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/win11.ps1)
-
-    #Create Custom SetupComplete
-    Set-SetupCompleteCreateStart
+    
     # restart-computer
 }
 
