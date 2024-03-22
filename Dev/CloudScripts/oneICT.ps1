@@ -103,10 +103,10 @@ if ($env:SystemDrive -ne 'X:') {
      
     #Set Time Zone to Automatic Update
     
-    Write-Host -ForegroundColor Gray "**Setting Time Zone for Auto Update**" 
-    Enable-AutoZimeZoneUpdate
-    Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
-    Set-DefaultProfilePersonalPref
+    # Write-Host -ForegroundColor Gray "**Setting Time Zone for Auto Update**" 
+    # Enable-AutoZimeZoneUpdate
+    # Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
+    # Set-DefaultProfilePersonalPref
     
     #Try to prevent crap from auto installing
     Write-Host -ForegroundColor Gray "**Disabling Cloud Content**" 
@@ -136,18 +136,16 @@ if ($env:SystemDrive -ne 'X:') {
     iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Debloat.ps1)
 
     #Set Time Zone
-    Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
-    Set-TimeZoneFromIP
+    # Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
+    # Set-TimeZoneFromIP
 
     #Set OOBE Language
-    $LanguageXMLPath = "C:\Windows\System32\oobe\info\defaults\DefaultInputMethod.xml"
-    $LanguageConfigContent = @"
-    <InputLocale>de-CH</InputLocale>
-    <SystemLocale>de-CH</SystemLocale>
-    <UILanguage>de-CH</UILanguage>
-    <UserLocale>de-CH</UserLocale>
-    "@
-    Set-Content -Path $LanguageXMLPath -Value $LanguageConfigContent -Force
+    Set-WinUILanguageOverride -Language de-CH
+    Set-WinCultureFromLanguageListOptOut -OptOut $false
+    Set-Culture -CultureInfo de-CH
+    $InputMethod = '0807:00000807' # Das Layout für Deutsch (Schweiz)
+    Set-WinUserLanguageList -LanguageList (New-WinUserLanguageList $InputMethod) -Force
+    Set-WinSystemLocale -SystemLocale de-CH
 
     # setup RunOnce to execute provisioning.ps1 script
     # disable privacy experience
@@ -156,27 +154,30 @@ if ($env:SystemDrive -ne 'X:') {
     $destinationPath = Join-Path -Path $destinationFolder -ChildPath "provisioning.ps1"
     Invoke-WebRequest -Uri $url -OutFile $destinationPath
     
-    $settings =
-    [PSCustomObject]@{
-        Path  = "SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
-        Name  = "execute_provisioning"
-        Value = "cmd /c powershell.exe -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\SetupComplete\provisioning.ps1 -first" -f
-    },
-    [PSCustomObject]@{
-        Path  = "SOFTWARE\Policies\Microsoft\Windows\OOBE"
-        Name  = "DisablePrivacyExperience"
-        Value = 1
-    } | group Path
-
+    $settings = @(
+        [PSCustomObject]@{
+            Path  = "SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
+            Name  = "execute_provisioning"
+            Value = "cmd /c powershell.exe -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\SetupComplete\provisioning.ps1"
+        },
+        [PSCustomObject]@{
+            Path  = "SOFTWARE\Policies\Microsoft\Windows\OOBE"
+            Name  = "DisablePrivacyExperience"
+            Value = 1
+        }
+    ) | Group-Object Path
+    
     foreach ($setting in $settings) {
-    $registry = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($setting.Name, $true)
-    if ($null -eq $registry) {
-        $registry = [Microsoft.Win32.Registry]::LocalMachine.CreateSubKey($setting.Name, $true)
-    }
-    $setting.Group | % {
-        $registry.SetValue($_.name, $_.value)
-    }
-    $registry.Dispose()
+        # Öffne den angegebenen Registrierungsschlüssel (oder erstelle ihn, falls er nicht existiert)
+        $registry = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($setting.Name, $true)
+        if ($null -eq $registry) {
+            $registry = [Microsoft.Win32.Registry]::LocalMachine.CreateSubKey($setting.Name, $true)
+        }
+        # Setze die Werte für den Registrierungsschlüssel basierend auf den Gruppenobjektdaten
+        foreach ($item in $setting.Group) {
+            $registry.SetValue($item.Name, $item.Value)
+        }
+        $registry.Dispose()
     }
 
     Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
