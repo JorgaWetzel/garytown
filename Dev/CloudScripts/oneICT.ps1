@@ -28,11 +28,16 @@ if ($env:SystemDrive -eq 'X:') {
     $PSFilePath = "$ScriptsPath\SetupComplete.ps1"
     $CmdFilePath = "$ScriptsPath\SetupComplete.cmd"
     
-    # Erstelle die SetupComplete.ps1, wenn sie nicht existiert, und füge den gewünschten Inhalt hinzu
+    # Stelle sicher, dass die SetupComplete.ps1 existiert
     if (!(Test-Path -Path $PSFilePath)) {
         New-Item -Path $PSFilePath -ItemType File -Force
     }
-    # Erstelle die SetupComplete.cmd, wenn sie nicht existiert, und füge den gewünschten Inhalt hinzu
+    # Füge den grundlegenden Inhalt zur SetupComplete.ps1 hinzu, wenn nicht schon vorhanden
+    Add-Content -Path $PSFilePath "Write-Output 'Starting SetupComplete HOPE Script Process'"
+    Add-Content -Path $PSFilePath "Write-Output 'iex (irm hope.garytown.com)'"
+    Add-Content -Path $PSFilePath 'iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/oneict.ps1)'
+    
+    # Stelle sicher, dass die SetupComplete.cmd existiert und setze den Inhalt
     if (!(Test-Path -Path $CmdFilePath)) {
         New-Item -Path $CmdFilePath -ItemType File -Force
     }
@@ -45,11 +50,19 @@ if ($env:SystemDrive -eq 'X:') {
     if ($restartLine -ne $null) {
         # Entferne die Zeile aus dem Originalinhalt
         $psContent = $psContent | Where-Object { $_ -ne $restartLine }
-        # Füge die Zeile am Ende des Inhalts hinzu
+        # Füge die entfernten Inhalte und die Restart-Zeile am Ende hinzu
+        #$psContent += "Write-Output 'Neuer zusätzlicher Inhalt'"
+        #$psContent += "Write-Output 'Weiterer neuer Inhalt'"
         $psContent += $restartLine
         # Schreibe den neuen Inhalt zurück in die Datei
         Set-Content -Path $PSFilePath -Value $psContent
+    } else {
+        # Nur hinzufügen, wenn 'Restart-Computer -Force' nicht bereits vorhanden war
+        #Add-Content -Path $PSFilePath "Write-Output 'Neuer zusätzlicher Inhalt'"
+        #Add-Content -Path $PSFilePath "Write-Output 'Weiterer neuer Inhalt'"
+        Add-Content -Path $PSFilePath "Restart-Computer -Force"
     }
+
 
     
     # restart-computer
