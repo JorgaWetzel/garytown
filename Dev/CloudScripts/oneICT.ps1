@@ -251,7 +251,7 @@ $UnattendContent = @"
 $UnattendPath = "C:\Windows\Panther\Unattend.xml"
 
 # Schreibe den Inhalt in die Unattend.xml Datei
-$UnattendContent | Out-File -FilePath $UnattendPath -Encoding utf8 -Force
+# $UnattendContent | Out-File -FilePath $UnattendPath -Encoding utf8 -Force
     
     $null = Stop-Transcript -ErrorAction Ignore
 
