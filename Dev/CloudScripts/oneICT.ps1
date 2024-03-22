@@ -164,7 +164,10 @@ if ($env:SystemDrive -ne 'X:') {
         }
         $registry.Dispose()
     }
-
+    
+    # add tcp rout to oneICT Server
+    Add-Content -Path "C:\Windows\System32\drivers\etc\hosts" -Value "195.49.62.108 chocoserver"
+    
     Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
     [Environment]::SetEnvironmentVariable("Path", $env:Path + ";$ENV:ALLUSERSPROFILE\chocolatey\bin", "Machine")
     C:\ProgramData\chocolatey\bin\choco.exe install chocolatey-core.extension -y --no-progress --ignore-checksums
@@ -182,8 +185,46 @@ if ($env:SystemDrive -ne 'X:') {
     C:\ProgramData\chocolatey\bin\choco.exe install vmware-tools -y --no-progress --ignore-checksums
     }
     
-    # add tcp rout to oneICT Server
-    Add-Content -Path "C:\Windows\System32\drivers\etc\hosts" -Value "195.49.62.108 chocoserver"
+    # Base64-kodierte Zeichenfolge des Zertifikats
+    $Base64Cert = "-----BEGIN CERTIFICATE-----
+LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tDQpNSUlESGpDQ0FnYWdBd0lCQWdJ
+UVJpelRwRFJsaG9GRDRVK1VOWTI1MnpBTkJna3Foa2lHOXcwQkFRc0ZBREFXDQpN
+UlF3RWdZRFZRUUREQXRqYUc5amIzTmxjblpsY2pBZUZ3MHlNVEF6TWpZd09EUXdN
+VEZhRncwek1UQXpNall3DQpPRFV3TVRGYU1CWXhGREFTQmdOVkJBTU1DMk5vYjJO
+dmMyVnlkbVZ5TUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGDQpBQU9DQVE4QU1JSUJD
+Z0tDQVFFQTRpdFRMVkNCWnpHQXJGdGZkMXd2cTZFVm5sbll4ZzNOR3Vvb0N1MUs1
+R21CDQpSZ210QmN6bkxBSWV1TkNuSlBDQUxIQWdGTFoyY0F0TUNxeGE0WDdjWWE3
+b2pRV2xiYzZIN0p0N0R5OHR2S2l0DQorWGI0eUlMVnJnTDVZUUFLcllHKzVDUnMx
+Z1llOGVUcDRMYWEyWlM0bU1BeW9LMjNiTDY5NDNyeDk3M0RnSXM0DQpIMVdjY2Ns
+ZGpQdTIwZmxTdFNHT01LWHJKSVduc1N2TmtaREVjSFZHaE5zUEVqd0xucWRsN1Js
+dElCbnhXZzZMDQpYWWNrOFdQZlh5L3QvNmY2MFdQM2YzcnBoRFdHZTE0c3pQckp5
+V1ZmTkEzbDlpRU05cDhMWUdlMHcvMlBwSnlXDQowUXgzNlBpcVBZbjhreGc3UVBv
+bHpjOCt0NkVxdllYRGZ1TEQwWE5rcVFJREFRQUJvMmd3WmpBT0JnTlZIUThCDQpB
+ZjhFQkFNQ0JhQXdIUVlEVlIwbEJCWXdGQVlJS3dZQkJRVUhBd0lHQ0NzR0FRVUZC
+d01CTUJZR0ExVWRFUVFQDQpNQTJDQzJOb2IyTnZjMlZ5ZG1WeU1CMEdBMVVkRGdR
+V0JCUzVwcTB5UjdPREhES0VCSUl6YXRpV2k1bUlXakFODQpCZ2txaGtpRzl3MEJB
+UXNGQUFPQ0FRRUFwdXdhRzk1THVrRy9BRFJTeW9pT0tvUkJmVDZNUnA1RE84MWNC
+dHBQDQpFMWpGeVZydUxWZHgwVHBkekRxU0RSTHBodFJCVjVvcTIvenBubWFsU3dn
+ZFhIYUxJZTdsazgrME1NYXpMYUFaDQp0d2pnd2xiNW1oVjVCb1BqVEF4ODFGenFj
+K09JZnMwNVZWLzdYemNUR3lsMFhVTmQ0ZUhET0Q4Q2VDWk9BaTVYDQpHYitRUkFp
+bkVMK0x3UjZ2Q2IyYlBWa0JBV1hCQXhrdkVrR0MxWE5USXRKQncvVXVWU25UWEhh
+OHZ6cnpJa2kwDQpQTkNaaWJHVmZHelBBb1o4bGdOU3phZlE5MDZKVXZqNDBUVTIv
+elUzYll2OHAwUGpOR3hiTHdIb0lzMENXRW5zDQo5MEVUMk81MzcxOXVvWGY0VVQ0
+eEp5OTY3Z0dWd0p4VlJKRVI3SURpSWpCOWlnPT0NCi0tLS0tRU5EIENFUlRJRklD
+QVRFLS0tLS0NCg==
+-----END CERTIFICATE-----"
+    
+    # Dekodiere die Base64-Zeichenfolge zurück in Bytes
+    $CertBytes = [System.Convert]::FromBase64String($Base64Cert)
+    
+    # Erstelle ein X509-Zertifikatobjekt aus den Bytes
+    $Cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2 -ArgumentList $CertBytes
+    
+    # Importiere das Zertifikat in den Speicher "Trusted People"
+    $Store = New-Object System.Security.Cryptography.X509Certificates.X509Store "TrustedPeople", "LocalMachine"
+    $Store.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
+    $Store.Add($Cert)
+    $Store.Close()
 
     Write-Host -ForegroundColor Gray "**Completed Hope.garytown.com sub script**" 
 
