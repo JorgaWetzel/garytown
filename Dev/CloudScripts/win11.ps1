@@ -1,4 +1,4 @@
-#to Run, boot OSDCloudUSB, at the PS Prompt: iex (irm win11.garytown.com)
+#to Run, boot OSDCloudUSB, at the PS Prompt: iex (irm win11.oneict.ch)
 $ScriptName = 'oneICT'
 $ScriptVersion = '09.04.2024'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
@@ -91,8 +91,8 @@ Write-Host "Starting OSDCloud" -ForegroundColor Green
 #write-host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
 
 # Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
-Start-OSDCloudGUI
-# Start-OSDCloudGUIDev
+# Start-OSDCloudGUI
+Start-OSDCloudGUIDev
 
 write-host "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot" -ForegroundColor Green
 
