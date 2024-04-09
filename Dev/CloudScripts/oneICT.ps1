@@ -59,12 +59,14 @@ if ($transcriptLine -ne $null -and $restartLine -ne $null) {
     #Add-Content -Path $PSFilePath "Write-Output 'Weiterer neuer Inhalt'"
     Add-Content -Path $PSFilePath "Stop-Transcript"
     Add-Content -Path $PSFilePath "Restart-Computer -Force"
-}    
-    # restart-computer
+
     $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Unattend.xml"
     $destinationPath = "C:\Windows\Panther\unattend.xml"
     Invoke-WebRequest -Uri $url -OutFile $destinationPath
     pause
+}    
+    # restart-computer
+
 function Set-OSDCloudUnattendAuditMode {
     [CmdletBinding()]
     param ()
