@@ -112,10 +112,5 @@ if (Test-path -path "x:\windows\system32\cmtrace.exe"){
     copy-item "x:\windows\system32\cmtrace.exe" -Destination "C:\Windows\System\cmtrace.exe"
 }
 
-$url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Unattend.xml"
-$destinationPath = "C:\Windows\Panther\unattend.xml"
-Invoke-WebRequest -Uri $url -OutFile $destinationPath
-pause
-
 #Restart
 #restart-computer
