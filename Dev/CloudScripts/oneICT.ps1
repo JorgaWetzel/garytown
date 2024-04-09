@@ -61,14 +61,8 @@ if ($transcriptLine -ne $null -and $restartLine -ne $null) {
     Add-Content -Path $PSFilePath "Restart-Computer -Force"
 }    
     # restart-computer
-    # Ziel-URL der Datei
     $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Unattend.xml"
-    
     $destinationPath = "C:\Windows\Panther\unattend.xml"
-    # Überprüfen, ob das Zielverzeichnis existiert, andernfalls erstellen
-    If (-Not (Test-Path -Path (Split-Path -Path $destinationPath -Parent))) {
-        New-Item -ItemType Directory -Path (Split-Path -Path $destinationPath -Parent) -Force
-    }
     Invoke-WebRequest -Uri $url -OutFile $destinationPath
 }
 
