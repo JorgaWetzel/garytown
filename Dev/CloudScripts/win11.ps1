@@ -23,7 +23,7 @@ $OSName = 'Windows 11 23H2 x64'
 $OSEdition = 'Pro'
 $OSActivation = 'Retail'
 $OSLanguage = 'de-de'
-$OSImageIndex =  '9'
+$OSImageIndex =  '8'
 
 
 #Set OSDCloud Vars
@@ -90,8 +90,8 @@ import-module "$ModulePath\OSD.psd1" -Force
 Write-Host "Starting OSDCloud" -ForegroundColor Green
 #write-host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
 
-# Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
-Start-OSDCloudGUI
+Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
+# Start-OSDCloudGUI
 # Start-OSDCloudGUIDev
 
 write-host "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot" -ForegroundColor Green
