@@ -23,7 +23,7 @@ $OSName = 'Windows 11 23H2 x64'
 $OSEdition = 'Pro'
 $OSActivation = 'Retail'
 $OSLanguage = 'de-de'
-$OSImageIndex =  'AUTO'
+$OSImageIndex =  '9'
 
 
 #Set OSDCloud Vars
