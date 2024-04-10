@@ -99,6 +99,10 @@ if ($env:SystemDrive -ne 'X:') {
     Enable-AutoZimeZoneUpdate
     # Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
     Set-DefaultProfilePersonalPref
+
+    # Delivery Optimization
+    Write-Host -ForegroundColor Green "**Function Set-DOPoliciesGPORegistry**"
+    Set-DOPoliciesGPORegistry
     
     #Try to prevent crap from auto installing
     Write-Host -ForegroundColor Gray "**Disabling Cloud Content**" 
@@ -109,12 +113,12 @@ if ($env:SystemDrive -ne 'X:') {
     Set-Win11ReqBypassRegValues
     
     #Windows Updates
-    #Write-Host -ForegroundColor Gray "**Running Defender Updates**"
-    #Update-DefenderStack
-    #Write-Host -ForegroundColor Gray "**Running Windows Updates**"
-    #Start-WindowsUpdate
-    #Write-Host -ForegroundColor Gray "**Running Driver Updates**"
-    #Start-WindowsUpdateDriver
+    Write-Host -ForegroundColor Gray "**Running Defender Updates**"
+    Update-DefenderStack
+    Write-Host -ForegroundColor Gray "**Running Windows Updates**"
+    Start-WindowsUpdate
+    Write-Host -ForegroundColor Gray "**Running Driver Updates**"
+    Start-WindowsUpdateDriver
 
     #Store Updates
     #Write-Host -ForegroundColor Gray "**Running Winget Updates**"
