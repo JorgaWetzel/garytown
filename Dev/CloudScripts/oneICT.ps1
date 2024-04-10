@@ -82,15 +82,10 @@ if ($env:SystemDrive -ne 'X:') {
         iex (irm https://raw.githubusercontent.com/suazione/CodeDump/main/Set-ConfigureChatAutoInstall.ps1)
     }
     catch {}
-    # Add Hope PDF to Desktop
-    Write-Host -ForegroundColor Gray "**Adding HOPE PDF to Desktop**" 
-    #try {
-    #    Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/85ad154fa2964ea4757a458dc5c91aea5bf483c6/HopeForUsedComputers/Hope%20for%20Used%20Computers%20PDF.pdf" -OutFile "C:\Users\Public\Desktop\Hope For Used Computers.pdf"
-    #}
-    #catch {}
 
-    #Set DO
-    #Set-DOPoliciesGPORegistry
+    # Delivery Optimization
+    Write-Host -ForegroundColor Green "**Function Set-DOPoliciesGPORegistry**"
+    Set-DOPoliciesGPORegistry
     
     #Write-Host -ForegroundColor Gray "**Running Test.garytown.com**" 
     #iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/test.ps1)
@@ -98,12 +93,10 @@ if ($env:SystemDrive -ne 'X:') {
     #Set Time Zone to Automatic Update
     # Write-Host -ForegroundColor Gray "**Setting Time Zone for Auto Update**" 
     Enable-AutoZimeZoneUpdate
+    
     # Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
     Set-DefaultProfilePersonalPref
-
-    # Delivery Optimization
-    Write-Host -ForegroundColor Green "**Function Set-DOPoliciesGPORegistry**"
-    Set-DOPoliciesGPORegistry
+    Set-DefaultProfilePersonalPrefOneICT
     
     #Try to prevent crap from auto installing
     Write-Host -ForegroundColor Gray "**Disabling Cloud Content**" 
@@ -151,7 +144,4 @@ if ($env:SystemDrive -ne 'X:') {
     Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
     Set-TimeZoneFromIP
     
-
-
-
 }
