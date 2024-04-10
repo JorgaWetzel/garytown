@@ -141,14 +141,6 @@ if ($env:SystemDrive -ne 'X:') {
     Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
     Set-TimeZoneFromIP
 
-    #Set OOBE Language
-    #Set-WinUILanguageOverride -Language de-CH
-    #Set-WinCultureFromLanguageListOptOut -OptOut $false
-    #Set-Culture -CultureInfo de-CH
-    #$InputMethod = '0807:00000807' # Das Layout für Deutsch (Schweiz)
-    #Set-WinUserLanguageList -LanguageList (New-WinUserLanguageList $InputMethod) -Force
-    #Set-WinSystemLocale -SystemLocale de-CH
-
     # setup RunOnce to execute provisioning.ps1 script
     # disable privacy experience
     $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/provisioning.ps1"
