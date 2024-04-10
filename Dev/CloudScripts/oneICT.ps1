@@ -207,8 +207,7 @@ if ($env:SystemDrive -ne 'X:') {
     Remove-Item -Path $tempPath
     Write-Host "Das Zertifikat wurde erfolgreich zu TrustedPeople unter LocalMachine hinzugefügt."
 
-    Write-Host -ForegroundColor Gray "**Completed Hope.garytown.com sub script**" 
-
+    # Disabling IPv6
     write-host ""
     write-host "Disabling IPv6 ..." -ForegroundColor green
     write-host ""
@@ -216,6 +215,7 @@ if ($env:SystemDrive -ne 'X:') {
     write-host "============IPv6 Status============" -ForegroundColor Magenta
     get-NetAdapterBinding -Name '*' -ComponentID 'ms_tcpip6' | format-table -AutoSize -Property Name, Enabled 
     
+    Write-Host -ForegroundColor Gray "**Completed oneICT sub script**"
     $null = Stop-Transcript -ErrorAction Ignore
 
 }
