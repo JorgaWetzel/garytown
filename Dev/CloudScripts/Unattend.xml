@@ -41,7 +41,7 @@
             <RunSynchronous>
                 <RunSynchronousCommand wcm:action="add">
                     <Order>1</Order>
-                    <Path>Powershell -ExecutionPolicy Bypass -Command Invoke-OSDSpecializeDev -Verbose</Path>
+                    <Path>Powershell -ExecutionPolicy Bypass -Command Invoke-OSDSpecialize -Verbose</Path>
                     <Description>OSDCloud Specialize</Description>
                 </RunSynchronousCommand>
                 <RunSynchronousCommand wcm:action="add">
