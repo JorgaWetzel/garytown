@@ -83,10 +83,10 @@ if ($env:SystemDrive -ne 'X:') {
     catch {}
     # Add Hope PDF to Desktop
     Write-Host -ForegroundColor Gray "**Adding HOPE PDF to Desktop**" 
-    try {
-        Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/85ad154fa2964ea4757a458dc5c91aea5bf483c6/HopeForUsedComputers/Hope%20for%20Used%20Computers%20PDF.pdf" -OutFile "C:\Users\Public\Desktop\Hope For Used Computers.pdf"
-    }
-    catch {}
+    #try {
+    #    Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/85ad154fa2964ea4757a458dc5c91aea5bf483c6/HopeForUsedComputers/Hope%20for%20Used%20Computers%20PDF.pdf" -OutFile "C:\Users\Public\Desktop\Hope For Used Computers.pdf"
+    #}
+    #catch {}
 
     #Set DO
     #Set-DOPoliciesGPORegistry
@@ -125,19 +125,20 @@ if ($env:SystemDrive -ne 'X:') {
 
     #Modified Version of Andrew's Debloat Script
     Write-Host -ForegroundColor Gray "**Running Debloat Script**" 
-    iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Debloat.ps1)
+    #iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Debloat.ps1)
+    Invoke-Debloat
 
     #Set Time Zone
     # Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
     # Set-TimeZoneFromIP
 
     #Set OOBE Language
-    Set-WinUILanguageOverride -Language de-CH
-    Set-WinCultureFromLanguageListOptOut -OptOut $false
-    Set-Culture -CultureInfo de-CH
-    $InputMethod = '0807:00000807' # Das Layout für Deutsch (Schweiz)
-    Set-WinUserLanguageList -LanguageList (New-WinUserLanguageList $InputMethod) -Force
-    Set-WinSystemLocale -SystemLocale de-CH
+    #Set-WinUILanguageOverride -Language de-CH
+    #Set-WinCultureFromLanguageListOptOut -OptOut $false
+    #Set-Culture -CultureInfo de-CH
+    #$InputMethod = '0807:00000807' # Das Layout für Deutsch (Schweiz)
+    #Set-WinUserLanguageList -LanguageList (New-WinUserLanguageList $InputMethod) -Force
+    #Set-WinSystemLocale -SystemLocale de-CH
 
     # setup RunOnce to execute provisioning.ps1 script
     # disable privacy experience
