@@ -132,6 +132,15 @@ if ($env:SystemDrive -ne 'X:') {
     Invoke-UpdateScanMethodMSStore
     Write-Host -ForegroundColor Gray "winget upgrade --all --accept-package-agreements --accept-source-agreements"
     winget upgrade --all --accept-package-agreements --accept-source-agreements
+    
+    Write-Host -ForegroundColor Gray "**Running Disablking TCP IP v6*"
+    DisableIPv6
+    
+    Write-Host -ForegroundColor Gray "**Running Chocolatey Script and Settings**"
+    Set-Chocolatey
+
+    Write-Host -ForegroundColor Gray "**Running RunOnce Script to install Default Apps**"
+    Set-RunOnceScript
 
     #Modified Version of Andrew's Debloat Script
     Write-Host -ForegroundColor Gray "**Running Debloat Script**" 
@@ -141,83 +150,8 @@ if ($env:SystemDrive -ne 'X:') {
     #Set Time Zone
     Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
     Set-TimeZoneFromIP
-
-    # setup RunOnce to execute provisioning.ps1 script
-    # disable privacy experience
-    $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/provisioning.ps1"
-    $destinationFolder = "C:\Windows\Setup\Scripts"
-    $destinationPath = Join-Path -Path $destinationFolder -ChildPath "provisioning.ps1"
-    Invoke-WebRequest -Uri $url -OutFile $destinationPath
-    
-    $settings = @(
-        [PSCustomObject]@{
-            Path  = "SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
-            Name  = "execute_provisioning"
-            Value = "cmd /c powershell.exe -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\provisioning.ps1"
-        },
-        [PSCustomObject]@{
-            Path  = "SOFTWARE\Policies\Microsoft\Windows\OOBE"
-            Name  = "DisablePrivacyExperience"
-            Value = 1
-        }
-    ) | Group-Object Path
-    
-    foreach ($setting in $settings) {
-        # Öffne den angegebenen Registrierungsschlüssel (oder erstelle ihn, falls er nicht existiert)
-        $registry = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($setting.Name, $true)
-        if ($null -eq $registry) {
-            $registry = [Microsoft.Win32.Registry]::LocalMachine.CreateSubKey($setting.Name, $true)
-        }
-        # Setze die Werte für den Registrierungsschlüssel basierend auf den Gruppenobjektdaten
-        foreach ($item in $setting.Group) {
-            $registry.SetValue($item.Name, $item.Value)
-        }
-        $registry.Dispose()
-    }
-    
-    # add tcp rout to oneICT Server
-    Add-Content -Path "C:\Windows\System32\drivers\etc\hosts" -Value "195.49.62.108 chocoserver"
-    
-    Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-    [Environment]::SetEnvironmentVariable("Path", $env:Path + ";$ENV:ALLUSERSPROFILE\chocolatey\bin", "Machine")
-    C:\ProgramData\chocolatey\bin\choco.exe install chocolatey-core.extension -y --no-progress --ignore-checksums
-    C:\ProgramData\chocolatey\bin\choco.exe source add --name="'oneICT'" --source="'https://chocoserver:8443/repository/ChocolateyInternal/'" --allow-self-service --user="'chocolatey'" --password="'wVGULoJGh1mxbRpChJQV'" --priority=1
-    C:\ProgramData\chocolatey\bin\choco.exe source add --name="'Chocolatey'" --source="'https://chocolatey.org/api/v2/'" --allow-self-service --priority=2
-    # C:\ProgramData\chocolatey\bin\choco.exe install chocolateygui -y --source="'oneICT'" --no-progress
-    C:\ProgramData\chocolatey\bin\choco.exe feature enable -n allowGlobalConfirmation
-    C:\ProgramData\chocolatey\bin\choco.exe feature enable -n allowEmptyChecksums
-    
-    $manufacturer = (gwmi win32_computersystem).Manufacturer
-    "Das ist ein $manufacturer PC"
-    
-    if ($manufacturer -match "VMware"){
-    Write-Host "Installing VMware tools..."
-    C:\ProgramData\chocolatey\bin\choco.exe install vmware-tools -y --no-progress --ignore-checksums
-    }
     
 
-    # Zertifikat
-    $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/choclatey.cer"
-    $tempPath = "$env:TEMP\choclatey.cer"
-    Invoke-WebRequest -Uri $url -OutFile $tempPath
-    # Öffnen des Zertifikatspeichers für "TrustedPeople" unter "LocalMachine"
-    $certStore = New-Object System.Security.Cryptography.X509Certificates.X509Store("TrustedPeople", "LocalMachine")
-    $certStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
-    $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($tempPath)
-    $certStore.Add($cert)
-    $certStore.Close()
-    Remove-Item -Path $tempPath
-    Write-Host "Das Zertifikat wurde erfolgreich zu TrustedPeople unter LocalMachine hinzugefügt."
 
-    # Disabling IPv6
-    write-host ""
-    write-host "Disabling IPv6 ..." -ForegroundColor green
-    write-host ""
-    Disable-NetAdapterBinding -Name '*' -ComponentID 'ms_tcpip6'
-    write-host "============IPv6 Status============" -ForegroundColor Magenta
-    get-NetAdapterBinding -Name '*' -ComponentID 'ms_tcpip6' | format-table -AutoSize -Property Name, Enabled 
-    
-    Write-Host -ForegroundColor Gray "**Completed oneICT sub script**"
-    $null = Stop-Transcript -ErrorAction Ignore
 
 }
