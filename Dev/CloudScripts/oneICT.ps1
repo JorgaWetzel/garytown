@@ -209,30 +209,12 @@ if ($env:SystemDrive -ne 'X:') {
 
     Write-Host -ForegroundColor Gray "**Completed Hope.garytown.com sub script**" 
 
-# Definiere den Inhalt der Unattend.xml Datei
-$UnattendContent = @"
-<?xml version="1.0" encoding="utf-8"?>
-<unattend xmlns="urn:schemas-microsoft-com:unattend">
-    <settings pass="specialize">
-        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <TimeZone>W. Europe Standard Time</TimeZone>
-            <RegisteredOrganization></RegisteredOrganization>
-            <RegisteredOwner>Administrator</RegisteredOwner>
-        </component>
-        <component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <InputLocale>0807:00000807</InputLocale>
-            <SystemLocale>en-US</SystemLocale>
-            <UserLocale>de-CH</UserLocale>
-        </component>
-    </settings>
-</unattend>
-"@
-
-# Definiere den Pfad zur Unattend.xml
-$UnattendPath = "C:\Windows\Panther\Unattend.xml"
-
-# Schreibe den Inhalt in die Unattend.xml Datei
-# $UnattendContent | Out-File -FilePath $UnattendPath -Encoding utf8 -Force
+    write-host ""
+    write-host "Disabling IPv6 ..." -ForegroundColor green
+    write-host ""
+    Disable-NetAdapterBinding -Name '*' -ComponentID 'ms_tcpip6'
+    write-host "============IPv6 Status============" -ForegroundColor Magenta
+    get-NetAdapterBinding -Name '*' -ComponentID 'ms_tcpip6' | format-table -AutoSize -Property Name, Enabled 
     
     $null = Stop-Transcript -ErrorAction Ignore
 
