@@ -120,6 +120,11 @@ if ($env:SystemDrive -ne 'X:') {
     Write-Host -ForegroundColor Gray "**Running Driver Updates**"
     Start-WindowsUpdateDriver
 
+    #HP Stuff
+    Write-Host -ForegroundColor Gray "**Running HP Client Management Script Library**"
+    Install-ModuleHPCMSL
+    Invoke-HPTPMDownload
+
     #Store Updates
     #Write-Host -ForegroundColor Gray "**Running Winget Updates**"
     #Write-Host -ForegroundColor Gray "Invoke-UpdateScanMethodMSStore"
@@ -133,8 +138,8 @@ if ($env:SystemDrive -ne 'X:') {
     Invoke-Debloat
 
     #Set Time Zone
-    # Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
-    # Set-TimeZoneFromIP
+    Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
+    Set-TimeZoneFromIP
 
     #Set OOBE Language
     #Set-WinUILanguageOverride -Language de-CH
