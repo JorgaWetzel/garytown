@@ -6,7 +6,7 @@ Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 #endregion
 
 Write-Host -ForegroundColor Green "[+] Function Set-DefaultProfilePersonalPrefOneICT"
-function Set-DefaultProfilePersonalPref {
+function Set-DefaultProfilePersonalPrefOneICT {
     #Set Default User Profile to MY PERSONAL preferences.
 
     $REG_defaultuser = "c:\users\default\ntuser.dat"
