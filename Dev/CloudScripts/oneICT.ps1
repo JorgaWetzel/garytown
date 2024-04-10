@@ -59,7 +59,7 @@ if ($env:SystemDrive -eq 'X:') {
         [System.Windows.Forms.MessageBox]::Show("Der PC-Name wurde zu '$newComputerName' aktualisiert.", "Bestätigung")
     }
 
-    Notepad $destinationPath
+    # Notepad $destinationPath
     
     #Create Custom SetupComplete
     $ScriptsPath = "C:\Windows\Setup\Scripts"
