@@ -22,7 +22,44 @@ if ($env:SystemDrive -eq 'X:') {
     $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Unattend.xml"
     $destinationPath = "C:\Windows\Panther\unattend.xml"
     Invoke-WebRequest -Uri $url -OutFile $destinationPath
-    #Notepad $destinationPath
+
+    # Change Computername
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+    $form = New-Object System.Windows.Forms.Form
+    $form.Text = 'PC-Namen Eingabe'
+    $form.Size = New-Object System.Drawing.Size(300,150)
+    $form.StartPosition = 'CenterScreen'
+    $label = New-Object System.Windows.Forms.Label
+    $label.Location = New-Object System.Drawing.Point(10,20)
+    $label.Size = New-Object System.Drawing.Size(280,20)
+    $label.Text = 'Bitte geben Sie den neuen PC-Namen ein:'
+    $form.Controls.Add($label)
+    $textBox = New-Object System.Windows.Forms.TextBox
+    $textBox.Location = New-Object System.Drawing.Point(10,40)
+    $textBox.Size = New-Object System.Drawing.Size(260,20)
+    $form.Controls.Add($textBox)
+    $okButton = New-Object System.Windows.Forms.Button
+    $okButton.Location = New-Object System.Drawing.Point(10,70)
+    $okButton.Size = New-Object System.Drawing.Size(75,23)
+    $okButton.Text = 'OK'
+    $okButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+    $form.AcceptButton = $okButton
+    $form.Controls.Add($okButton)
+    $form.Topmost = $true
+    $result = $form.ShowDialog()
+    
+    if ($result -eq [System.Windows.Forms.DialogResult]::OK)
+    {
+        $newComputerName = $textBox.Text
+        $destinationPath = "C:\Windows\Panther\unattend.xml"
+        [xml]$unattendXml = Get-Content $destinationPath
+        $unattendXml.SelectSingleNode("//component[@name='Microsoft-Windows-Shell-Setup']/ComputerName").InnerText = $newComputerName
+        $unattendXml.Save($destinationPath)
+        [System.Windows.Forms.MessageBox]::Show("Der PC-Name wurde zu '$newComputerName' aktualisiert.", "Bestätigung")
+    }
+
+    Notepad $destinationPath
     
     #Create Custom SetupComplete
     $ScriptsPath = "C:\Windows\Setup\Scripts"
