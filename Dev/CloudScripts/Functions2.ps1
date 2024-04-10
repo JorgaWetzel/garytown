@@ -44,3 +44,41 @@ function Set-DefaultProfilePersonalPref {
     Start-Sleep -s 1
     reg unload $VirtualRegistryPath_defaultuser | Out-Null
 }
+
+
+Write-Host -ForegroundColor Green "[+] Function Set-RunOnceScript"
+function Set-RunOnceScript {
+    # setup RunOnce to execute provisioning.ps1 script
+    # disable privacy experience
+    $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/provisioning.ps1"
+    $destinationFolder = "C:\Windows\Setup\Scripts"
+    $destinationPath = Join-Path -Path $destinationFolder -ChildPath "provisioning.ps1"
+    Invoke-WebRequest -Uri $url -OutFile $destinationPath
+    
+    $settings = @(
+        [PSCustomObject]@{
+            Path  = "SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
+            Name  = "execute_provisioning"
+            Value = "cmd /c powershell.exe -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\provisioning.ps1"
+        },
+        [PSCustomObject]@{
+            Path  = "SOFTWARE\Policies\Microsoft\Windows\OOBE"
+            Name  = "DisablePrivacyExperience"
+            Value = 1
+        }
+    ) | Group-Object Path
+    
+    foreach ($setting in $settings) {
+        # Öffne den angegebenen Registrierungsschlüssel (oder erstelle ihn, falls er nicht existiert)
+        $registry = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($setting.Name, $true)
+        if ($null -eq $registry) {
+            $registry = [Microsoft.Win32.Registry]::LocalMachine.CreateSubKey($setting.Name, $true)
+        }
+        # Setze die Werte für den Registrierungsschlüssel basierend auf den Gruppenobjektdaten
+        foreach ($item in $setting.Group) {
+            $registry.SetValue($item.Name, $item.Value)
+        }
+        $registry.Dispose()
+    }
+    }
+    
