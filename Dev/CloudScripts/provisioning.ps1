@@ -172,9 +172,9 @@ Remove-AppFromTaskbar 'Microsoft Store'
         $selected = Read-Host "Eintrag auswaehlen"
         switch ($selected) {
             1 {
-                Get-Credential | select @{n = 'Name'; e = { $_.UserName } },
-                @{n = 'Passwort'; e = { $_.Password } } | New-LocalUser -PasswordNeverExpires | Add-LocalGroupMember -Group "Administratoren"
-                break
+		$credential = Get-Credential -Message "Bitte geben Sie den Benutzernamen und das Passwort für den neuen lokalen Administrator an"
+    		New-LocalUser -Name $credential.UserName -Password $credential.Password -PasswordNeverExpires:$true | Add-LocalGroupMember -Group "Administratoren"
+    		break
             }
             2 {
                 Read-Host "Computername eintragen" | select @{n = 'NewName'; e = { $_ } } | Rename-Computer
