@@ -99,7 +99,7 @@ if ($env:SystemDrive -ne 'X:') {
     
     # Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
     Set-DefaultProfilePersonalPref
-    Set-DefaultProfilePersonalPrefOneICT
+    # Set-DefaultProfilePersonalPrefOneICT
     
     #Try to prevent crap from auto installing
     Write-Host -ForegroundColor Gray "**Disabling Cloud Content**" 
@@ -118,9 +118,9 @@ if ($env:SystemDrive -ne 'X:') {
     Start-WindowsUpdateDriver
 
     #HP Stuff
-    Write-Host -ForegroundColor Gray "**Running HP Client Management Script Library**"
-    Install-ModuleHPCMSL
-    Invoke-HPTPMDownload
+    # Write-Host -ForegroundColor Gray "**Running HP Client Management Script Library**"
+    # Install-ModuleHPCMSL
+    # Invoke-HPTPMDownload
 
     #Store Updates
     Write-Host -ForegroundColor Gray "**Running Winget Updates**"
