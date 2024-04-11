@@ -21,11 +21,10 @@ function Set-DefaultProfilePersonalPrefOneICT {
 
     # Disabling Bing Search in Start Menu, Disabling Cortana
     $Path = "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Search"
-    Set-ItemProperty -Path $Path -Name "BingSearchEnabled" -Type DWord -Value 0 | Out-Null
-    Set-ItemProperty -Path $Path -Name "CortanaConsent" -Type DWord -Value 0 | Out-Null
-    If (!(Test-Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search")) {
-        New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search" -Force | Out-Null
-    }
+    New-ItemProperty -Path $Path -Name "BingSearchEnabled" -Type DWord -Value 0 -Force | Out-Null
+    New-ItemProperty -Path $Path -Name "CortanaConsent" -Type DWord -Value 0 - Force | Out-Null
+    New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search" -Force | Out-Null
+    
 
     Start-Sleep -s 1
     reg unload $VirtualRegistryPath_defaultuser | Out-Null
