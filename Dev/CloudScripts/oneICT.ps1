@@ -76,12 +76,15 @@ if ($env:SystemDrive -ne 'X:') {
     #Start the Transcript
     $Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-OSDOOBE.log"
     $null = Start-Transcript -Path (Join-Path "C:\OSDCloud\Logs" $Transcript) -ErrorAction Ignore
+
+    <#
     #Remove Personal Teams
     Write-Host -ForegroundColor Gray "**Removing Default Chat Tool**" 
     try {
         iex (irm https://raw.githubusercontent.com/suazione/CodeDump/main/Set-ConfigureChatAutoInstall.ps1)
     }
     catch {}
+    #>
 
     # Delivery Optimization
     Write-Host -ForegroundColor Green "**Function Set-DOPoliciesGPORegistry**"
@@ -92,7 +95,7 @@ if ($env:SystemDrive -ne 'X:') {
      
     #Set Time Zone to Automatic Update
     # Write-Host -ForegroundColor Gray "**Setting Time Zone for Auto Update**" 
-    Enable-AutoZimeZoneUpdate
+    # Enable-AutoZimeZoneUpdate
     
     # Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
     Set-DefaultProfilePersonalPref
