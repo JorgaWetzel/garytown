@@ -27,14 +27,32 @@ osdcloud-InstallWinGet
 $usb_drive_name = 'USB Drive'
 
 $provisioning = [System.IO.DirectoryInfo]"$($env:ProgramData)\provisioning"
+$urls = @(
+    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_brave.ps1",
+    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_chrome.ps1",
+    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_edge.ps1",
+    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_firefox.ps1"
+)
 
-# run computer/software configuration scripts
-if ($first) {
-    . "$($provisioning.FullName)\configure_brave.ps1"
-    . "$($provisioning.FullName)\configure_chrome.ps1"
-    . "$($provisioning.FullName)\configure_edge.ps1"
-    . "$($provisioning.FullName)\configure_firefox.ps1"
+# Stelle sicher, dass das Verzeichnis existiert
+if (-not (Test-Path $provisioning)) {
+    New-Item -ItemType Directory -Path $provisioning -Force
 }
+
+# Herunterladen und Ausführen der Konfigurationsskripte
+foreach ($url in $urls) {
+    $scriptName = [System.IO.Path]::GetFileName($url)
+    $scriptPath = Join-Path -Path $provisioning -ChildPath $scriptName
+    
+    # Herunterladen, wenn das Skript noch nicht existiert
+    if (-not (Test-Path $scriptPath)) {
+        Invoke-WebRequest -Uri $url -OutFile $scriptPath
+    }
+    
+    # Ausführen des Skripts
+    . $scriptPath
+}
+
 
 # wait for network
 $ProgressPreference_bk = $ProgressPreference
