@@ -3,7 +3,7 @@ $edge_search_engines =
     is_default = $true
     keyword = "google"
     name = "google.com"
-    search_url = "https://www.google.com/search?q={searchTerms}"
+    search_url = "https://www.google.ch/search?q={searchTerms}"
 },
 @{
     keyword = "duck"
