@@ -74,7 +74,7 @@ Write-Host  -ForegroundColor Green "Disabling Application suggestions..."
     }
     Set-ItemProperty -Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People" -Name "PeopleBand" -Type DWord -Value 0
     Write-Host  -ForegroundColor Green "Enabling NumLock after startup..."
-    If (!(Test-Path "$VirtualRegistryPath_defaultuser:")) {
+    If (!(Test-Path "$VirtualRegistryPath_defaultuser")) {
         New-PSDrive -Name $VirtualRegistryPath_defaultuser -PSProvider Registry -Root HKEY_USERS | Out-Null
     }
     Set-ItemProperty -Path "$VirtualRegistryPath_defaultuser\.DEFAULT\Control Panel\Keyboard" -Name "InitialKeyboardIndicators" -Type DWord -Value 2147483650
