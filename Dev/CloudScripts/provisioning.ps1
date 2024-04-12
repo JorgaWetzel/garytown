@@ -185,7 +185,8 @@ Remove-AppFromTaskbar 'Microsoft Store'
                 break
             }
             4 {
-                irm https://raw.githubusercontent.com/JorgaWetzel/winutil/main/winutil.ps1 | iex
+                #irm https://raw.githubusercontent.com/JorgaWetzel/winutil/main/winutil.ps1 | iex
+		irm https://raw.githubusercontent.com/ChrisTitusTech/winutil/main/winutil.ps1 | iex
                 break
             }
 
