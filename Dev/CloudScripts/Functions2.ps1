@@ -33,8 +33,10 @@ function Set-DefaultProfilePersonalPrefOneICT {
     reg unload $VirtualRegistryPath_defaultuser | Out-Null
 }
 
+
+
 Write-Host -ForegroundColor Green "[+] Function Set-MachineSettingsOneICT"
-function Set-DefaultProfilePersonalPrefOneICT {
+function Set-MachineSettingsOneICT {
     #Set Default Machine Settings
 
 # Windows will tell you exactly what it is doing when it is shutting down or is booting...
