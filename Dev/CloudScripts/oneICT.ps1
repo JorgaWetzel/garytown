@@ -97,7 +97,7 @@ if ($env:SystemDrive -ne 'X:') {
     # Write-Host -ForegroundColor Gray "**Setting Time Zone for Auto Update**" 
     # Enable-AutoZimeZoneUpdate
     
-    # Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
+    Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
     Set-DefaultProfilePersonalPref
     # Set-DefaultProfilePersonalPrefOneICT
     
