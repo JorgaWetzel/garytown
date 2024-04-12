@@ -1,6 +1,6 @@
 #to Run, boot OSDCloudUSB, at the PS Prompt: iex (irm win11.garytown.com)
 $ScriptName = 'test.garytown.com'
-$ScriptVersion = '24.01.25.01'
+$ScriptVersion = '24.04.10.01'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
 
 
@@ -22,9 +22,10 @@ if (-not (Get-Command 'WinGet' -ErrorAction SilentlyContinue)) {
 	Write-Output "Download Winget"  
 	Start-BitsTransfer -DisplayName "WinGet" -Source "https://aka.ms/getwinget" -Destination "C:\ProgramData\WinGet\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle"
 	if (Test-Path -Path "C:\ProgramData\WinGet\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle"){
-        Add-AppxProvisionedPackage -online -packagepath C:\ProgramData\WinGet\Microsoft.VCLibs.x64.14.00.Desktop.appx -SkipLicense | Out-null	    
-        Write-Host -ForegroundColor Yellow "[-] Add-AppxPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe"
-	    Add-AppxPackage -RegisterByFamilyName -MainPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe -ErrorAction SilentlyContinue
+         	Write-Host -ForegroundColor Yellow "[-] Add-AppxProvisionedPackage -online -packagepath C:\ProgramData\WinGet\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle -SkipLicense"
+		Add-AppxProvisionedPackage -online -packagepath "C:\ProgramData\WinGet\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle" -SkipLicense | Out-null	    
+        	Write-Host -ForegroundColor Yellow "[-] Add-AppxPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe"
+	    	Add-AppxPackage -RegisterByFamilyName -MainPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe -ErrorAction SilentlyContinue
 	}
     else{
         Write-Host -ForegroundColor Red "[F] Failed to download and install WinGet"
