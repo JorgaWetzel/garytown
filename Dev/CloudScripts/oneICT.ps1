@@ -145,9 +145,9 @@ if ($env:SystemDrive -ne 'X:') {
     Set-RunOnceScript
 
     #Modified Version of Andrew's Debloat Script
-    Write-Host -ForegroundColor Gray "**Running Debloat Script**" 
+    #Write-Host -ForegroundColor Gray "**Running Debloat Script**" 
     #iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Debloat.ps1)
-    Invoke-Debloat
+    #Invoke-Debloat
 
     #Set Time Zone
     Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
