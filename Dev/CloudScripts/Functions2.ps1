@@ -199,11 +199,14 @@ function Set-RegistrySettings($settings) {
     }
 }
 
+<#
 # Exportieren der Standard-App-Assoziationen und Schreiben der XML-Konfiguration
 $defaultAssociationsPath = "$env:ProgramData\provisioning\DefaultAssociationsConfiguration.xml"
 if (-Not (Test-Path $defaultAssociationsPath)) {
-    New-Item $defaultAssociationsPath -Force -ItemType File
+   New-Item $defaultAssociationsPath -Force -ItemType File
 }
+#>
+
 $defaultAssociationsXml = @'
 <?xml version="1.0" encoding="UTF-8"?>
 <DefaultAssociations>
