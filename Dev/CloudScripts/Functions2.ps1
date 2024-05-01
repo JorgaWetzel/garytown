@@ -662,7 +662,7 @@ function Set-RunOnceScript {
     $certStore.Add($cert)
     $certStore.Close()
     Remove-Item -Path $tempPath
-    Write-Host "Das Zertifikat wurde erfolgreich zu TrustedPeople unter LocalMachine hinzugefügt."
+    Write-Host "Das Zertifikat wurde erfolgreich zu TrustedPeople unter LocalMachine hinzugefuegt."
     }
 
     Write-Host -ForegroundColor Green "[+] Function DisableIPv6"
