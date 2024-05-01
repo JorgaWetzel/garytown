@@ -81,7 +81,13 @@ $edge_settings =
     Path  = "SOFTWARE\Policies\Microsoft\Edge\ExtensionInstallForcelist"
     Value = "odfafepnkmbhccpbejgmiehpchacaeak" # uBlock Origin
     Name  = ++$edge_extension_count
+},
+[PSCustomObject]@{
+    Path  = "SOFTWARE\Policies\Microsoft\Edge\ExtensionInstallForcelist"
+    Value = "hfjadhjooeceemgojogkhlppanjkbobc" # Grammatik- und Rechtschreibprüfung - LanguageTool
+    Name  = ++$edge_extension_count
 } | group Path
+
 
 foreach($setting in $edge_settings){
     $registry = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($setting.Name, $true)
