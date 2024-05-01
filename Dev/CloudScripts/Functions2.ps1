@@ -445,8 +445,8 @@ Write-Host  -ForegroundColor Green "Disabling Telemetry..."
     Write-Host  -ForegroundColor Green "Hiding 3D Objects icon from This PC..."
     Remove-Item -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{0DB7E03F-FC29-4DC6-9020-FF41B59E513A}" -Recurse -ErrorAction SilentlyContinue
 
-	# Network Tweaks
-	Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" -Name "IRPStackSize" -Type DWord -Value 20
+    # Network Tweaks
+    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" -Name "IRPStackSize" -Type DWord -Value 20
 
     # Group svchost.exe processes
     $ram = (Get-CimInstance -ClassName Win32_PhysicalMemory | Measure-Object -Property Capacity -Sum).Sum / 1kb
@@ -487,7 +487,7 @@ Write-Host  -ForegroundColor Green "Disabling Telemetry..."
     #"WlanSvc"                                      # WLAN AutoConfig
     "WMPNetworkSvc"                                # Windows Media Player Network Sharing Service
     #"wscsvc"                                       # Windows Security Center Service
-    "WSearch"                                      # Windows Search
+    #"WSearch"                                      # Windows Search
     "XblAuthManager"                               # Xbox Live Auth Manager
     "XblGameSave"                                  # Xbox Live Game Save Service
     "XboxNetApiSvc"                                # Xbox Live Networking Service
@@ -503,7 +503,7 @@ Write-Host  -ForegroundColor Green "Disabling Telemetry..."
     "AJRouter"                                     #Disables (needed for AllJoyn Router Service)
     "MSDTC"                                        # Disables Distributed Transaction Coordinator
     "WpcMonSvc"                                    #Disables Parental Controls
-    "PhoneSvc"                                     #Disables Phone Service(Manages the telephony state on the device)
+    #"PhoneSvc"                                     #Disables Phone Service(Manages the telephony state on the device)
     "PrintNotify"                                  #Disables Windows printer notifications and extentions
     "PcaSvc"                                       #Disables Program Compatibility Assistant Service
     "WPDBusEnum"                                   #Disables Portable Device Enumerator Service
@@ -518,16 +518,16 @@ Write-Host  -ForegroundColor Green "Disabling Telemetry..."
     #"BFE"                                         #Disables Base Filtering Engine (BFE) (is a service that manages firewall and Internet Protocol security)
     #"BrokerInfrastructure"                         #Disables Windows infrastructure service that controls which background tasks can run on the system.
     "SCardSvr"                                      #Disables Windows smart card
-    "EntAppSvc"                                     #Disables enterprise application management.
-    "BthAvctpSvc"                                   #Disables AVCTP service (if you use  Bluetooth Audio Device or Wireless Headphones. then don't disable this)
+    #"EntAppSvc"                                     #Disables enterprise application management.
+    #"BthAvctpSvc"                                   #Disables AVCTP service (if you use  Bluetooth Audio Device or Wireless Headphones. then don't disable this)
     #"FrameServer"                                   #Disables Windows Camera Frame Server(this allows multiple clients to access video frames from camera devices.)
     "Browser"                                       #Disables computer browser
     "BthAvctpSvc"                                   #AVCTP service (This is Audio Video Control Transport Protocol service.)
     #"BDESVC"                                        #Disables bitlocker
     "iphlpsvc"                                      #Disables ipv6 but most websites don't use ipv6 they use ipv4     
-    "edgeupdate"                                    # Disables one of edge update service  
-    "MicrosoftEdgeElevationService"                 # Disables one of edge  service 
-    "edgeupdatem"                                   # disbales another one of update service (disables edgeupdatem)                          
+    #"edgeupdate"                                    # Disables one of edge update service  
+    #"MicrosoftEdgeElevationService"                 # Disables one of edge  service 
+    #"edgeupdatem"                                   # disbales another one of update service (disables edgeupdatem)                          
     "SEMgrSvc"                                      #Disables Payments and NFC/SE Manager (Manages payments and Near Field Communication (NFC) based secure elements)
     #"PNRPsvc"                                      # Disables peer Name Resolution Protocol ( some peer-to-peer and collaborative applications, such as Remote Assistance, may not function, Discord will still work)
     #"p2psvc"                                       # Disbales Peer Name Resolution Protocol(nables multi-party communication using Peer-to-Peer Grouping.  If disabled, some applications, such as HomeGroup, may not function. Discord will still work)
@@ -580,6 +580,7 @@ Write-Host  -ForegroundColor Green "Disabling Bing Search in Start Menu..."
 
 
 #Security Windows Update
+<#
  Write-Host  -ForegroundColor Green "Disabling driver offering through Windows Update..."
     If (!(Test-Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Device Metadata")) {
         New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Device Metadata" -Force | Out-Null
@@ -604,7 +605,7 @@ Write-Host  -ForegroundColor Green "Disabling Bing Search in Start Menu..."
     Write-Host  -ForegroundColor Green "Disabled driver offering through Windows Update"
     $ResultText.text = "`r`n" +"`r`n" + "Set Windows Update to Sane Settings"
 
-
+#>
 
 }
 
