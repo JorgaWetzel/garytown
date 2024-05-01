@@ -676,3 +676,4 @@ function Set-RunOnceScript {
     write-host "============IPv6 Status============" -ForegroundColor Magenta
     get-NetAdapterBinding -Name '*' -ComponentID 'ms_tcpip6' | format-table -AutoSize -Property Name, Enabled 
     }
+    
