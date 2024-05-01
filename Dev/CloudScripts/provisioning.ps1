@@ -126,7 +126,6 @@ else {
 	"vcredist140",
 	"zoom",
 	"notepadplusplus.install"
- 	"microsoft-teams-new-bootstrapper"
 	"onenote"
  	"onedrive"
 	"office365business" 	
