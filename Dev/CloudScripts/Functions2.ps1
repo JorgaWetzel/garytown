@@ -124,6 +124,7 @@ Set-ItemProperty -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentV
 Write-Host -ForegroundColor Green "Disabled Action Center"
 $ResultText.text += "`r`nDisabled Action Center"
 
+
 Write-Host -ForegroundColor Green "Adjusting visual effects for performance..."
 Set-ItemProperty -Path "$VirtualRegistryPath_software\Control Panel\Desktop" -Name "DragFullWindows" -Value "0" -Type String
 Set-ItemProperty -Path "$VirtualRegistryPath_software\Control Panel\Desktop" -Name "MenuShowDelay" -Value "200" -Type String
