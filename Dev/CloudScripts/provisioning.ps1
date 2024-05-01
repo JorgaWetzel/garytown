@@ -125,6 +125,9 @@ else {
 	"vcredist140",
 	"zoom",
 	"notepadplusplus.install"
+ 	"microsoft-teams-new-bootstrapper"
+	"onenote"
+ 	"onedrive"
 	"office365business --params "'/productid:O365HomePremRetail /exclude:Access Groove Lync /eula:FALSE'"" 	
 	$packages | %{
 		choco install $_ -y --no-progress --ignore-checksums
