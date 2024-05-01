@@ -150,7 +150,22 @@ if ($env:SystemDrive -ne 'X:') {
     Invoke-Debloat
 
     #Set Time Zone
-    #Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
-    #Set-TimeZoneFromIP
+    Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
+    Set-TimeZoneFromIP
+    
+    Write-Host -ForegroundColor Gray "**oneICT User Settings**"
+    Set-DefaultProfilePersonalPrefOneICT
+
+    Write-Host -ForegroundColor Gray "**oneICT Machine SettingsP**"
+    Set-MachineSettingsOneICT
+
+    Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
+    Set-RunOnceScript
+
+    Write-Host -ForegroundColor Gray "**oneICT Choclatey Framework and Settings**"
+    Set-Chocolatey
+
+    Write-Host -ForegroundColor Gray "**Disalbe IP V6**"
+    DisableIPv6
     
 }
