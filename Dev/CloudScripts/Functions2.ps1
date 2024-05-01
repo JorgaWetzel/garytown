@@ -204,7 +204,7 @@ $defaultAssociationsPath = "$env:ProgramData\provisioning\DefaultAssociationsCon
 if (-Not (Test-Path $defaultAssociationsPath)) {
     New-Item $defaultAssociationsPath -Force -ItemType File
 }
-$defaultAssociationsXml = @"
+$defaultAssociationsXml = @'
 <?xml version="1.0" encoding="UTF-8"?>
 <DefaultAssociations>
   <Association Identifier=".htm" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
@@ -214,8 +214,9 @@ $defaultAssociationsXml = @"
   <Association Identifier=".pdf" ProgId="Acrobat.Document.DC" ApplicationName="Adobe Acrobat" />
   <Association Identifier="mailto" ProgId="Outlook.URL.mailto.15" ApplicationName="Outlook" />
 </DefaultAssociations>
-"@
+'@
 $defaultAssociationsXml | Out-File $defaultAssociationsPath -Encoding UTF8 -Force
+
 
 # Allgemeine Einstellungen für Google Chrome
 $chromeSettings = @(
