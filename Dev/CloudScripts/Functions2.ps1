@@ -6,131 +6,147 @@ Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 
 Write-Host -ForegroundColor Green "[+] Function Set-DefaultProfilePersonalPrefOneICT"
 function Set-DefaultProfilePersonalPrefOneICT {
-    #Set Default User Profile to MY PERSONAL preferences.
-
+    # Set Default User Profile to MY PERSONAL preferences.
     $REG_defaultuser = "c:\users\default\ntuser.dat"
-    $VirtualRegistryPath_defaultuser = "HKLM\DefUser" #Load Command
-    $VirtualRegistryPath_software = "HKLM:\DefUser\Software" #PowerShell Path
+    $VirtualRegistryPath_defaultuser = "HKLM\DefUser" # Load Command
+    $VirtualRegistryPath_software = "HKLM:\DefUser\Software" # PowerShell Path
 
+    # Ensure registry is unloaded before loading
     if (Test-Path -Path $VirtualRegistryPath_software) {
-        reg unload $VirtualRegistryPath_defaultuser | Out-Null # Just in case...
-        Start-Sleep 1
+        reg unload $VirtualRegistryPath_defaultuser | Out-Null
+        Start-Sleep -Seconds 1
     }
     reg load $VirtualRegistryPath_defaultuser $REG_defaultuser | Out-Null
 
+    # Registry settings for user experience
     Write-Host "Enable file operations details..."
-    $registryPath = "$VirtualRegistryPath_software\Software\Microsoft\Windows\CurrentVersion\Explorer\OperationStatusManager"
+    $registryPath = "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\OperationStatusManager"
     Set-ItemProperty -Path $registryPath -Name "EnthusiastMode" -Value 1 -Type DWORD
 
-    Write-Host "Enable known file extensions"
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "HideFileExt" -Type DWord -Value 0
-    
-    # Setze ZeroConfigExchangeZeroConfigExchange
-    REG ADD "HKLM:\DefUser\Software\Microsoft\Office\16.0\Outlook\AutoDiscover" /v ZeroConfigExchange /t REG_DWORD /d 1 /f
+    Write-Host "Enable known file extensions..."
+    Set-ItemProperty -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "HideFileExt" -Value 0 -Type DWORD
 
-Write-Host  -ForegroundColor Green "Disabling Application suggestions..."
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "ContentDeliveryAllowed" -Type DWord -Value 0
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "OemPreInstalledAppsEnabled" -Type DWord -Value 0
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "PreInstalledAppsEnabled" -Type DWord -Value 0
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "PreInstalledAppsEverEnabled" -Type DWord -Value 0
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SilentInstalledAppsEnabled" -Type DWord -Value 0
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-338387Enabled" -Type DWord -Value 0
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-338388Enabled" -Type DWord -Value 0
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-338389Enabled" -Type DWord -Value 0
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-353698Enabled" -Type DWord -Value 0
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SystemPaneSuggestionsEnabled" -Type DWord -Value 0
+    # Set ZeroConfigExchange
+    REG ADD "$VirtualRegistryPath_software\Microsoft\Office\16.0\Outlook\AutoDiscover" /v ZeroConfigExchange /t REG_DWORD /d 1 /f
 
-    Write-Host  -ForegroundColor Green "Disabling Feedback..."
-    If (!(Test-Path $VirtualRegistryPath_software\SOFTWARE\Microsoft\Siuf\Rules")) {
-        New-Item -Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Siuf\Rules" -Force | Out-Null
-    }
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Siuf\Rules" -Name "NumberOfSIUFInPeriod" -Type DWord -Value 0
+    Write-Host -ForegroundColor Green "Disabling Application suggestions..."
+    $cdmPath = "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
+    $settings = @(
+        "ContentDeliveryAllowed",
+        "OemPreInstalledAppsEnabled",
+        "PreInstalledAppsEnabled",
+        "PreInstalledAppsEverEnabled",
+        "SilentInstalledAppsEnabled",
+        "SubscribedContent-338387Enabled",
+        "SubscribedContent-338388Enabled",
+        "SubscribedContent-338389Enabled",
+        "SubscribedContent-353698Enabled",
+        "SystemPaneSuggestionsEnabled"
+    )
 
-    Write-Host  -ForegroundColor Green "Disabling Tailored Experiences..."
-    If (!(Test-Path "$VirtualRegistryPath_software\SOFTWARE\Policies\Microsoft\Windows\CloudContent")) {
-        New-Item -Path "$VirtualRegistryPath_software\SOFTWARE\Policies\Microsoft\Windows\CloudContent" -Force | Out-Null
+    foreach ($setting in $settings) {
+        Set-ItemProperty -Path $cdmPath -Name $setting -Value 0 -Type DWORD
     }
 
-    Write-Host -ForegroundColor Green  "Showing task manager details..."
-    $taskmgr = Start-Process -WindowStyle Hidden -FilePath taskmgr.exe -PassThru
-    Do {
-        Start-Sleep -Milliseconds 100
-        $preferences = Get-ItemProperty -Path "$VirtualRegistryPath_software\Software\Microsoft\Windows\CurrentVersion\TaskManager" -Name "Preferences" -ErrorAction SilentlyContinue
-    } Until ($preferences)
-    Stop-Process $taskmgr
-    $preferences.Preferences[28] = 0
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\Software\Microsoft\Windows\CurrentVersion\TaskManager" -Name "Preferences" -Type Binary -Value $preferences.Preferences
-    Write-Host -ForegroundColor Green "Showing file operations details..."
-    If (!(Test-Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\OperationStatusManager")) {
-        New-Item -Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\OperationStatusManager" | Out-Null
+    Write-Host -ForegroundColor Green "Disabling Feedback..."
+    $feedbackPath = "$VirtualRegistryPath_software\Microsoft\Siuf\Rules"
+    if (!(Test-Path $feedbackPath)) {
+        New-Item -Path $feedbackPath -Force | Out-Null
     }
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\OperationStatusManager" -Name "EnthusiastMode" -Type DWord -Value 1
-    Write-Host  -ForegroundColor Green "Hiding Task View button..."
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ShowTaskViewButton" -Type DWord -Value 0
-    Write-Host  -ForegroundColor Green "Hiding People icon..."
-    If (!(Test-Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People")) {
-        New-Item -Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People" | Out-Null
-    }
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People" -Name "PeopleBand" -Type DWord -Value 0
-    Write-Host  -ForegroundColor Green "Enabling NumLock after startup..."
-    If (!(Test-Path "$VirtualRegistryPath_defaultuser")) {
-        New-PSDrive -Name $VirtualRegistryPath_defaultuser -PSProvider Registry -Root HKEY_USERS | Out-Null
-    }
-    Set-ItemProperty -Path "$VirtualRegistryPath_defaultuser\.DEFAULT\Control Panel\Keyboard" -Name "InitialKeyboardIndicators" -Type DWord -Value 2147483650
-    Add-Type -AssemblyName System.Windows.Forms
-    If (!([System.Windows.Forms.Control]::IsKeyLocked('NumLock'))) {
-        $wsh = New-Object -ComObject WScript.Shell
-        $wsh.SendKeys('{NUMLOCK}')
+    Set-ItemProperty -Path $feedbackPath -Name "NumberOfSIUFInPeriod" -Value 0 -Type DWORD
+
+    Write-Host -ForegroundColor Green "Disabling Tailored Experiences..."
+    $cloudContentPath = "$VirtualRegistryPath_software\Policies\Microsoft\Windows\CloudContent"
+    if (!(Test-Path $cloudContentPath)) {
+        New-Item -Path $cloudContentPath -Force | Out-Null
     }
 
-    Write-Host  -ForegroundColor Green "Changing default Explorer view to This PC..."
-    $ResultText.text += "`r`n" +"Quality of Life Tweaks"
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "LaunchTo" -Type DWord -Value 1
+    Write-Host -ForegroundColor Green "Showing task manager details..."
+$taskmgr = Start-Process -WindowStyle Hidden -FilePath "taskmgr.exe" -PassThru
+Do {
+    Start-Sleep -Milliseconds 100
+    $preferences = Get-ItemProperty -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\TaskManager" -Name "Preferences" -ErrorAction SilentlyContinue
+} Until ($preferences)
+Stop-Process -InputObject $taskmgr
 
-    Write-Host  -ForegroundColor Green "Disable News and Interests"
-    $ResultText.text += "`r`n" +"Disabling Extra Junk"
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\SOFTWARE\Policies\Microsoft\Windows\Windows Feeds" -Name "EnableFeeds" -Type DWord -Value 0
-    # Remove "News and Interest" from taskbar
-    Set-ItemProperty -Path  "$VirtualRegistryPath_software\Software\Microsoft\Windows\CurrentVersion\Feeds" -Name "ShellFeedsTaskbarViewMode" -Type DWord -Value 2
+$preferences.Preferences[28] = 0
+Set-ItemProperty -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\TaskManager" -Name "Preferences" -Value $preferences.Preferences -Type Binary
 
-    # remove "Meet Now" button from taskbar
+Write-Host -ForegroundColor Green "Showing file operations details..."
+If (!(Test-Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\OperationStatusManager")) {
+    New-Item -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\OperationStatusManager" -Force | Out-Null
+}
+Set-ItemProperty -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\OperationStatusManager" -Name "EnthusiastMode" -Value 1 -Type DWORD
 
-    If (!(Test-Path "$VirtualRegistryPath_software\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer")) {
-        New-Item -Path "$VirtualRegistryPath_software\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Force | Out-Null
-    }
+Write-Host -ForegroundColor Green "Hiding Task View button..."
+Set-ItemProperty -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ShowTaskViewButton" -Value 0 -Type DWORD
 
-	Set-ItemProperty -Path "$VirtualRegistryPath_software\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "HideSCAMeetNow" -Type DWord -Value 1
+Write-Host -ForegroundColor Green "Hiding People icon..."
+If (!(Test-Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People")) {
+    New-Item -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People" -Force | Out-Null
+}
+Set-ItemProperty -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People" -Name "PeopleBand" -Value 0 -Type DWORD
 
-Write-Host  -ForegroundColor Green "Disabling Action Center..."
-    If (!(Test-Path "$VirtualRegistryPath_software\SOFTWARE\Policies\Microsoft\Windows\Explorer")) {
-        New-Item -Path "$VirtualRegistryPath_software\SOFTWARE\Policies\Microsoft\Windows\Explorer" | Out-Null
-    }
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\SOFTWARE\Policies\Microsoft\Windows\Explorer" -Name "DisableNotificationCenter" -Type DWord -Value 1
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Windows\CurrentVersion\PushNotifications" -Name "ToastEnabled" -Type DWord -Value 0
-    Write-Host  -ForegroundColor Green "Disabled Action Center"
-    $ResultText.text = "`r`n" +"`r`n" + "Disabled Action Center"
+Write-Host -ForegroundColor Green "Enabling NumLock after startup..."
+If (!(Test-Path "$VirtualRegistryPath_defaultuser")) {
+    New-PSDrive -Name "DefUser" -PSProvider "Registry" -Root "HKEY_USERS" | Out-Null
+}
+Set-ItemProperty -Path "$VirtualRegistryPath_defaultuser\.DEFAULT\Control Panel\Keyboard" -Name "InitialKeyboardIndicators" -Value 2147483650 -Type DWORD
+Add-Type -AssemblyName "System.Windows.Forms"
+If (!([System.Windows.Forms.Control]::IsKeyLocked([System.Windows.Forms.Keys]::NumLock))) {
+    $wsh = New-Object -ComObject WScript.Shell
+    $wsh.SendKeys('{NUMLOCK}')
+}
 
- Write-Host  -ForegroundColor Green "Adjusting visual effects for performance..."
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\Control Panel\Desktop" -Name "DragFullWindows" -Type String -Value 0
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\Control Panel\Desktop" -Name "MenuShowDelay" -Type String -Value 200
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\Control Panel\Desktop" -Name "UserPreferencesMask" -Type Binary -Value ([byte[]](144,18,3,128,16,0,0,0))
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\Control Panel\Desktop\WindowMetrics" -Name "MinAnimate" -Type String -Value 0
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\Control Panel\Keyboard" -Name "KeyboardDelay" -Type DWord -Value 0
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ListviewAlphaSelect" -Type DWord -Value 0
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ListviewShadow" -Type DWord -Value 0
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAnimations" -Type DWord -Value 0
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects" -Name "VisualFXSetting" -Type DWord -Value 3
-    Set-ItemProperty -Path "$VirtualRegistryPath_software\Software\Microsoft\Windows\DWM" -Name "EnableAeroPeek" -Type DWord -Value 0
-    Write-Host  -ForegroundColor Green "Adjusted visual effects for performance"
-    $ResultText.text = "`r`n" +"`r`n" + "Adjusted VFX for performance"
+Write-Host -ForegroundColor Green "Changing default Explorer view to This PC..."
+$ResultText.text += "`r`nQuality of Life Tweaks"
+Set-ItemProperty -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "LaunchTo" -Value 1 -Type DWORD
 
-Write-Host  -ForegroundColor Green "Showing tray icons..."
-	Set-ItemProperty -Path "$VirtualRegistryPath_software\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" -Name "EnableAutoTray" -Type DWord -Value 0
-	Write-Host  -ForegroundColor Green "Done - Now showing all tray icons"
-    $ResultText.text = "`r`n" +"`r`n" + "Tray Icons now set to show all"
-    
-    Start-Sleep -s 1
-    reg unload $VirtualRegistryPath_defaultuser | Out-Null
+Write-Host -ForegroundColor Green "Disable News and Interests"
+$ResultText.text += "`r`nDisabling Extra Junk"
+Set-ItemProperty -Path "$VirtualRegistryPath_software\Policies\Microsoft\Windows\Windows Feeds" -Name "EnableFeeds" -Value 0 -Type DWORD
+
+# Remove "News and Interest" from taskbar
+Set-ItemProperty -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Feeds" -Name "ShellFeedsTaskbarViewMode" -Value 2 -Type DWORD
+
+# Remove "Meet Now" button from taskbar
+If (!(Test-Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Policies\Explorer")) {
+    New-Item -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Force | Out-Null
+}
+Set-ItemProperty -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "HideSCAMeetNow" -Value 1 -Type DWORD
+
+Write-Host -ForegroundColor Green "Disabling Action Center..."
+If (!(Test-Path "$VirtualRegistryPath_software\Policies\Microsoft\Windows\Explorer")) {
+    New-Item -Path "$VirtualRegistryPath_software\Policies\Microsoft\Windows\Explorer" -Force | Out-Null
+}
+Set-ItemProperty -Path "$VirtualRegistryPath_software\Policies\Microsoft\Windows\Explorer" -Name "DisableNotificationCenter" -Value 1 -Type DWORD
+Set-ItemProperty -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\PushNotifications" -Name "ToastEnabled" -Value 0 -Type DWORD
+Write-Host -ForegroundColor Green "Disabled Action Center"
+$ResultText.text += "`r`nDisabled Action Center"
+
+Write-Host -ForegroundColor Green "Adjusting visual effects for performance..."
+Set-ItemProperty -Path "$VirtualRegistryPath_software\Control Panel\Desktop" -Name "DragFullWindows" -Value "0" -Type String
+Set-ItemProperty -Path "$VirtualRegistryPath_software\Control Panel\Desktop" -Name "MenuShowDelay" -Value "200" -Type String
+Set-ItemProperty -Path "$VirtualRegistryPath_software\Control Panel\Desktop" -Name "UserPreferencesMask" -Value ([byte[]](144,18,3,128,16,0,0,0)) -Type Binary
+Set-ItemProperty -Path "$VirtualRegistryPath_software\Control Panel\Desktop\WindowMetrics" -Name "MinAnimate" -Value "0" -Type String
+Set-ItemProperty -Path "$VirtualRegistryPath_software\Control Panel\Keyboard" -Name "KeyboardDelay" -Value 0 -Type DWORD
+Set-ItemProperty -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ListviewAlphaSelect" -Value 0 -Type DWORD
+Set-ItemProperty -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ListviewShadow" -Value 0 -Type DWORD
+Set-ItemProperty -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAnimations" -Value 0 -Type DWORD
+Set-ItemProperty -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects" -Name "VisualFXSetting" -Value 3 -Type DWORD
+Set-ItemProperty -Path "$VirtualRegistryPath_software\Microsoft\Windows\DWM" -Name "EnableAeroPeek" -Value 0 -Type DWORD
+Write-Host -ForegroundColor Green "Adjusted visual effects for performance"
+$ResultText.text += "`r`nAdjusted VFX for performance"
+
+Write-Host -ForegroundColor Green "Showing tray icons..."
+Set-ItemProperty -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer" -Name "EnableAutoTray" -Value 0 -Type DWORD
+Write-Host -ForegroundColor Green "Done - Now showing all tray icons"
+$ResultText.text += "`r`nTray Icons now set to show all"
+
+
+# Finish by unloading the registry
+Start-Sleep -Seconds 1
+reg unload $VirtualRegistryPath_defaultuser | Out-Null
 }
 
 
@@ -647,9 +663,10 @@ function Set-RunOnceScript {
     $manufacturer = (gwmi win32_computersystem).Manufacturer
     Write-Host "Das ist ein $manufacturer PC"
     
-    if ($manufacturer -match "VMware")
+    if ($manufacturer -match "VMware") {
     Write-Host "Installing VMware tools..."
     C:\ProgramData\chocolatey\bin\choco.exe install vmware-tools -y --no-progress --ignore-checksums
+    }
 
     # Zertifikat
     $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/choclatey.cer"
