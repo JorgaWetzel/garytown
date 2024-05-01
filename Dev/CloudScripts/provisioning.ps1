@@ -128,7 +128,7 @@ else {
  	"microsoft-teams-new-bootstrapper"
 	"onenote"
  	"onedrive"
-	"office365business --params "'/productid:O365HomePremRetail /exclude:Access Groove Lync /eula:FALSE'"" 	
+	"office365business" 	
 	$packages | %{
 		choco install $_ -y --no-progress --ignore-checksums
 	}
