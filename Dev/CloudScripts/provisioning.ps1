@@ -118,7 +118,6 @@ else {
 	"vlc",
 	"jre8",
 	"powertoys",
-	"firefox",
 	"office365business",
 	"onedrive",
 	"Pdf24",
