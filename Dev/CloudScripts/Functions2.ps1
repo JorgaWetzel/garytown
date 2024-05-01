@@ -60,8 +60,8 @@ function Set-DefaultProfilePersonalPrefOneICT {
     if (!(Test-Path $cloudContentPath)) {
         New-Item -Path $cloudContentPath -Force | Out-Null
     }
-
-    Write-Host -ForegroundColor Green "Showing task manager details..."
+<#    
+Write-Host -ForegroundColor Green "Showing task manager details..."
 $taskmgr = Start-Process -WindowStyle Hidden -FilePath "taskmgr.exe" -PassThru
 Do {
     Start-Sleep -Milliseconds 100
@@ -71,6 +71,7 @@ Stop-Process -InputObject $taskmgr
 
 $preferences.Preferences[28] = 0
 Set-ItemProperty -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\TaskManager" -Name "Preferences" -Value $preferences.Preferences -Type Binary
+#>
 
 Write-Host -ForegroundColor Green "Showing file operations details..."
 If (!(Test-Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\OperationStatusManager")) {
