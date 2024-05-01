@@ -2,7 +2,7 @@ CT$ScriptName = 'functions.oneict.ch'
 $ScriptVersion = '10.04.2024'
 Set-ExecutionPolicy Bypass -Force
 
-Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion" 
+Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 #endregion
 
 Write-Host -ForegroundColor Green "[+] Function Set-DefaultProfilePersonalPrefOneICT"
