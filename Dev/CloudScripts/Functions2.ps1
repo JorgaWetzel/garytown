@@ -651,7 +651,6 @@ function Set-RunOnceScript {
     if ($manufacturer -match "VMware"){
     Write-Host "Installing VMware tools..."
     C:\ProgramData\chocolatey\bin\choco.exe install vmware-tools -y --no-progress --ignore-checksums
-    }
 
     # Zertifikat
     $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/choclatey.cer"
