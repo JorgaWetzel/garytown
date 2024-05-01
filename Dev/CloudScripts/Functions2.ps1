@@ -647,7 +647,7 @@ function Set-RunOnceScript {
     $manufacturer = (gwmi win32_computersystem).Manufacturer
     Write-Host "Das ist ein $manufacturer PC"
     
-    if ($manufacturer -match "VMware"){
+    if ($manufacturer -match "VMware")
     Write-Host "Installing VMware tools..."
     C:\ProgramData\chocolatey\bin\choco.exe install vmware-tools -y --no-progress --ignore-checksums
 
