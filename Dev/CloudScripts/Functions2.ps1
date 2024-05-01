@@ -12,7 +12,7 @@ function Set-DefaultProfilePersonalPrefOneICT {
     $VirtualRegistryPath_defaultuser = "HKLM\DefUser" #Load Command
     $VirtualRegistryPath_software = "HKLM:\DefUser\Software" #PowerShell Path
 
-    if (Test-Path -Path $VirtualRegistryPath_software){
+    if (Test-Path -Path $VirtualRegistryPath_software) {
         reg unload $VirtualRegistryPath_defaultuser | Out-Null # Just in case...
         Start-Sleep 1
     }
