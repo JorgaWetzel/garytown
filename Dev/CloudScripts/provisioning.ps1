@@ -204,4 +204,7 @@ Remove-AppFromTaskbar 'Microsoft Store'
     # best place to add more actions
     Write-Host "Alles ist fertig." -ForegroundColor Green
     Read-Host
+    
 }
+
+$null = Stop-Transcript -ErrorAction Ignore
