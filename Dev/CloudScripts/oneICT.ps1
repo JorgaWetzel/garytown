@@ -124,14 +124,7 @@ if ($env:SystemDrive -ne 'X:') {
     # Write-Host -ForegroundColor Gray "**Running HP Client Management Script Library**"
     # Install-ModuleHPCMSL
     # Invoke-HPTPMDownload
-
-    #Store Updates
-    Write-Host -ForegroundColor Gray "**Running Winget Updates**"
-    Write-Host -ForegroundColor Gray "Invoke-UpdateScanMethodMSStore"
-    Invoke-UpdateScanMethodMSStore
-    Write-Host -ForegroundColor Gray "winget upgrade --all --accept-package-agreements --accept-source-agreements"
-    winget upgrade --all --accept-package-agreements --accept-source-agreements
-    
+   
     Write-Host -ForegroundColor Gray "**Running Disablking TCP IP v6*"
     DisableIPv6
     
