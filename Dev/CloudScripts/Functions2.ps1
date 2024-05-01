@@ -608,6 +608,85 @@ Write-Host  -ForegroundColor Green "Disabling Bing Search in Start Menu..."
 
 #>
 
+
+# Get-AppxPackage | select @{n='name';e={"$($_.PackageFamilyName)!app"}} | ?{$_.name -like "**"}
+# Import-StartLayout
+$apps = 
+"Microsoft.Windows.Explorer",
+"Microsoft.Windows.ControlPanel",
+"Microsoft.WindowsCalculator_8wekyb3d8bbwe!app",
+"Microsoft.Paint_8wekyb3d8bbwe!app",
+"Microsoft.ScreenSketch_8wekyb3d8bbwe!app ",
+"Microsoft.MicrosoftEdge.Stable_8wekyb3d8bbwe!app",
+"C:\Program Files\Mozilla Firefox\firefox.exe",
+"C:\Program Files\Google\Chrome\Application\chrome.exe",
+"C:\Program Files\Microsoft Office\Office16\OUTLOOK.EXE",
+"C:\Program Files\Microsoft Office\Office16\WINWORD.EXE",
+"C:\Program Files\Microsoft Office\Office16\EXCEL.EXE",
+"C:\Program Files\Microsoft Office\Office16\POWERPNT.EXE",
+"MicrosoftTeams_8wekyb3d8bbwe!app",
+"Microsoft.YourPhone_8wekyb3d8bbwe!app",
+"Microsoft.MicrosoftStickyNotes_8wekyb3d8bbwe!app"
+$start_pins = @{
+    pinnedList = foreach ($app in $apps) {
+        if ($app -match "\w:\\") {
+            @{
+                desktopAppLink = $app
+            }
+        }
+        elseif ($app -match "Microsoft\.Windows\.") {
+            @{
+                desktopAppId = $app
+            }
+        }
+        else {
+            @{
+                packagedAppId = $app
+            }
+        }
+    }
+} | ConvertTo-Json -Compress
+
+$settings = 
+[PSCustomObject]@{
+    Path  = "SOFTWARE\Microsoft\PolicyManager\current\device\Start"
+    Value = $start_pins
+    #Value = '{ "pinnedList": [] }' # only for remove everything
+    Name  = "ConfigureStartPins"
+},
+[PSCustomObject]@{
+    Path  = "SOFTWARE\Microsoft\PolicyManager\current\device\Start"
+    Value = 1
+    Name  = "ConfigureStartPins_ProviderSet"
+},
+[PSCustomObject]@{
+    Path  = "SOFTWARE\Microsoft\PolicyManager\current\device\Start"
+    Value = "B5292708-1619-419B-9923-E5D9F3925E71"
+    Name  = "ConfigureStartPins_WinningProvider"
+},
+[PSCustomObject]@{
+    Path  = "SOFTWARE\Microsoft\PolicyManager\providers\B5292708-1619-419B-9923-E5D9F3925E71\default\Device\Start"
+    Value = $start_pins
+    #Value = '{ "pinnedList": [] }' # only for remove everything
+    Name  = "ConfigureStartPins"
+},
+[PSCustomObject]@{
+    Path  = "SOFTWARE\Microsoft\PolicyManager\providers\B5292708-1619-419B-9923-E5D9F3925E71\default\Device\Start"
+    Value = 1
+    Name  = "ConfigureStartPins_LastWrite"
+} | group Path
+
+foreach ($setting in $settings) {
+    $registry = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($setting.Name, $true)
+    if ($null -eq $registry) {
+        $registry = [Microsoft.Win32.Registry]::LocalMachine.CreateSubKey($setting.Name, $true)
+    }
+    $setting.Group | % {
+        $registry.SetValue($_.name, $_.value)
+    }
+    $registry.Dispose()
+}
+
 }
 
 
