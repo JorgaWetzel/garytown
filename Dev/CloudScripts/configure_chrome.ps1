@@ -28,7 +28,12 @@ $chrome_settings =
     Path  = "Software\Policies\Google\Chrome\ExtensionInstallForcelist"
     Value = "cjpalhdlnbpafiamejdnhcphjbkeiagm" # uBlock Origin
     Name  = ++$chrome_extension_count
-} | group Path
+},
+[PSCustomObject]@{
+    Path  = "Software\Policies\Google\Chrome\ExtensionInstallForcelist"
+    Value = "oldceeleldhonbafppcapldpdifcinji" # Grammatik
+    Name  = ++$chrome_extension_count
+}| group Path
 
 foreach($setting in $chrome_settings){
     $registry = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($setting.Name, $true)
