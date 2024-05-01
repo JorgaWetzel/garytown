@@ -646,7 +646,7 @@ function Set-RunOnceScript {
     C:\ProgramData\chocolatey\bin\choco.exe feature enable -n allowEmptyChecksums
     
     $manufacturer = (gwmi win32_computersystem).Manufacturer
-    "Das ist ein $manufacturer PC"
+    Write-Host "Das ist ein $manufacturer PC"
     
     if ($manufacturer -match "VMware"){
     Write-Host "Installing VMware tools..."
