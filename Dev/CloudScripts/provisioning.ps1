@@ -2,7 +2,8 @@ param(
     [switch]$first
 )
 
-$null = Stop-Transcript -ErrorAction Ignore
+$Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-Provisioning.log"
+$null = Start-Transcript -Path (Join-Path "C:\OSDCloud\Logs" $Transcript) -ErrorAction Ignore
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
 Invoke-Expression -Command (Invoke-RestMethod -Uri functions.osdcloud.com)
