@@ -74,67 +74,29 @@ do {
 } while (!$ping)
 $ProgressPreference = $ProgressPreference_bk
 
-if ($first) {
-    # setup windows update powershell module
-    $nuget = Get-PackageProvider 'NuGet' -ListAvailable -ErrorAction SilentlyContinue
+# Chocolatey software installation
+$packages =
+"adobereader",
+"microsoft-teams-new-bootstrapper",
+"googlechrome",
+"7zip.install",
+"firefox",
+"vlc",
+"jre8",
+"powertoys",
+"office365business",
+"onedrive",
+"Pdf24",
+"TeamViewer",
+"vcredist140",
+"zoom",
+"notepadplusplus.install"
+"onenote"
+"onedrive"
+"office365business" 	
+$packages | %{
+	choco install $_ -y --no-progress --ignore-checksums
 
-    if ($null -eq $nuget) {
-        Install-PackageProvider -Name NuGet -Confirm:$false -Force
-    }
-
-    $module = Get-Module 'PSWindowsUpdate' -ListAvailable
-
-    if ($null -eq $module) {
-        Install-Module PSWindowsUpdate -Confirm:$false -Force
-    }
-}
-
-# install windows updates
-$updates = Get-WindowsUpdate
-
-if ($null -ne $updates) {
-    Install-WindowsUpdate -AcceptAll -Install -IgnoreReboot | select KB, Result, Title, Size
-}
-
-$status = Get-WURebootStatus -Silent
-
-if ($status) {
-    $setup_runonce = @{
-        Path  = "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce"
-        Name  = "execute_provisioning"
-        Value = "cmd /c powershell.exe -ExecutionPolicy Bypass -File {0}\provisioning.ps1" -f "$($env:ProgramData)\provisioning"
-    }
-    New-ItemProperty @setup_runonce | Out-Null
-    Restart-Computer
-}
-else {
-    # chocolatey software installation
-	##
-	# Chocolatey part
-	##
-	# Chocolatey software installation
-	$packages =
-	"adobereader",
-	"microsoft-teams-new-bootstrapper",
-	"googlechrome",
-	"7zip.install",
-	"firefox",
-	"vlc",
-	"jre8",
-	"powertoys",
-	"office365business",
-	"onedrive",
-	"Pdf24",
-	"TeamViewer",
-	"vcredist140",
-	"zoom",
-	"notepadplusplus.install"
-	"onenote"
- 	"onedrive"
-	"office365business" 	
-	$packages | %{
-		choco install $_ -y --no-progress --ignore-checksums
-	}
 
 # Version=1
 
