@@ -341,16 +341,16 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnec
 netsh advfirewall firewall set rule group="remote desktop" new enable=yes
 Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
 Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-#>
+
 
 Write-Host  -ForegroundColor Green "Running OO Shutup with Recommended Settings"
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/cole-bermudez/Windows-Deployment/main/ooshutup10.cfg" -Outfile "C:\Support\Scripts\ooshutup10.cfg"
 Invoke-WebRequest -Uri "https://dl5.oo-software.com/files/ooshutup10/OOSU10.exe" -outFile "C:\Support\Scripts\OOSU10.exe"
 cd C:\Support\Scripts
 ./OOSU10.exe ooshutup10.cfg /quiet
+#>
 
 Write-Host  -ForegroundColor Green "Disabling Telemetry..."
-    $ResultText.text += "`r`n" +"Disabling Telemetry..."
     Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection" -Name "AllowTelemetry" -Type DWord -Value 0
     Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" -Name "AllowTelemetry" -Type DWord -Value 0
     Disable-ScheduledTask -TaskName "Microsoft\Windows\Application Experience\Microsoft Compatibility Appraiser" | Out-Null
@@ -407,8 +407,8 @@ Write-Host  -ForegroundColor Green "Disabling Telemetry..."
     Stop-Service "dmwappushservice" -WarningAction SilentlyContinue
     Set-Service "dmwappushservice" -StartupType Disabled
     Write-Host  -ForegroundColor Green "Stopping and disabling Home Groups services..."
-    Stop-Service "HomeGroupListener" -WarningAction SilentlyContinue
-    Set-Service "HomeGroupListener" -StartupType Disabled
+    # Stop-Service "HomeGroupListener" -WarningAction SilentlyContinue
+    # Set-Service "HomeGroupListener" -StartupType Disabled
     Stop-Service "HomeGroupProvider" -WarningAction SilentlyContinue
     Set-Service "HomeGroupProvider" -StartupType Disabled
     Write-Host  -ForegroundColor Green "Disabling Remote Assistance..."
@@ -551,7 +551,6 @@ foreach ($service in $services) {
 }
 
 Write-Host  -ForegroundColor Green "Disabling Bing Search in Start Menu..."
-    $ResultText.text = "`r`n" +"`r`n" + "Disabling Search, Cortana, Start menu search... Please Wait"
     Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search" -Name "BingSearchEnabled" -Type DWord -Value 0
     Write-Host  -ForegroundColor Green "Disabling Cortana"
     Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Search" -Name "CortanaConsent" -Type DWord -Value 0
