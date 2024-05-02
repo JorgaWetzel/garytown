@@ -585,7 +585,6 @@ Write-Host  -ForegroundColor Green "Disabling Bing Search in Start Menu..."
     Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -Name "NoAutoRebootWithLoggedOnUsers" -Type DWord -Value 1
     Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -Name "AUPowerManagement" -Type DWord -Value 0
     Write-Host  -ForegroundColor Green "Disabled driver offering through Windows Update"
-    $ResultText.text = "`r`n" +"`r`n" + "Set Windows Update to Sane Settings"
 
 #>
 
