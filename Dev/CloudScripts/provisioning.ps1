@@ -19,7 +19,11 @@ osdcloud-InstallWinGet
         Write-Host -ForegroundColor Green '[+] winget upgrade --all --accept-source-agreements --accept-package-agreements'
 	winget install --id "9WZDNCRFJ3PZ" --exact --source msstore --accept-package-agreements --accept-source-agreements
  	Write-Host -ForegroundColor Green '[+] winget install company portal (unternehmenbsportal)'
-        # winget upgrade --all --accept-source-agreements --accept-package-agreements
+        ## winget upgrade --all --accept-source-agreements --accept-package-agreements
+	# $command = "winget install --id `"9WZDNCRFJ3PZ`" --exact --source msstore --accept-package-agreements --accept-source-agreements"
+ 	# $runOncePath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
+  	# $taskName = "InstallAppAtLogon"
+   	# Set-ItemProperty -Path $runOncePath -Name $taskName -Value "cmd.exe /c powershell -Command $command" -Force
     }
 # osdcloud-InstallPwsh
 # Write-Host -ForegroundColor Green "[+] pwsh.osdcloud.com Complete"
