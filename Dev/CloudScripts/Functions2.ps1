@@ -706,6 +706,11 @@ function Set-RunOnceScript {
             Name  = "execute_provisioning"
             Value = "cmd /c powershell.exe -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\provisioning.ps1"
         },
+	[PSCustomObject]@{
+            Path  = "SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
+            Name  = "InstallCorporatePortal"
+            Value = cmd.exe /c powershell -Command "winget install --id "9WZDNCRFJ3PZ" --exact --source msstore --accept-package-agreements --accept-source-agreements"
+        },
         [PSCustomObject]@{
             Path  = "SOFTWARE\Policies\Microsoft\Windows\OOBE"
             Name  = "DisablePrivacyExperience"
