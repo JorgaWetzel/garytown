@@ -154,9 +154,6 @@ if ($env:SystemDrive -ne 'X:') {
 
     Write-Host -ForegroundColor Gray "**oneICT Choclatey Framework and Settings**"
     Set-Chocolatey
-
-    Write-Host -ForegroundColor Gray "**Disalbe IP V6**"
-    DisableIPv6
     
     $null = Stop-Transcript -ErrorAction Ignore
 }
