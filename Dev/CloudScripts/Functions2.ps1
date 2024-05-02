@@ -125,27 +125,27 @@ $ResultText.text += "`r`nAdjusted VFX for performance"
 
 Write-Host -ForegroundColor Green "Showing tray icons..."
 Set-ItemProperty -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer" -Name "EnableAutoTray" -Value 0 -Type DWORD
-Write-Host -ForegroundColor Green "Done - Now showing all tray icons"
 
 # Finish by unloading the registry
 Start-Sleep -Seconds 1
 reg unload $VirtualRegistryPath_defaultuser | Out-Null
 }
 
-
-
 Write-Host -ForegroundColor Green "[+] Function Set-MachineSettingsOneICT"
 function Set-MachineSettingsOneICT {
     #Set Default Machine Settings
 
 # Windows will tell you exactly what it is doing when it is shutting down or is booting...
+Write-Host -ForegroundColor Green "[+] Boot and shutdownVerboseStatus "
 reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\policies\system" /v "VerboseStatus" /t REG_DWORD /d "1" /f
 
 #EDGE
+Write-Host -ForegroundColor Green "[+] Edge Disable First Run wizard"
 REG ADD  "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "PersonalizationReportingEnabled" /t REG_DWORD /d 0 /f
 REG ADD  "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "ShowRecommendationsEnabled" /t REG_DWORD /d 0 /f
 REG ADD  "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "HideFirstRunExperience" /t REG_DWORD /d 1 /f
 
+Write-Host -ForegroundColor Green "[+] Edge Set Search Engine and Start Page"
 # Define search engines as JSON
 $searchEngines = @(
     @{ keyword = "duck"; name = "duckduckgo.com"; search_url = "https://duckduckgo.com/?q={searchTerms}" },
@@ -197,13 +197,12 @@ function Set-RegistrySettings($settings) {
     }
 }
 
-<#
+Write-Host -ForegroundColor Green "[+] Set Default App Associations"
 # Exportieren der Standard-App-Assoziationen und Schreiben der XML-Konfiguration
 $defaultAssociationsPath = "$env:ProgramData\provisioning\DefaultAssociationsConfiguration.xml"
 if (-Not (Test-Path $defaultAssociationsPath)) {
    New-Item $defaultAssociationsPath -Force -ItemType File
 }
-#>
 
 $defaultAssociationsXml = @'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -218,7 +217,7 @@ $defaultAssociationsXml = @'
 '@
 $defaultAssociationsXml | Out-File $defaultAssociationsPath -Encoding UTF8 -Force
 
-
+Write-Host -ForegroundColor Green "[+] Set Google Chrome Setting"
 # Allgemeine Einstellungen für Google Chrome
 $chromeSettings = @(
     [PSCustomObject]@{ Path = "SOFTWARE\Policies\Google\Chrome"; Name = "HomepageLocation"; Value = "https://google.ch" },
@@ -261,7 +260,6 @@ Write-Host -ForegroundColor Green "Configure Over Provisioning via TRIM"
 fsutil behavior set DisableDeleteNotify 0
 
 # Enable system restore on C:\
-
 Write-Host -ForegroundColor Green "Enabling system restore..."
 Enable-ComputerRestore -Drive "$env:SystemDrive"
 
@@ -324,6 +322,7 @@ net accounts /lockoutduration:30
 net accounts /lockoutwindow:30
 
 #Enable screen saver
+<#
 Write-Host -ForegroundColor Green "Further Hardening:"
 Write-Host -ForegroundColor Green "`nScreen Saver Enabled `nScreen Saver Timeout: 15 minutes `nSpecific Screen Saver Set `nPassword Protected Screen Saver `nSceen Saver Cannot Be Changed"
 REG DEL "HKLM\SOFTWARE\Policies\Microsoft\Windows\Control Panel\Desktop" /v ScreenSaveActive /f
@@ -337,11 +336,12 @@ REG ADD "HKLM:\Software\Policies\Microsoft\Windows\Control Panel\Desktop" /v Scr
 REG ADD "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v NoDispScrSavPage \t REG_DWORD /d 1 /f
 
 #Enable RDP
-#Write-Host -ForegroundColor Green "Enable RDP"
-#reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
-#netsh advfirewall firewall set rule group="remote desktop" new enable=yes
-#Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
-#Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+Write-Host -ForegroundColor Green "Enable RDP"
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
+netsh advfirewall firewall set rule group="remote desktop" new enable=yes
+Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
+Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+#>
 
 Write-Host  -ForegroundColor Green "Running OO Shutup with Recommended Settings"
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/cole-bermudez/Windows-Deployment/main/ooshutup10.cfg" -Outfile "C:\Support\Scripts\ooshutup10.cfg"
