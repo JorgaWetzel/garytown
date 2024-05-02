@@ -125,23 +125,27 @@ if ($env:SystemDrive -ne 'X:') {
     # Install-ModuleHPCMSL
     # Invoke-HPTPMDownload
    
-    Write-Host -ForegroundColor Gray "**Running Disablking TCP IP v6*"
+    Write-Host -ForegroundColor Gray "**Running Disabling TCP IP v6*"
     DisableIPv6
     
     Write-Host -ForegroundColor Gray "**Running Chocolatey Script and Settings**"
+    Write-Host -ForegroundColor Gray "" 
     Set-Chocolatey
 
     Write-Host -ForegroundColor Gray "**Running RunOnce Script to install Default Apps**"
+    Write-Host -ForegroundColor Gray "" 
     Set-RunOnceScript
 
     #Modified Version of Andrew's Debloat Script
     Write-Host -ForegroundColor Gray "**Running Debloat Script**" 
+    Write-Host -ForegroundColor Gray "" 
     iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Debloat.ps1)
     Invoke-Debloat
 
     #Set Time Zone
-    Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
-    Set-TimeZoneFromIP
+    #Write-Host -ForegroundColor Gray "" 
+    #Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
+    #Set-TimeZoneFromIP
     
     Write-Host -ForegroundColor Gray "**oneICT User Settings**"
     Set-DefaultProfilePersonalPrefOneICT
