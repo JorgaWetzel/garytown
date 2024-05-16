@@ -17,8 +17,8 @@ osdcloud-InstallPowerShellModule -Name PSReadLine
 osdcloud-InstallWinGet
     if (Get-Command 'WinGet' -ErrorAction SilentlyContinue) {
         Write-Host -ForegroundColor Green '[+] winget upgrade --all --accept-source-agreements --accept-package-agreements'
-	winget install --id "9WZDNCRFJ3PZ" --exact --source msstore --accept-package-agreements --accept-source-agreements
- 	Write-Host -ForegroundColor Green '[+] winget install company portal (unternehmenbsportal)'
+	# winget install --id "9WZDNCRFJ3PZ" --exact --source msstore --accept-package-agreements --accept-source-agreements
+ 	# Write-Host -ForegroundColor Green '[+] winget install company portal (unternehmenbsportal)'
         ## winget upgrade --all --accept-source-agreements --accept-package-agreements
 	# $command = "winget install --id `"9WZDNCRFJ3PZ`" --exact --source msstore --accept-package-agreements --accept-source-agreements"
  	# $runOncePath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
