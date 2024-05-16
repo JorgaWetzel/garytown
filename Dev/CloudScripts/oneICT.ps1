@@ -153,7 +153,7 @@ if ($env:SystemDrive -ne 'X:') {
     Write-Host -ForegroundColor Gray "**oneICT Machine SettingsP**"
     Set-MachineSettingsOneICT
 
-    Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
+    Write-Host -ForegroundColor Gray "**Setting RunOnce Script**"
     Set-RunOnceScript
 
     Write-Host -ForegroundColor Gray "**oneICT Choclatey Framework and Settings**"
