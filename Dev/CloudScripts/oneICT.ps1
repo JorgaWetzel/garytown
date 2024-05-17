@@ -18,12 +18,13 @@ Set-ExecutionPolicy Bypass -Force
 if ($env:SystemDrive -eq 'X:') {
     Write-Host -ForegroundColor Green "Starting oneICT Deployment from Cloud Scripts"
     iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/win11.ps1)
-    
+    pause
     #Create Unattend.xml
     $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Unattend.xml"
     $destinationPath = "C:\Windows\Panther\unattend.xml"
     Invoke-WebRequest -Uri $url -OutFile $destinationPath    
-    # Notepad $destinationPath
+    Notepad $destinationPath
+    pause
     
     #Create Custom SetupComplete
     $ScriptsPath = "C:\Windows\Setup\Scripts"
