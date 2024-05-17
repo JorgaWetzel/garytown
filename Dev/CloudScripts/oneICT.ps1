@@ -22,7 +22,7 @@ if ($env:SystemDrive -eq 'X:') {
     $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Unattend.xml"
     $destinationPath = "C:\Windows\Panther\unattend.xml"
     Invoke-WebRequest -Uri $url -OutFile $destinationPath    
-    Notepad $destinationPath
+    # Notepad $destinationPath
     
     #Create Custom SetupComplete
     $ScriptsPath = "C:\Windows\Setup\Scripts"
