@@ -96,7 +96,7 @@ $packages =
 "office365business" 	
 $packages | %{
 	choco install $_ -y --no-progress --ignore-checksums
-
+}
 
 # Version=1
 
