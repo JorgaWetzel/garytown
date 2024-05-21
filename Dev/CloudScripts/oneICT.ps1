@@ -157,6 +157,9 @@ if ($env:SystemDrive -ne 'X:') {
 
     Write-Host -ForegroundColor Gray "**oneICT Choclatey Framework and Settings**"
     Set-Chocolatey
+
+    Write-Host -ForegroundColor Gray "**Install Office 365**"
+    choco install office365business --params "'/exclude:Access Groove Lync Publisher /language:de-DE /updates:TRUE /eula:FALSE'" -y --no-progress --ignore-checksums	
     
     $null = Stop-Transcript -ErrorAction Ignore
 }
