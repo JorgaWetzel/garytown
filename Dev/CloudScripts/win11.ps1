@@ -25,7 +25,7 @@ $OSActivation = 'Retail'
 $OSLanguage = 'de-de'
 $OSImageIndex =  '8'
 
-
+# Full List https://github.com/OSDeploy/OSD/blob/06d544f0bff26b560e19676582d273e1c229cfac/Public/OSDCloud.ps1#L521
 #Set OSDCloud Vars
 $Global:MyOSDCloud = [ordered]@{
     Restart = [bool]$False
