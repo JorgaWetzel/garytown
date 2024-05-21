@@ -40,7 +40,7 @@ $Global:MyOSDCloud = [ordered]@{
     SyncMSUpCatDriverUSB = [bool]$true
     CheckSHA1 = [bool]$true
     SkipODT = [bool]$true
-    ODTFile = "1"
+    ODTSetupFile = "X:\OSDCloud\ODT\O365ProPlusRetail\Current\Current.xml"
 }
 
 #Testing MS Update Catalog Driver Sync
