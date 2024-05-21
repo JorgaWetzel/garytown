@@ -678,7 +678,7 @@ function Set-RunOnceScript {
     $destinationFolder = "C:\Windows\Setup\Scripts"
     $destinationPath = Join-Path -Path $destinationFolder -ChildPath "provisioning.ps1"
     Invoke-WebRequest -Uri $url -OutFile $destinationPath
-    
+
     $settings = @(
         [PSCustomObject]@{
             Path  = "SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
@@ -690,21 +690,19 @@ function Set-RunOnceScript {
             Name  = "DisablePrivacyExperience"
             Value = 1
         }
-    ) | Group-Object Path
-    
+    )
+
     foreach ($setting in $settings) {
         # Öffne den angegebenen Registrierungsschlüssel (oder erstelle ihn, falls er nicht existiert)
-        $registry = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($setting.Name, $true)
+        $registry = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($setting.Path, $true)
         if ($null -eq $registry) {
-            $registry = [Microsoft.Win32.Registry]::LocalMachine.CreateSubKey($setting.Name, $true)
+            $registry = [Microsoft.Win32.Registry]::LocalMachine.CreateSubKey($setting.Path)
         }
-        # Setze die Werte für den Registrierungsschlüssel basierend auf den Gruppenobjektdaten
-        foreach ($item in $setting.Group) {
-            $registry.SetValue($item.Name, $item.Value)
-        }
-        $registry.Dispose()
+        # Setze die Werte für den Registrierungsschlüssel
+        $registry.SetValue($setting.Name, $setting.Value)
+        $registry.Close()
     }
-    }
+}
 
 
     Write-Host -ForegroundColor Green "[+] Function Set-Chocolatey"
