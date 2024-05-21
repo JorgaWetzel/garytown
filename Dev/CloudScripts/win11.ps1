@@ -39,6 +39,8 @@ $Global:MyOSDCloud = [ordered]@{
     ShutdownSetupComplete = [bool]$False
     SyncMSUpCatDriverUSB = [bool]$true
     CheckSHA1 = [bool]$true
+    SkipODT = [bool]$true
+    ODTFile = "1"
 }
 
 #Testing MS Update Catalog Driver Sync
