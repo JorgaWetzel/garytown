@@ -15,7 +15,7 @@ Set-ExecutionPolicy Bypass -Force
 
 #WinPE Stuff
 if ($env:SystemDrive -eq 'X:') {
-    Write-Host -ForegroundColor Green "Starting win11.garytown.com"
+    Write-Host -ForegroundColor Green "Starting win11.oneict.ch"
     iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/win11.ps1)
     
     #Create Unattend.xml
@@ -69,6 +69,7 @@ if ($transcriptLine -ne $null -and $restartLine -ne $null) {
     # restart-computer
 
 }
+
 
 #Non-WinPE
 if ($env:SystemDrive -ne 'X:') {

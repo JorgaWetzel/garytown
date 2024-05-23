@@ -4,9 +4,9 @@ Creates Setup Complete Files
 #>
 
 $ScriptName = 'hope.garytown.com'
-$ScriptVersion = '24.5.20.1'
+$ScriptVersion = '24.1.22.1'
 
-iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
+iex (irm functions.garytown.com)
 #region functions
 function Set-SetupCompleteCreateStartHOPEonUSB {
     
@@ -38,7 +38,6 @@ function Set-SetupCompleteCreateStartHOPEonUSB {
     New-Item -Path $PSFilePath -ItemType File -Force
     Add-Content -path $PSFilePath "Write-Output 'Starting SetupComplete HOPE Script Process'"
     Add-Content -path $PSFilePath "Write-Output 'iex (irm hope.garytown.com)'"
-    Add-Content -path $PSFilePath 'if ((Test-WebConnection) -ne $true){Write-error "No Internet, Sleeping 2 Minutes" ; start-sleep -seconds 120}'
     Add-Content -path $PSFilePath 'iex (irm hope.garytown.com)'
 }
 
@@ -73,11 +72,9 @@ Set-ExecutionPolicy Bypass -Force
 if ($env:SystemDrive -eq 'X:') {
     #Create Custom SetupComplete on USBDrive, this will get copied and run during SetupComplete Phase thanks to OSD Function: Set-SetupCompleteOSDCloudUSB
     Set-SetupCompleteCreateStartHOPEonUSB
-    Write-Host -ForegroundColor Green "Mapping Drive W: to \\WD1TB\OSD"
-    net use w: \\wd1tb\osd /user:OSDCloud P@ssw0rd
     
-    Write-Host -ForegroundColor Green "Starting win11.garytown.com"
-    iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/win11.ps1)
+    Write-Host -ForegroundColor Green "Starting win10.garytown.com"
+    iex (irm win11.garytown.com)
 
     #Create Marker so it knows this is a "HOPE" computer - No longer need thanks to the custom setup complete above.
     #new-item -Path C:\OSDCloud\configs -Name hope.JSON -ItemType file
@@ -87,16 +84,6 @@ if ($env:SystemDrive -eq 'X:') {
 
 #Non-WinPE
 if ($env:SystemDrive -ne 'X:') {
-    Set-ExecutionPolicy Bypass -Force
-
-    #Setup Post Actions Scheduled Task
-    iex (irm "https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScripts/PostActionsTask.ps1")
-
-    #Disable Auto Bitlocker
-    New-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\BitLocker -Name PreventDeviceEncryption -PropertyType dword -Value 1 -Force
-    
-    #Add Functions
-    iex (irm functions.garytown.com)
     #Remove Personal Teams
     Write-Host -ForegroundColor Gray "**Removing Default Chat Tool**" 
     try {
@@ -114,18 +101,12 @@ if ($env:SystemDrive -ne 'X:') {
     #Set-DOPoliciesGPORegistry
     
     Write-Host -ForegroundColor Gray "**Running Test.garytown.com**" 
-    iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/test.ps1)
+    iex (irm test.garytown.com)
      
     #Set Time Zone to Automatic Update
-    #Write-Host -ForegroundColor Gray "**Setting Time Zone for Auto Update**" 
-    #Enable-AutoZimeZoneUpdate
-
-    #Enable Microsoft Other Updates:
-    (New-Object -com "Microsoft.Update.ServiceManager").AddService2("7971f918-a847-4430-9279-4a52d1efe18d",7,"")
-
-    #Enable "Notify me when a restart is required to finish updating"
-    New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings -Name RestartNotificationsAllowed2 -PropertyType dword -Value 1
-
+    
+    Write-Host -ForegroundColor Gray "**Setting Time Zone for Auto Update**" 
+    Enable-AutoZimeZoneUpdate
     Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
     Set-DefaultProfilePersonalPref
     
@@ -154,13 +135,7 @@ if ($env:SystemDrive -ne 'X:') {
 
     #Modified Version of Andrew's Debloat Script
     Write-Host -ForegroundColor Gray "**Running Debloat Script**" 
-    iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Debloat.ps1)
-
-    #Lenovo Updates
-    try {
-        iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScripts/LenovoUpdate.ps1)
-    }
-    catch {}
+    iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScripts/Debloat.ps1)
 
     #Set Time Zone
     Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"

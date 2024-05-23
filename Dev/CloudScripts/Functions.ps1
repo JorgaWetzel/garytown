@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '24.3.14.1'
+$ScriptVersion = '24.5.21.1'
 Set-ExecutionPolicy Bypass -Force
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
@@ -346,6 +346,9 @@ Function Set-Win11ReqBypassRegValues {
 
 Write-Host -ForegroundColor Green "[+] Function Start-WindowsUpdate"
 iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Start-WindowsUpdate.ps1)
+
+Write-Host -ForegroundColor Green "[+] Functions for HP TPM"
+iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Get-HPTPMDetermine.ps1)
 
 Write-Host -ForegroundColor Green "[+] Function Start-WindowsUpdateDriver"
 iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Start-WindowsUpdateDrivers.ps1)
@@ -855,6 +858,9 @@ iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScrip
 Write-Host -ForegroundColor Green "[+] Function Set-ThisPC"
 function Set-ThisPC {iex (irm https://raw.githubusercontent.com/gwblok/garytown/f64b267ba11c3a632ee0d19656875f93b715a989/OSD/CloudOSD/Set-ThisPC.ps1)}
 
+Write-Host -ForegroundColor Green "[+] Function Check-ComplianceKB5025885"
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/ConfigMgr/Baselines/CVE-2023-24932/KB5025885-CheckCompliance.ps1)
+
 if ((Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer -match "Lenovo"){
 	Write-Host -ForegroundColor Green "[+] Function Install-LenovoDMM"
     function Install-LenovoDMM {
@@ -863,4 +869,11 @@ if ((Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer -match "Lenov
         Expand-Archive -Path "$env:TEMP\ldmm.zip" -DestinationPath "$env:ProgramFiles\WindowsPowerShell\Modules" -Force
         Import-Module LnvDeviceManagement -Force -Verbose
     }
+    	Write-Host -ForegroundColor Green "[+] Function Install-LenovoSystemUpdater"
+	iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Install-LenovoApps.ps1)
 }
+if ((Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer -match "Dell"){
+	Write-Host -ForegroundColor Green "[+] Function OSDCloud-DCU..."
+	iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/cloud/modules/devicesdell.psm1)
+}
+
