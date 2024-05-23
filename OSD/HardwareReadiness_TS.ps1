@@ -1,6 +1,21 @@
+<#
+Modified for OSD by @gwblok
+
+2022.01.27
+
+Creates several TS Variables
+
+Changes
+2022.01.28
+ - Changed Get-TPM to using Get-CimInstance -Namespace "ROOT\cimv2\Security\MicrosoftTpm" -ClassName Win32_TPM
+2024.05.07
+ - Added logic to use Disk 0 as default if TS Var OSDisk doesn't exist
+ - Added logic to still work when TPM wasn't already owned (think first time OSD on VM)
+
+#>
+
 #=============================================================================================================================
 #
-# Modified by @gwblok to create TS Variables based on this scripts findings.
 #
 # Script Name:     HardwareReadiness.ps1
 # Description:     Verifies the hardware compliance. Return code 0 for success. 
@@ -26,8 +41,12 @@
 
 try {
 $tsenv = new-object -comobject Microsoft.SMS.TSEnvironment
+$InWinPE = $tsenv.value('_SMSTSInWinPE')
+$OSDisk = $tsenv.value('OSDisk')
+if ($InWinPE){
+    Write-Output "Running Script in WinPE Mode"
+    }
 }
-
 catch{
 Write-Output "Not in TS"
     }
@@ -266,8 +285,16 @@ using System.Runtime.InteropServices;
 
 # Storage
 try {
-    $osDrive = Get-WmiObject -Class Win32_OperatingSystem | Select-Object -Property SystemDrive
-    $osDriveSize = Get-WmiObject -Class Win32_LogicalDisk -filter "DeviceID='$($osDrive.SystemDrive)'" | Select-Object @{Name = "SizeGB"; Expression = { $_.Size / 1GB -as [int] } }  
+
+    if ($InWinPE){
+        if ($OSDisk){$osDrive = get-volume -DriveLetter ($OSDisk[0])}
+        else {$osDrive = Get-Disk -Number 0}
+        $osDriveSize = $osDrive | Select-Object @{Name = "SizeGB"; Expression = { $_.Size / 1GB -as [int] } } 
+        }
+    else {
+        $osDrive = Get-WmiObject -Class Win32_OperatingSystem | Select-Object -Property SystemDrive
+        $osDriveSize = Get-WmiObject -Class Win32_LogicalDisk -filter "DeviceID='$($osDrive.SystemDrive)'" | Select-Object @{Name = "SizeGB"; Expression = { $_.Size / 1GB -as [int] } } 
+        }
 
     if ($null -eq $osDriveSize) {
         UpdateReturnCode -ReturnCode 1
@@ -333,8 +360,15 @@ catch {
 
 # TPM
 try {
-    $tpm = Get-Tpm
-
+    if ($InWinPE){
+        $tpm = Get-CimInstance -Namespace "ROOT\cimv2\Security\MicrosoftTpm" -ClassName Win32_TPM 
+        }
+    else {
+        $tpm = Get-Tpm
+        }
+    
+    #$tpm = Get-Tpm
+    
     if ($null -eq $tpm) {
         UpdateReturnCode -ReturnCode 1
         $outObject.returnReason += $logFormatReturnReason -f $TPM_STRING
@@ -342,8 +376,8 @@ try {
         $exitCode = 1
         $HR_TPM = $FAIL_STRING
     }
-    elseif ($tpm.TpmPresent) {
-        $tpmVersion = Get-WmiObject -Class Win32_Tpm -Namespace root\CIMV2\Security\MicrosoftTpm | Select-Object -Property SpecVersion
+    elseif ($tpm.IsOwned_InitialValue -or $tpm.TpmPresent -or $tpm.IsEnabled_InitialValue -or $tpm.IsActivated_InitialValue) {
+        $tpmVersion = Get-CimInstance -Namespace "ROOT\cimv2\Security\MicrosoftTpm" -ClassName Win32_TPM  | Select-Object -Property SpecVersion
 
         if ($null -eq $tpmVersion.SpecVersion) {
             UpdateReturnCode -ReturnCode 1
@@ -376,7 +410,12 @@ try {
         else {
             UpdateReturnCode -ReturnCode  1
             $outObject.returnReason += $logFormatReturnReason -f $TPM_STRING
-            $outObject.logging += $logFormat -f $TPM_STRING, $TPM_VERSION_STRING, ($tpm.TpmPresent), $FAIL_STRING
+            if ($InWinPE){
+                $outObject.logging += $logFormat -f $TPM_STRING, $TPM_VERSION_STRING, "NA", $FAIL_STRING
+                }
+            else {                
+                $outObject.logging += $logFormat -f $TPM_STRING, $TPM_VERSION_STRING, ($tpm.TpmPresent), $FAIL_STRING
+                }
             $HR_TPM = $FAIL_STRING
         }
         $exitCode = 1
@@ -547,4 +586,28 @@ if ($tsenv)
     $tsenv.value("HR_Memory") = $HR_Memory
     Write-Output "HR_Storage = $HR_Storage"
     $tsenv.value("HR_Storage") = $HR_Storage
+    if ($outObject.returnCode -ne 0)
+        {
+        write-output "HR_ReturnLogging = $($outObject.logging)"
+        $tsenv.value("HR_ReturnLogging") = $outObject.logging
+        }
+    }
+
+else
+    {
+    Write-Output "HR_ReturnResult = $($outObject.returnResult)"
+    if ($outObject.returnReason)
+        {
+        Write-Output "HR_ReturnReason = $($outObject.returnReason)"
+        }
+    Write-Output "HR_SecureBoot = $HR_SecureBoot"
+    Write-Output "HR_CPU = $HR_CPU"
+    Write-Output "HR_TPM = $HR_TPM"
+    Write-Output "HR_Memory = $HR_Memory"
+    Write-Output "HR_Storage = $HR_Storage"
+    if ($outObject.returnCode -ne 0)
+        {
+        write-output "HR_ReturnLogging = $($outObject.logging)"
+
+        }
     }

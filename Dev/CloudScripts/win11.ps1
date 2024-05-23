@@ -26,10 +26,10 @@ $OSActivation = 'Retail'
 $OSLanguage = 'de-de'
 $OSImageIndex =  '8'
 
-
+# Full List https://github.com/OSDeploy/OSD/blob/06d544f0bff26b560e19676582d273e1c229cfac/Public/OSDCloud.ps1#L521
 #Set OSDCloud Vars
 $Global:MyOSDCloud = [ordered]@{
-    Restart = [bool]$true
+    Restart = [bool]$False
     RecoveryPartition = [bool]$true
     OEMActivation = [bool]$True
     WindowsUpdate = [bool]$true
@@ -39,6 +39,7 @@ $Global:MyOSDCloud = [ordered]@{
     ClearDiskConfirm = [bool]$False
     ShutdownSetupComplete = [bool]$False
     SyncMSUpCatDriverUSB = [bool]$true
+    CheckSHA1 = [bool]$true
 }
 
 #Testing MS Update Catalog Driver Sync
@@ -96,13 +97,11 @@ Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation
 # Start-OSDCloudGUIDev
 
 write-host "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot" -ForegroundColor Green
-
 <#
 if (Test-DISMFromOSDCloudUSB){
     Start-DISMFromOSDCloudUSB
 }
 #>
-
 #Used in Testing "Beta Gary Modules which I've updated on the USB Stick"
 #$OfflineModulePath = (Get-ChildItem -Path "C:\Program Files\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
 #write-output "Updating $OfflineModulePath using $ModulePath"

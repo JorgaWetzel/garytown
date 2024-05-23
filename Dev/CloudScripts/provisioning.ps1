@@ -2,7 +2,8 @@ param(
     [switch]$first
 )
 
-$null = Stop-Transcript -ErrorAction Ignore
+$Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-Provisioning.log"
+$null = Start-Transcript -Path (Join-Path "C:\OSDCloud\Logs" $Transcript) -ErrorAction Ignore
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
 Invoke-Expression -Command (Invoke-RestMethod -Uri functions.osdcloud.com)
@@ -13,10 +14,16 @@ osdcloud-InstallPackageManagement
 osdcloud-TrustPSGallery
 osdcloud-InstallPowerShellModule -Name Pester
 osdcloud-InstallPowerShellModule -Name PSReadLine
-osdcloud-InstallWinGet
+# osdcloud-InstallWinGet
     if (Get-Command 'WinGet' -ErrorAction SilentlyContinue) {
         Write-Host -ForegroundColor Green '[+] winget upgrade --all --accept-source-agreements --accept-package-agreements'
-        winget upgrade --all --accept-source-agreements --accept-package-agreements
+	Write-Host -ForegroundColor Green '[+] winget install company portal (unternehmenbsportal)'
+	winget install --id "9WZDNCRFJ3PZ" --exact --source msstore --accept-package-agreements --accept-source-agreements
+        ## winget upgrade --all --accept-source-agreements --accept-package-agreements
+	# $command = "winget install --id `"9WZDNCRFJ3PZ`" --exact --source msstore --accept-package-agreements --accept-source-agreements"
+ 	# $runOncePath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
+  	# $taskName = "InstallAppAtLogon"
+   	# Set-ItemProperty -Path $runOncePath -Name $taskName -Value "cmd.exe /c powershell -Command $command" -Force
     }
 # osdcloud-InstallPwsh
 # Write-Host -ForegroundColor Green "[+] pwsh.osdcloud.com Complete"
@@ -27,14 +34,32 @@ osdcloud-InstallWinGet
 $usb_drive_name = 'USB Drive'
 
 $provisioning = [System.IO.DirectoryInfo]"$($env:ProgramData)\provisioning"
+$urls = @(
+    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_brave.ps1",
+    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_chrome.ps1",
+    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_edge.ps1",
+    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_firefox.ps1"
+)
 
-# run computer/software configuration scripts
-if ($first) {
-    . "$($provisioning.FullName)\configure_brave.ps1"
-    . "$($provisioning.FullName)\configure_chrome.ps1"
-    . "$($provisioning.FullName)\configure_edge.ps1"
-    . "$($provisioning.FullName)\configure_firefox.ps1"
+# Stelle sicher, dass das Verzeichnis existiert
+if (-not (Test-Path $provisioning)) {
+    New-Item -ItemType Directory -Path $provisioning -Force
 }
+
+# Herunterladen und Ausführen der Konfigurationsskripte
+foreach ($url in $urls) {
+    $scriptName = [System.IO.Path]::GetFileName($url)
+    $scriptPath = Join-Path -Path $provisioning -ChildPath $scriptName
+    
+    # Herunterladen, wenn das Skript noch nicht existiert
+    if (-not (Test-Path $scriptPath)) {
+        Invoke-WebRequest -Uri $url -OutFile $scriptPath
+    }
+    
+    # Ausführen des Skripts
+    . $scriptPath
+}
+
 
 # wait for network
 $ProgressPreference_bk = $ProgressPreference
@@ -49,65 +74,29 @@ do {
 } while (!$ping)
 $ProgressPreference = $ProgressPreference_bk
 
-if ($first) {
-    # setup windows update powershell module
-    $nuget = Get-PackageProvider 'NuGet' -ListAvailable -ErrorAction SilentlyContinue
-
-    if ($null -eq $nuget) {
-        Install-PackageProvider -Name NuGet -Confirm:$false -Force
-    }
-
-    $module = Get-Module 'PSWindowsUpdate' -ListAvailable
-
-    if ($null -eq $module) {
-        Install-Module PSWindowsUpdate -Confirm:$false -Force
-    }
+# Chocolatey software installation
+$packages =
+"adobereader",
+"microsoft-teams-new-bootstrapper",
+"googlechrome",
+"7zip.install",
+"firefox",
+"vlc",
+"jre8",
+"powertoys",
+"office365business",
+"onedrive",
+"Pdf24",
+"TeamViewer",
+"vcredist140",
+"zoom",
+"notepadplusplus.install"
+"onenote"
+"onedrive"
+"office365business" 	
+$packages | %{
+	choco install $_ -y --no-progress --ignore-checksums
 }
-
-# install windows updates
-$updates = Get-WindowsUpdate
-
-if ($null -ne $updates) {
-    Install-WindowsUpdate -AcceptAll -Install -IgnoreReboot | select KB, Result, Title, Size
-}
-
-$status = Get-WURebootStatus -Silent
-
-if ($status) {
-    $setup_runonce = @{
-        Path  = "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce"
-        Name  = "execute_provisioning"
-        Value = "cmd /c powershell.exe -ExecutionPolicy Bypass -File {0}\provisioning.ps1" -f "$($env:ProgramData)\provisioning"
-    }
-    New-ItemProperty @setup_runonce | Out-Null
-    Restart-Computer
-}
-else {
-    # chocolatey software installation
-	##
-	# Chocolatey part
-	##
-	# Chocolatey software installation
-	$packages =
-	"adobereader",
-	"microsoft-teams-new-bootstrapper",
-	"googlechrome",
-	"7zip.install",
-	"firefox",
-	"vlc",
-	"jre8",
-	"powertoys",
-	"firefox",
-	"office365business",
-	"onedrive",
-	"Pdf24",
-	"TeamViewer",
-	"vcredist140",
-	"zoom",
-	"notepadplusplus.install"
-	$packages | %{
-		choco install $_ -y --no-progress --ignore-checksums
-	}
 
 # Version=1
 
@@ -154,9 +143,9 @@ Remove-AppFromTaskbar 'Microsoft Store'
         $selected = Read-Host "Eintrag auswaehlen"
         switch ($selected) {
             1 {
-                Get-Credential | select @{n = 'Name'; e = { $_.UserName } },
-                @{n = 'Passwort'; e = { $_.Password } } | New-LocalUser -PasswordNeverExpires | Add-LocalGroupMember -Group "Administratoren"
-                break
+		$credential = Get-Credential -Message "Bitte geben Sie den Benutzernamen und das Passwort für den neuen lokalen Administrator an"
+    		New-LocalUser -Name $credential.UserName -Password $credential.Password -PasswordNeverExpires:$true | Add-LocalGroupMember -Group "Administratoren"
+    		break
             }
             2 {
                 Read-Host "Computername eintragen" | select @{n = 'NewName'; e = { $_ } } | Rename-Computer
@@ -167,7 +156,8 @@ Remove-AppFromTaskbar 'Microsoft Store'
                 break
             }
             4 {
-                irm https://raw.githubusercontent.com/JorgaWetzel/winutil/main/winutil.ps1 | iex
+                #irm https://raw.githubusercontent.com/JorgaWetzel/winutil/main/winutil.ps1 | iex
+		irm https://raw.githubusercontent.com/ChrisTitusTech/winutil/main/winutil.ps1 | iex
                 break
             }
 
@@ -178,4 +168,6 @@ Remove-AppFromTaskbar 'Microsoft Store'
     # best place to add more actions
     Write-Host "Alles ist fertig." -ForegroundColor Green
     Read-Host
-}
+    
+
+$null = Stop-Transcript -ErrorAction Ignore

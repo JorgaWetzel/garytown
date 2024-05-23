@@ -449,7 +449,7 @@ try {
         $exitCode = 1
         $HR_TPM = $FAIL_STRING
     }
-    elseif ($tpm.IsOwned_InitialValue -or $tpm.TpmPresent) {
+    elseif ($tpm.IsOwned_InitialValue -or $tpm.TpmPresent -or $tpm.IsEnabled_InitialValue -or $tpm.IsActivated_InitialValue) {
         $tpmVersion = Get-WmiObject -Class Win32_Tpm -Namespace root\CIMV2\Security\MicrosoftTpm | Select-Object -Property SpecVersion
 
         if ($null -eq $tpmVersion.SpecVersion) {
@@ -666,7 +666,7 @@ $Null = New-ItemProperty -Path $RegistryPath -Name DriveModel -Value $Disk0.Mode
 
 
 #Running OS Info
-$Null = New-ItemProperty -Path $RegistryPath -Name CurrentBuild -Value $CurrentVersion.CurrentBuild -PropertyType String -Force
+$Null = New-ItemProperty -Path $RegistryPath -Name CurrentBuild -Value "$($CurrentVersion.CurrentBuild).$($CurrentVersion.UBR)" -PropertyType String -Force
 $Null = New-ItemProperty -Path $RegistryPath -Name WinPEName -Value $ComputerName -PropertyType String -Force
 
 #CM Info:
