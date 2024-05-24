@@ -62,6 +62,9 @@ if ($CurrentRun -ge 5){
     stop-Computer -force
 }
 
+Write-Host "Installing Office 365 Business..."
+C:\ProgramData\chocolatey\bin\choco.exe install office365business --params "'/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE'" -y --no-progress --ignore-checksums
+
 '@
 
 $PostActionScript | Out-File -FilePath $ScriptPath -Force
