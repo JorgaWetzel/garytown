@@ -36,7 +36,7 @@ if ($env:SystemDrive -eq 'X:') {
     }
     # Füge den grundlegenden Inhalt zur SetupComplete.ps1 hinzu, wenn nicht schon vorhanden
     Add-Content -Path $PSFilePath "Write-Output 'Starting SetupComplete HOPE Script Process'"
-    Add-Content -Path $PSFilePath "Write-Output 'iex (irm hope.garytown.com)'"
+    Add-Content -Path $PSFilePath "Write-Output 'iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/oneICT.ps1)'"
     Add-Content -Path $PSFilePath 'iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/oneICT.ps1)'
     
     # Stelle sicher, dass die SetupComplete.cmd existiert und setze den Inhalt
@@ -138,126 +138,13 @@ if ($env:SystemDrive -ne 'X:') {
     #>
     
     # setup RunOnce to execute provisioning.ps1 script
-    # disable privacy experience
-    $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/provisioning.ps1"
-    $destinationFolder = "C:\Windows\Setup\Scripts"
-    $destinationPath = Join-Path -Path $destinationFolder -ChildPath "provisioning.ps1"
-    Invoke-WebRequest -Uri $url -OutFile $destinationPath
+    Write-Host -ForegroundColor Gray "**Running Set-RunOnceScript Script**"
+    Set-RunOnceScript
     
-    $settings = @(
-        [PSCustomObject]@{
-            Path  = "SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
-            Name  = "execute_provisioning"
-            Value = "cmd /c powershell.exe -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\provisioning.ps1"
-        },
-        [PSCustomObject]@{
-            Path  = "SOFTWARE\Policies\Microsoft\Windows\OOBE"
-            Name  = "DisablePrivacyExperience"
-            Value = 1
-        }
-    ) | Group-Object Path
-    
-    foreach ($setting in $settings) {
-        # Öffne den angegebenen Registrierungsschlüssel (oder erstelle ihn, falls er nicht existiert)
-        $registry = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($setting.Name, $true)
-        if ($null -eq $registry) {
-            $registry = [Microsoft.Win32.Registry]::LocalMachine.CreateSubKey($setting.Name, $true)
-        }
-        # Setze die Werte für den Registrierungsschlüssel basierend auf den Gruppenobjektdaten
-        foreach ($item in $setting.Group) {
-            $registry.SetValue($item.Name, $item.Value)
-        }
-        $registry.Dispose()
-    }
-    
-    # add tcp rout to oneICT Server
-    Add-Content -Path "C:\Windows\System32\drivers\etc\hosts" -Value "195.49.62.108 chocoserver"
-    
-    Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-    [Environment]::SetEnvironmentVariable("Path", $env:Path + ";$ENV:ALLUSERSPROFILE\chocolatey\bin", "Machine")
-    C:\ProgramData\chocolatey\bin\choco.exe install chocolatey-core.extension -y --no-progress --ignore-checksums
-    C:\ProgramData\chocolatey\bin\choco.exe source add --name="'oneICT'" --source="'https://chocoserver:8443/repository/ChocolateyInternal/'" --allow-self-service --user="'chocolatey'" --password="'wVGULoJGh1mxbRpChJQV'" --priority=1
-    C:\ProgramData\chocolatey\bin\choco.exe source add --name="'Chocolatey'" --source="'https://chocolatey.org/api/v2/'" --allow-self-service --priority=2
-    # C:\ProgramData\chocolatey\bin\choco.exe install chocolateygui -y --source="'oneICT'" --no-progress
-    C:\ProgramData\chocolatey\bin\choco.exe feature enable -n allowGlobalConfirmation
-    C:\ProgramData\chocolatey\bin\choco.exe feature enable -n allowEmptyChecksums
-    
-    $manufacturer = (gwmi win32_computersystem).Manufacturer
-    "Das ist ein $manufacturer PC"
-    
-    if ($manufacturer -match "VMware"){
-    Write-Host "Installing VMware tools..."
-    C:\ProgramData\chocolatey\bin\choco.exe install vmware-tools -y --no-progress --ignore-checksums
-    }
-    
-    # Base64-kodierte Zeichenfolge des Zertifikats
-    $Base64Cert = "-----BEGIN CERTIFICATE-----
-LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tDQpNSUlESGpDQ0FnYWdBd0lCQWdJ
-UVJpelRwRFJsaG9GRDRVK1VOWTI1MnpBTkJna3Foa2lHOXcwQkFRc0ZBREFXDQpN
-UlF3RWdZRFZRUUREQXRqYUc5amIzTmxjblpsY2pBZUZ3MHlNVEF6TWpZd09EUXdN
-VEZhRncwek1UQXpNall3DQpPRFV3TVRGYU1CWXhGREFTQmdOVkJBTU1DMk5vYjJO
-dmMyVnlkbVZ5TUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGDQpBQU9DQVE4QU1JSUJD
-Z0tDQVFFQTRpdFRMVkNCWnpHQXJGdGZkMXd2cTZFVm5sbll4ZzNOR3Vvb0N1MUs1
-R21CDQpSZ210QmN6bkxBSWV1TkNuSlBDQUxIQWdGTFoyY0F0TUNxeGE0WDdjWWE3
-b2pRV2xiYzZIN0p0N0R5OHR2S2l0DQorWGI0eUlMVnJnTDVZUUFLcllHKzVDUnMx
-Z1llOGVUcDRMYWEyWlM0bU1BeW9LMjNiTDY5NDNyeDk3M0RnSXM0DQpIMVdjY2Ns
-ZGpQdTIwZmxTdFNHT01LWHJKSVduc1N2TmtaREVjSFZHaE5zUEVqd0xucWRsN1Js
-dElCbnhXZzZMDQpYWWNrOFdQZlh5L3QvNmY2MFdQM2YzcnBoRFdHZTE0c3pQckp5
-V1ZmTkEzbDlpRU05cDhMWUdlMHcvMlBwSnlXDQowUXgzNlBpcVBZbjhreGc3UVBv
-bHpjOCt0NkVxdllYRGZ1TEQwWE5rcVFJREFRQUJvMmd3WmpBT0JnTlZIUThCDQpB
-ZjhFQkFNQ0JhQXdIUVlEVlIwbEJCWXdGQVlJS3dZQkJRVUhBd0lHQ0NzR0FRVUZC
-d01CTUJZR0ExVWRFUVFQDQpNQTJDQzJOb2IyTnZjMlZ5ZG1WeU1CMEdBMVVkRGdR
-V0JCUzVwcTB5UjdPREhES0VCSUl6YXRpV2k1bUlXakFODQpCZ2txaGtpRzl3MEJB
-UXNGQUFPQ0FRRUFwdXdhRzk1THVrRy9BRFJTeW9pT0tvUkJmVDZNUnA1RE84MWNC
-dHBQDQpFMWpGeVZydUxWZHgwVHBkekRxU0RSTHBodFJCVjVvcTIvenBubWFsU3dn
-ZFhIYUxJZTdsazgrME1NYXpMYUFaDQp0d2pnd2xiNW1oVjVCb1BqVEF4ODFGenFj
-K09JZnMwNVZWLzdYemNUR3lsMFhVTmQ0ZUhET0Q4Q2VDWk9BaTVYDQpHYitRUkFp
-bkVMK0x3UjZ2Q2IyYlBWa0JBV1hCQXhrdkVrR0MxWE5USXRKQncvVXVWU25UWEhh
-OHZ6cnpJa2kwDQpQTkNaaWJHVmZHelBBb1o4bGdOU3phZlE5MDZKVXZqNDBUVTIv
-elUzYll2OHAwUGpOR3hiTHdIb0lzMENXRW5zDQo5MEVUMk81MzcxOXVvWGY0VVQ0
-eEp5OTY3Z0dWd0p4VlJKRVI3SURpSWpCOWlnPT0NCi0tLS0tRU5EIENFUlRJRklD
-QVRFLS0tLS0NCg==
------END CERTIFICATE-----"
-    
-    # Dekodiere die Base64-Zeichenfolge zurück in Bytes
-    $CertBytes = [System.Convert]::FromBase64String($Base64Cert)
-    
-    # Erstelle ein X509-Zertifikatobjekt aus den Bytes
-    $Cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2 -ArgumentList $CertBytes
-    
-    # Importiere das Zertifikat in den Speicher "Trusted People"
-    $Store = New-Object System.Security.Cryptography.X509Certificates.X509Store "TrustedPeople", "LocalMachine"
-    $Store.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
-    $Store.Add($Cert)
-    $Store.Close()
+    # Setup oneICT Chocolatey Framework
+    Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
+    Set-Chocolatey
 
-    Write-Host -ForegroundColor Gray "**Completed Hope.garytown.com sub script**" 
-
-# Definiere den Inhalt der Unattend.xml Datei
-$UnattendContent = @"
-<?xml version="1.0" encoding="utf-8"?>
-<unattend xmlns="urn:schemas-microsoft-com:unattend">
-    <settings pass="specialize">
-        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <TimeZone>W. Europe Standard Time</TimeZone>
-            <RegisteredOrganization></RegisteredOrganization>
-            <RegisteredOwner>Administrator</RegisteredOwner>
-        </component>
-        <component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <InputLocale>0807:00000807</InputLocale>
-            <SystemLocale>en-US</SystemLocale>
-            <UserLocale>de-CH</UserLocale>
-        </component>
-    </settings>
-</unattend>
-"@
-
-# Definiere den Pfad zur Unattend.xml
-$UnattendPath = "C:\Windows\Panther\Unattend.xml"
-
-# Schreibe den Inhalt in die Unattend.xml Datei
-# $UnattendContent | Out-File -FilePath $UnattendPath -Encoding utf8 -Force
-    
     $null = Stop-Transcript -ErrorAction Ignore
 
 }
