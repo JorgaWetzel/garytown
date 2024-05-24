@@ -20,10 +20,12 @@ if ($env:SystemDrive -eq 'X:') {
     iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/win11.ps1)
     
     #Create Unattend.xml
+    <#
     $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Unattend.xml"
     $destinationPath = "C:\Windows\Panther\unattend.xml"
     Invoke-WebRequest -Uri $url -OutFile $destinationPath
     # Notepad $destinationPath
+    #>
     
     #Create Custom SetupComplete
     $ScriptsPath = "C:\Windows\Setup\Scripts"
@@ -127,7 +129,7 @@ if ($env:SystemDrive -ne 'X:') {
     #Set Time Zone
     # Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
     # Set-TimeZoneFromIP
-    <#
+    
     #Set OOBE Language
     Set-WinUILanguageOverride -Language de-CH
     Set-WinCultureFromLanguageListOptOut -OptOut $false
@@ -135,8 +137,7 @@ if ($env:SystemDrive -ne 'X:') {
     $InputMethod = '0807:00000807' # Das Layout für Deutsch (Schweiz)
     Set-WinUserLanguageList -LanguageList (New-WinUserLanguageList $InputMethod) -Force
     Set-WinSystemLocale -SystemLocale de-CH
-    #>
-    
+        
     # setup RunOnce to execute provisioning.ps1 script
     Write-Host -ForegroundColor Gray "**Running Set-RunOnceScript Script**"
     Set-RunOnceScript
