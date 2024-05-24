@@ -28,15 +28,7 @@ else {
 if ($WindowsPhase -eq 'WinPE') {
     Write-Host -ForegroundColor Green "Starting win11.oneict.ch"
     iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/win11.ps1)
-    
-    #Create Unattend.xml
-    <#
-    $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Unattend.xml"
-    $destinationPath = "C:\Windows\Panther\unattend.xml"
-    Invoke-WebRequest -Uri $url -OutFile $destinationPath
-    # Notepad $destinationPath
-    #>
-    
+        
     #Create Custom SetupComplete
     $ScriptsPath = "C:\Windows\Setup\Scripts"
     $PSFilePath = "$ScriptsPath\SetupComplete.ps1"
