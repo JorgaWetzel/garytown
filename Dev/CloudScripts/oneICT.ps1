@@ -81,19 +81,17 @@ if ($env:SystemDrive -ne 'X:') {
     #Setup Post Actions Scheduled Task
     iex (irm "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/PostActionsTask.ps1")
     
+    #Add Functions
+    iex (irm functions.garytown.com)
     #Remove Personal Teams
-    <#
     Write-Host -ForegroundColor Gray "**Removing Default Chat Tool**" 
     try {
         iex (irm https://raw.githubusercontent.com/suazione/CodeDump/main/Set-ConfigureChatAutoInstall.ps1)
     }
     catch {}
-    
-    #Set DO
-    #Set-DOPoliciesGPORegistry
-    
-    #Write-Host -ForegroundColor Gray "**Running Test.garytown.com**" 
-    #iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/test.ps1)
+        
+    Write-Host -ForegroundColor Gray "**Running Test**" 
+    iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/test.ps1)
      
     # Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
     Set-DefaultProfilePersonalPref
@@ -122,8 +120,8 @@ if ($env:SystemDrive -ne 'X:') {
     #winget upgrade --all --accept-package-agreements --accept-source-agreements
 
     #Modified Version of Andrew's Debloat Script
-    Write-Host -ForegroundColor Gray "**Running Debloat Script**" 
-    iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Debloat.ps1)
+    #Write-Host -ForegroundColor Gray "**Running Debloat Script**" 
+    #iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Debloat.ps1)
 
     #Set Time Zone
     # Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
