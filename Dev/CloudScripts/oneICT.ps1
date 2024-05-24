@@ -73,13 +73,14 @@ if ($transcriptLine -ne $null -and $restartLine -ne $null) {
 
 #Non-WinPE
 if ($env:SystemDrive -ne 'X:') {
+    #Start the Transcript
+    $Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-OSDOOBE.log"
+    $null = Start-Transcript -Path (Join-Path "C:\OSDCloud\Logs" $Transcript) -ErrorAction Ignore
+
     Set-ExecutionPolicy Bypass -Force
     #Setup Post Actions Scheduled Task
     iex (irm "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/PostActionsTask.ps1")
     
-    #Start the Transcript
-    $Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-OSDOOBE.log"
-    $null = Start-Transcript -Path (Join-Path "C:\OSDCloud\Logs" $Transcript) -ErrorAction Ignore
     #Remove Personal Teams
     <#
     Write-Host -ForegroundColor Gray "**Removing Default Chat Tool**" 
@@ -94,9 +95,6 @@ if ($env:SystemDrive -ne 'X:') {
     #Write-Host -ForegroundColor Gray "**Running Test.garytown.com**" 
     #iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/test.ps1)
      
-    #Set Time Zone to Automatic Update
-    # Write-Host -ForegroundColor Gray "**Setting Time Zone for Auto Update**" 
-    Enable-AutoZimeZoneUpdate
     # Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
     Set-DefaultProfilePersonalPref
     
