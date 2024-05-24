@@ -6,53 +6,9 @@ Creates Setup Complete Files
 $ScriptName = 'oneICT.ps1'
 $ScriptVersion = '24.05.2024'
 
+#region functions
 iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
 iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions2.ps1)
-#region functions
-function Set-SetupCompleteCreateStartHOPEonUSB {
-    
-    $OSDCloudUSB = Get-Volume.usb | Where-Object {($_.FileSystemLabel -match 'OSDCloud') -or ($_.FileSystemLabel -match 'BHIMAGE')} | Select-Object -First 1
-    $SetupCompletePath = "$($OSDCloudUSB.DriveLetter):\OSDCloud\Config\Scripts\SetupComplete"
-    $ScriptsPath = $SetupCompletePath
-
-    if (!(Test-Path -Path $ScriptsPath)){New-Item -Path $ScriptsPath} 
-
-    $RunScript = @(@{ Script = "SetupComplete"; BatFile = 'SetupComplete.cmd'; ps1file = 'SetupComplete.ps1';Type = 'Setup'; Path = "$ScriptsPath"})
-
-
-    Write-Output "Creating $($RunScript.Script) Files"
-
-    $BatFilePath = "$($RunScript.Path)\$($RunScript.batFile)"
-    $PSFilePath = "$($RunScript.Path)\$($RunScript.ps1File)"
-            
-    #Create Batch File to Call PowerShell File
-    if (Test-Path -Path $PSFilePath){
-        copy-item $PSFilePath -Destination "$ScriptsPath\SetupComplete.ps1.bak"
-    }        
-    New-Item -Path $BatFilePath -ItemType File -Force
-    $CustomActionContent = New-Object system.text.stringbuilder
-    [void]$CustomActionContent.Append('%windir%\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy ByPass -File C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1')
-    Add-Content -Path $BatFilePath -Value $CustomActionContent.ToString()
-
-    #Create PowerShell File to do actions
-
-    New-Item -Path $PSFilePath -ItemType File -Force
-    Add-Content -Path $PSFilePath "Write-Output 'Starting SetupComplete oneICT Script Process'"
-    Add-Content -Path $PSFilePath "Write-Output 'iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/oneICT.ps1)'"
-    Add-Content -path $PSFilePath 'if ((Test-WebConnection) -ne $true){Write-error "No Internet, Sleeping 2 Minutes" ; start-sleep -seconds 120}'
-    Add-Content -Path $PSFilePath 'iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/oneICT.ps1)'
-    Add-Content -Path $PSFilePath "Stop-Transcript"
-    Add-Content -Path $PSFilePath "Restart-Computer -Force"
-}
-
-Function Restore-SetupCompleteOriginal {
-    $OSDCloudUSB = Get-Volume.usb | Where-Object {($_.FileSystemLabel -match 'OSDCloud') -or ($_.FileSystemLabel -match 'BHIMAGE')} | Select-Object -First 1
-    $SetupCompletePath = "$($OSDCloudUSB.DriveLetter):\OSDCloud\Config\Scripts\SetupComplete"
-    $ScriptsPath = $SetupCompletePath
-    if (Test-Path -Path "$ScriptsPath\SetupComplete.ps1.bak"){
-        copy-item -Path "$ScriptsPath\SetupComplete.ps1.bak" -Destination "$ScriptsPath\SetupComplete.ps1"
-    }
-}
 #endregion
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
@@ -69,16 +25,63 @@ else {
     else {$WindowsPhase = 'Windows'}
 }
 
-#region WinPE
+#WinPE Stuff
 if ($WindowsPhase -eq 'WinPE') {
-    #Create Custom SetupComplete on USBDrive, this will get copied and run during SetupComplete Phase thanks to OSD Function: Set-SetupCompleteOSDCloudUSB
-    Set-SetupCompleteCreateStartHOPEonUSB
     Write-Host -ForegroundColor Green "Starting win11.oneict.ch"
     iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/win11.ps1)
+    
+    #Create Unattend.xml
+    $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Unattend.xml"
+    $destinationPath = "C:\Windows\Panther\unattend.xml"
+    Invoke-WebRequest -Uri $url -OutFile $destinationPath
+    Notepad $destinationPath
+    
+    #Create Custom SetupComplete
+    $ScriptsPath = "C:\Windows\Setup\Scripts"
+    $PSFilePath = "$ScriptsPath\SetupComplete.ps1"
+    $CmdFilePath = "$ScriptsPath\SetupComplete.cmd"
+    
+    # Stelle sicher, dass die SetupComplete.ps1 existiert
+    if (!(Test-Path -Path $PSFilePath)) {
+        New-Item -Path $PSFilePath -ItemType File -Force
+    }
+    # Füge den grundlegenden Inhalt zur SetupComplete.ps1 hinzu, wenn nicht schon vorhanden
+    Add-Content -Path $PSFilePath "Write-Output 'Starting SetupComplete HOPE Script Process'"
+    Add-Content -Path $PSFilePath "Write-Output 'iex (irm hope.garytown.com)'"
+    Add-Content -Path $PSFilePath 'iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/oneICT.ps1)'
+    
+    # Stelle sicher, dass die SetupComplete.cmd existiert und setze den Inhalt
+    if (!(Test-Path -Path $CmdFilePath)) {
+        New-Item -Path $CmdFilePath -ItemType File -Force
+    }
+    $cmdContent = "%windir%\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass -File $PSFilePath"
+    Set-Content -Path $CmdFilePath -Value $cmdContent -Force
+    
+    # Bearbeite die SetupComplete.ps1, um "Stop-Transcript" und "Restart-Computer -Force" zu verschieben
+    $psContent = Get-Content -Path $PSFilePath
+    $transcriptLine = $psContent | Where-Object { $_ -match "Stop-Transcript" }
+    $restartLine = $psContent | Where-Object { $_ -match "Restart-Computer -Force" }
+if ($transcriptLine -ne $null -and $restartLine -ne $null) {
+    # Entferne die Zeilen aus dem Originalinhalt
+    $psContent = $psContent | Where-Object { $_ -notmatch "Stop-Transcript|Restart-Computer -Force" }
+    # Füge die entfernten Inhalte und die spezifischen Zeilen am Ende hinzu
+    #$psContent += "Write-Output 'Neuer zusätzlicher Inhalt'"
+    #$psContent += "Write-Output 'Weiterer neuer Inhalt'"
+    $psContent += $transcriptLine
+    $psContent += $restartLine
+    # Schreibe den neuen Inhalt zurück in die Datei
+    Set-Content -Path $PSFilePath -Value $psContent
+} else {
+    # Nur hinzufügen, wenn die Zeilen nicht bereits vorhanden waren
+    #Add-Content -Path $PSFilePath "Write-Output 'Neuer zusätzlicher Inhalt'"
+    #Add-Content -Path $PSFilePath "Write-Output 'Weiterer neuer Inhalt'"
+    Add-Content -Path $PSFilePath "Stop-Transcript"
+    Add-Content -Path $PSFilePath "Restart-Computer -Force"
+}    
+    # restart-computer
 
-    Restore-SetupCompleteOriginal
-    restart-computer
 }
+
 
 #region Specialize
 if ($WindowsPhase -eq 'Specialize') {
