@@ -73,15 +73,21 @@ if ($transcriptLine -ne $null -and $restartLine -ne $null) {
 
 #Non-WinPE
 if ($env:SystemDrive -ne 'X:') {
+    Set-ExecutionPolicy Bypass -Force
+    #Setup Post Actions Scheduled Task
+    iex (irm "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/PostActionsTask.ps1")
+    
     #Start the Transcript
     $Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-OSDOOBE.log"
     $null = Start-Transcript -Path (Join-Path "C:\OSDCloud\Logs" $Transcript) -ErrorAction Ignore
     #Remove Personal Teams
+    <#
     Write-Host -ForegroundColor Gray "**Removing Default Chat Tool**" 
     try {
         iex (irm https://raw.githubusercontent.com/suazione/CodeDump/main/Set-ConfigureChatAutoInstall.ps1)
     }
     catch {}
+    
     #Set DO
     #Set-DOPoliciesGPORegistry
     
@@ -124,7 +130,7 @@ if ($env:SystemDrive -ne 'X:') {
     #Set Time Zone
     # Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
     # Set-TimeZoneFromIP
-
+    <#
     #Set OOBE Language
     Set-WinUILanguageOverride -Language de-CH
     Set-WinCultureFromLanguageListOptOut -OptOut $false
@@ -132,7 +138,8 @@ if ($env:SystemDrive -ne 'X:') {
     $InputMethod = '0807:00000807' # Das Layout für Deutsch (Schweiz)
     Set-WinUserLanguageList -LanguageList (New-WinUserLanguageList $InputMethod) -Force
     Set-WinSystemLocale -SystemLocale de-CH
-
+    #>
+    
     # setup RunOnce to execute provisioning.ps1 script
     # disable privacy experience
     $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/provisioning.ps1"
