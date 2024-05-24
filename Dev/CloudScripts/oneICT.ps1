@@ -106,7 +106,7 @@ if ($WindowsPhase -eq 'OOBE') {
 
     Set-ExecutionPolicy Bypass -Force
     #Setup Post Actions Scheduled Task
-    iex (irm "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/PostActionsTask.ps1")
+    #iex (irm "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/PostActionsTask.ps1")
     
     #Add Functions
     iex (irm functions.garytown.com)
