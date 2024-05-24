@@ -85,6 +85,9 @@ if ($transcriptLine -ne $null -and $restartLine -ne $null) {
 
 #region Specialize
 if ($WindowsPhase -eq 'Specialize') {
+    $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Unattend.xml"
+    $destinationPath = "C:\Windows\Panther\unattend.xml"
+    Invoke-WebRequest -Uri $url -OutFile $destinationPath
     $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion
