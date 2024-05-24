@@ -13,9 +13,19 @@ iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
 
 Set-ExecutionPolicy Bypass -Force
-
-#WinPE Stuff
 if ($env:SystemDrive -eq 'X:') {
+    $WindowsPhase = 'WinPE'
+}
+else {
+    $ImageState = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Setup\State' -ErrorAction Ignore).ImageState
+    if ($env:UserName -eq 'defaultuser0') {$WindowsPhase = 'OOBE'}
+    elseif ($ImageState -eq 'IMAGE_STATE_SPECIALIZE_RESEAL_TO_OOBE') {$WindowsPhase = 'Specialize'}
+    elseif ($ImageState -eq 'IMAGE_STATE_SPECIALIZE_RESEAL_TO_AUDIT') {$WindowsPhase = 'AuditMode'}
+    else {$WindowsPhase = 'Windows'}
+}
+
+#region WinPE
+if ($WindowsPhase -eq 'WinPE') {
     Write-Host -ForegroundColor Green "Starting win11.oneict.ch"
     iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/win11.ps1)
     
@@ -73,9 +83,20 @@ if ($transcriptLine -ne $null -and $restartLine -ne $null) {
 
 }
 
+#region Specialize
+if ($WindowsPhase -eq 'Specialize') {
+    $null = Stop-Transcript -ErrorAction Ignore
+}
+#endregion
 
-#Non-WinPE
-if ($env:SystemDrive -ne 'X:') {
+#region AuditMode
+if ($WindowsPhase -eq 'AuditMode') {
+    $null = Stop-Transcript -ErrorAction Ignore
+}
+#endregion
+
+#region OOBE
+if ($WindowsPhase -eq 'OOBE') {
     #Start the Transcript
     $Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-OSDOOBE.log"
     $null = Start-Transcript -Path (Join-Path "C:\OSDCloud\Logs" $Transcript) -ErrorAction Ignore
@@ -149,5 +170,10 @@ if ($env:SystemDrive -ne 'X:') {
     Write-Host -ForegroundColor Gray "**Completed  oneICT.ps1 script**" 
 
     $null = Stop-Transcript -ErrorAction Ignore
+}
+#endregion
+
+#region Windows
+if ($WindowsPhase -eq 'Windows') {
 
 }
