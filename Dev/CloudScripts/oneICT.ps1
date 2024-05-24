@@ -170,13 +170,12 @@ if ($WindowsPhase -eq 'OOBE') {
     Set-Chocolatey
     Write-Host "Installing Office 365 Business..."
     C:\ProgramData\chocolatey\bin\choco.exe install office365business --params "'/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE'" -y --no-progress --ignore-checksums
-
     Write-Host -ForegroundColor Gray "**Completed  oneICT.ps1 script**" 
-
     $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion
 
 #region Windows
 if ($WindowsPhase -eq 'Windows') {
+$null = Stop-Transcript -ErrorAction Ignore
 }
