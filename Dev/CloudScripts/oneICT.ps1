@@ -145,6 +145,8 @@ if ($env:SystemDrive -ne 'X:') {
     Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
     Set-Chocolatey
 
+    Write-Host -ForegroundColor Gray "**Completed  oneICT.ps1 script**" 
+
     $null = Stop-Transcript -ErrorAction Ignore
 
 }
