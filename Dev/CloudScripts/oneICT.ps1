@@ -11,7 +11,6 @@ iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/
 iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions2.ps1)
 #endregion
 
-Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
 
 Set-ExecutionPolicy Bypass -Force
 if ($env:SystemDrive -eq 'X:') {
@@ -24,6 +23,8 @@ else {
     elseif ($ImageState -eq 'IMAGE_STATE_SPECIALIZE_RESEAL_TO_AUDIT') {$WindowsPhase = 'AuditMode'}
     else {$WindowsPhase = 'Windows'}
 }
+
+Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
 
 #WinPE Stuff
 if ($WindowsPhase -eq 'WinPE') {
@@ -103,7 +104,7 @@ if ($WindowsPhase -eq 'AuditMode') {
 #endregion
 
 #region OOBE
-if ($WindowsPhase -eq 'OOBE') {
+if ($env:SystemDrive -ne 'X:') {
     #Start the Transcript
     $Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-OSDOOBE.log"
     $null = Start-Transcript -Path (Join-Path "C:\OSDCloud\Logs" $Transcript) -ErrorAction Ignore
