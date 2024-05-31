@@ -134,6 +134,10 @@ if ($WindowsPhase -eq 'OOBE') {
     #Set Win11 Bypasses
     Write-Host -ForegroundColor Gray "**Enabling Win11 Bypasses**" 
     Set-Win11ReqBypassRegValues
+
+    # setup RunOnce to execute provisioning.ps1 script
+    Write-Host -ForegroundColor Gray "**Running Set-RunOnceScript Script**"
+    Set-RunOnceScript
     
     #Windows Updates
     #Write-Host -ForegroundColor Gray "**Running Defender Updates**"
@@ -165,10 +169,7 @@ if ($WindowsPhase -eq 'OOBE') {
     $InputMethod = '0807:00000807' # Das Layout für Deutsch (Schweiz)
     Set-WinUserLanguageList -LanguageList (New-WinUserLanguageList $InputMethod) -Force
     Set-WinSystemLocale -SystemLocale de-CH
-        
-    # setup RunOnce to execute provisioning.ps1 script
-    Write-Host -ForegroundColor Gray "**Running Set-RunOnceScript Script**"
-    Set-RunOnceScript
+    
     
     # Setup oneICT Chocolatey Framework
     Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
