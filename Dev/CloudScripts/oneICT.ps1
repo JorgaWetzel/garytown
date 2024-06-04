@@ -130,7 +130,7 @@ if ($env:SystemDrive -ne 'X:') {
     
     #Try to prevent crap from auto installing
     Write-Host -ForegroundColor Gray "**Disabling Cloud Content**" 
-    Disable-CloudContent
+    # Disable-CloudContent
     
     #Set Win11 Bypasses
     Write-Host -ForegroundColor Gray "**Enabling Win11 Bypasses**" 
@@ -164,19 +164,20 @@ if ($env:SystemDrive -ne 'X:') {
     # Set-TimeZoneFromIP
     
     #Set OOBE Language
+    <#
     Set-WinUILanguageOverride -Language de-CH
     Set-WinCultureFromLanguageListOptOut -OptOut $false
     Set-Culture -CultureInfo de-CH
     $InputMethod = '0807:00000807' # Das Layout für Deutsch (Schweiz)
     Set-WinUserLanguageList -LanguageList (New-WinUserLanguageList $InputMethod) -Force
     Set-WinSystemLocale -SystemLocale de-CH
-    
+    #>
     
     # Setup oneICT Chocolatey Framework
     Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
     Set-Chocolatey
     Write-Host "Installing Office 365 Business..."
-    C:\ProgramData\chocolatey\bin\choco.exe install office365business --params "'/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE'" -y --no-progress --ignore-checksums
+    # C:\ProgramData\chocolatey\bin\choco.exe install office365business --params "'/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE'" -y --no-progress --ignore-checksums
     Write-Host -ForegroundColor Gray "**Completed  oneICT.ps1 script**" 
     $null = Stop-Transcript -ErrorAction Ignore
 }
