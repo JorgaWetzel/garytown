@@ -164,14 +164,14 @@ if ($env:SystemDrive -ne 'X:') {
     # Set-TimeZoneFromIP
     
     #Set OOBE Language
-    <#
+    
     Set-WinUILanguageOverride -Language de-CH
     Set-WinCultureFromLanguageListOptOut -OptOut $false
     Set-Culture -CultureInfo de-CH
     $InputMethod = '0807:00000807' # Das Layout für Deutsch (Schweiz)
     Set-WinUserLanguageList -LanguageList (New-WinUserLanguageList $InputMethod) -Force
     Set-WinSystemLocale -SystemLocale de-CH
-    #>
+    
     
     # Setup oneICT Chocolatey Framework
     Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
