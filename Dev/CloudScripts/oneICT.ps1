@@ -130,7 +130,7 @@ if ($env:SystemDrive -ne 'X:') {
     
     #Try to prevent crap from auto installing
     Write-Host -ForegroundColor Gray "**Disabling Cloud Content**" 
-    # Disable-CloudContent
+    Disable-CloudContent
     
     #Set Win11 Bypasses
     Write-Host -ForegroundColor Gray "**Enabling Win11 Bypasses**" 
@@ -138,7 +138,7 @@ if ($env:SystemDrive -ne 'X:') {
 
     # setup RunOnce to execute provisioning.ps1 script
     Write-Host -ForegroundColor Gray "**Running Set-RunOnceScript Script**"
-    # Set-RunOnceScript
+    Set-RunOnceScript
     
     #Windows Updates
     #Write-Host -ForegroundColor Gray "**Running Defender Updates**"
@@ -156,8 +156,8 @@ if ($env:SystemDrive -ne 'X:') {
     #winget upgrade --all --accept-package-agreements --accept-source-agreements
 
     #Modified Version of Andrew's Debloat Script
-    #Write-Host -ForegroundColor Gray "**Running Debloat Script**" 
-    #iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Debloat.ps1)
+    Write-Host -ForegroundColor Gray "**Running Debloat Script**" 
+    iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Debloat.ps1)
 
     #Set Time Zone
     # Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
