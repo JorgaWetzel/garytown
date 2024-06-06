@@ -68,7 +68,7 @@ do {
     $ping = Test-NetConnection '8.8.8.8' -InformationLevel Quiet
     if (!$ping) {
         cls
-        'Wainting for network connection' | Out-Host
+        'Warte auf die Internetverbindung' | Out-Host
         sleep -s 5
     }
 } while (!$ping)
