@@ -73,8 +73,15 @@ if ($transcriptLine -ne $null -and $restartLine -ne $null) {
     Add-Content -Path $PSFilePath "Stop-Transcript"
     Add-Content -Path $PSFilePath "Restart-Computer -Force"
 }    
-    restart-computer
 
+    $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/unattend.xml"
+    $destinationPath = "C:\Windows\System32\sysprep\unattend.xml"
+    Invoke-WebRequest -Uri $url -OutFile $destinationPath
+    $url2 = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/BootOOBE.ps1"
+    $destinationPath = "C:\Windows\Setup\Scripts\BootOOBE.ps1"
+    Invoke-WebRequest -Uri $url2 -OutFile $destinationPath
+    $null = Stop-Transcript -ErrorAction Ignore
+    restart-computer
 }
 
 
@@ -126,12 +133,7 @@ if ($env:SystemDrive -ne 'X:') {
     # setup RunOnce to execute provisioning.ps1 script
     Write-Host -ForegroundColor Gray "**Running Set-RunOnceScript Script**"
     Set-RunOnceScript
-
-    $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Unattend.xml"
-    $destinationPath = "C:\Windows\Panther\unattend.xml"
-    Invoke-WebRequest -Uri $url -OutFile $destinationPath
-    $null = Stop-Transcript -ErrorAction Ignore
-    
+   
     #Windows Updates
     #Write-Host -ForegroundColor Gray "**Running Defender Updates**"
     #Update-DefenderStack
