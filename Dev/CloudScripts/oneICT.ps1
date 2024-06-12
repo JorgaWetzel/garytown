@@ -72,18 +72,6 @@ if ($transcriptLine -ne $null -and $restartLine -ne $null) {
 }
 
 
-#region Specialize
-if ($WindowsPhase -eq 'Specialize') {
-    $null = Stop-Transcript -ErrorAction Ignore
-}
-#endregion
-
-#region AuditMode
-if ($WindowsPhase -eq 'AuditMode') {
-    $null = Stop-Transcript -ErrorAction Ignore
-}
-#endregion
-
 #region OOBE
 if ($env:SystemDrive -ne 'X:') {
     #Start the Transcript
