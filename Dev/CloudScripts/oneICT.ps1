@@ -31,14 +31,6 @@ if ($WindowsPhase -eq 'WinPE') {
     Write-Host -ForegroundColor Green "Starting win11.oneict.ch"
     iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/win11.ps1)
     
-    <#
-    #Create Unattend.xml
-    $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Unattend.xml"
-    $destinationPath = "C:\Windows\Panther\unattend.xml"
-    Invoke-WebRequest -Uri $url -OutFile $destinationPath
-    #Notepad $destinationPath
-    #>
-    
     #Create Custom SetupComplete
     $ScriptsPath = "C:\Windows\Setup\Scripts"
     $PSFilePath = "$ScriptsPath\SetupComplete.ps1"
@@ -117,8 +109,8 @@ if ($env:SystemDrive -ne 'X:') {
     }
     catch {}
         
-    Write-Host -ForegroundColor Gray "**Running Test**" 
-    iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/test.ps1)
+    # Write-Host -ForegroundColor Gray "**Running Test**" 
+    # iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/test.ps1)
      
     # Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
     Set-DefaultProfilePersonalPref
@@ -176,7 +168,7 @@ if ($env:SystemDrive -ne 'X:') {
     # Setup oneICT Chocolatey Framework
     Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
     Set-Chocolatey
-    Write-Host "Installing Office 365 Business..."
+    # Write-Host "Installing Office 365 Business..."
     # C:\ProgramData\chocolatey\bin\choco.exe install office365business --params "'/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE'" -y --no-progress --ignore-checksums
     Write-Host -ForegroundColor Gray "**Completed  oneICT.ps1 script**" 
     $null = Stop-Transcript -ErrorAction Ignore
