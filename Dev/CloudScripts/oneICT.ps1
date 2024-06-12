@@ -65,8 +65,8 @@ if ($transcriptLine -ne $null -and $restartLine -ne $null) {
     $destinationPath = "C:\Windows\System32\sysprep\unattend.xml"
     Invoke-WebRequest -Uri $url -OutFile $destinationPath
     $url2 = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/BootOOBE.ps1"
-    $destinationPath = "C:\Windows\Setup\Scripts\BootOOBE.ps1"
-    Invoke-WebRequest -Uri $url2 -OutFile $destinationPath
+    $destinationPath2 = "C:\Windows\Setup\Scripts\BootOOBE.ps1"
+    Invoke-WebRequest -Uri $url2 -OutFile $destinationPath2
     $null = Stop-Transcript -ErrorAction Ignore
     restart-computer
 }
