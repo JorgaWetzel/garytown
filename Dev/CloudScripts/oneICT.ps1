@@ -99,7 +99,7 @@ if ($env:SystemDrive -ne 'X:') {
     Set-Win11ReqBypassRegValues
 
     # setup RunOnce to execute provisioning.ps1 script
-    Write-Host -ForegroundColor Gray "**Running Set-RunOnceScript Script**"
+    # Write-Host -ForegroundColor Gray "**Running Set-RunOnceScript Script**"
     # Set-RunOnceScript
    
     #Windows Updates
