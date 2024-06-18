@@ -28,7 +28,7 @@
             <FirstLogonCommands>
                 <SynchronousCommand wcm:action="add">
                     <Order>1</Order>
-                    <CommandLine>C:\Windows\Setup\Scripts\provisioning.ps1</CommandLine>
+                    <CommandLine>powershell.exe -noprofile -File C:\Windows\Setup\Scripts\provisioning.ps1</CommandLine>
                     <Description>First Logon Provovisioning Script</Description>
                 </SynchronousCommand>
             </FirstLogonCommands>
