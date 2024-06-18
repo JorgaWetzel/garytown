@@ -18,6 +18,6 @@ Rename-Item C:\Windows\Setup\Scripts\init2.ps1 init.ps1 -ea SilentlyContinue #Ru
 # WMIC USERACCOUNT WHERE "Name='Wksadmin'" SET PasswordExpires=FALSE
 
 get-process sysprep -ea SilentlyContinue | stop-process -Force -ErrorAction SilentlyContinue
-Start-Sleep 2
+Start-Sleep 4
 &C:\Windows\System32\Sysprep\sysprep.exe /oobe /reboot /unattend:c:\windows\system32\sysprep\unattend.xml
 exit(0)
