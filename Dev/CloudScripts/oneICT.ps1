@@ -100,7 +100,7 @@ if ($env:SystemDrive -ne 'X:') {
 
     # setup RunOnce to execute provisioning.ps1 script
     Write-Host -ForegroundColor Gray "**Running Set-RunOnceScript Script**"
-    Set-RunOnceScript
+    # Set-RunOnceScript
    
     #Windows Updates
     #Write-Host -ForegroundColor Gray "**Running Defender Updates**"
@@ -131,8 +131,6 @@ if ($env:SystemDrive -ne 'X:') {
     # Write-Host "Installing Office 365 Business..."
     # C:\ProgramData\chocolatey\bin\choco.exe install office365business --params "'/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE'" -y --no-progress --ignore-checksums
     Write-Host -ForegroundColor Gray "**Completed  oneICT.ps1 script**" 
-
-    New-ItemProperty -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "execute_provisioning" -Value ("cmd /c powershell.exe -ExecutionPolicy Bypass -File c:\windows\setup\scripts\provisioning.ps1" -f c:\windows\setup\scripts\provisioning.ps1)
     $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion
