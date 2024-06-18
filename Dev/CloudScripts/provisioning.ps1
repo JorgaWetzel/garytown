@@ -1,3 +1,16 @@
+# wait for network
+$ProgressPreference_bk = $ProgressPreference
+$ProgressPreference = 'SilentlyContinue'
+do {
+    $ping = Test-NetConnection '8.8.8.8' -InformationLevel Quiet
+    if (!$ping) {
+        cls
+        'Warte auf die Internetverbindung' | Out-Host
+        sleep -s 5
+    }
+} while (!$ping)
+$ProgressPreference = $ProgressPreference_bk
+
 param(
     [switch]$first
 )
@@ -14,7 +27,8 @@ osdcloud-InstallPackageManagement
 osdcloud-TrustPSGallery
 osdcloud-InstallPowerShellModule -Name Pester
 osdcloud-InstallPowerShellModule -Name PSReadLine
-# osdcloud-InstallWinGet
+powershell Invoke-Expression -Command (Invoke-RestMethod -Uri pwsh.live)
+osdcloud-InstallWinGet
     if (Get-Command 'WinGet' -ErrorAction SilentlyContinue) {
         Write-Host -ForegroundColor Green '[+] winget upgrade --all --accept-source-agreements --accept-package-agreements'
 	Write-Host -ForegroundColor Green '[+] winget install company portal (unternehmenbsportal)'
@@ -60,19 +74,6 @@ foreach ($url in $urls) {
     . $scriptPath
 }
 
-
-# wait for network
-$ProgressPreference_bk = $ProgressPreference
-$ProgressPreference = 'SilentlyContinue'
-do {
-    $ping = Test-NetConnection '8.8.8.8' -InformationLevel Quiet
-    if (!$ping) {
-        cls
-        'Warte auf die Internetverbindung' | Out-Host
-        sleep -s 5
-    }
-} while (!$ping)
-$ProgressPreference = $ProgressPreference_bk
 
 # Chocolatey software installation
 $packages =
