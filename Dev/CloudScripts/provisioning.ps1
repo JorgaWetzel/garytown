@@ -93,10 +93,11 @@ $packages =
 "notepadplusplus.install"
 "onenote"
 "onedrive"
-"office365business" 	
 $packages | %{
 	choco install $_ -y --no-progress --ignore-checksums
 }
+
+choco.exe install office365business --params "'/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE'" -y --no-progress --ignore-checksums
 
 # Version=1
 
