@@ -71,6 +71,8 @@ if ($env:SystemDrive -ne 'X:') {
     $Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-OSDOOBE.log"
     $null = Start-Transcript -Path (Join-Path "C:\OSDCloud\Logs" $Transcript) -ErrorAction Ignore
 
+    Set-SetupCompleteCreateStart
+    
     Set-ExecutionPolicy Bypass -Force
     #Setup Post Actions Scheduled Task
     #iex (irm "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/PostActionsTask.ps1")
@@ -125,7 +127,7 @@ if ($env:SystemDrive -ne 'X:') {
     Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
     Set-Chocolatey
 
-    Set-SetupCompleteCreateStart
+
     #Set-OSDCloudUnattendAuditMode
     #Set-OSDCloudUnattendAuditModeAutopilot
 
