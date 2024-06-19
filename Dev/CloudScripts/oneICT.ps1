@@ -84,8 +84,7 @@ if ($env:SystemDrive -ne 'X:') {
     # Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
     Set-DefaultProfilePersonalPref
 
-    Set-SetupCompleteCreateStart
-    Set-OSDCloudUnattendAuditModeAutopilot
+
     
     #Try to prevent crap from auto installing
     Write-Host -ForegroundColor Gray "**Disabling Cloud Content**" 
@@ -125,6 +124,9 @@ if ($env:SystemDrive -ne 'X:') {
     # Setup oneICT Chocolatey Framework
     Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
     Set-Chocolatey
+
+    Set-SetupCompleteCreateStart
+    Set-OSDCloudUnattendAuditModeAutopilot
 
     Write-Host -ForegroundColor Gray "**Completed  oneICT.ps1 script**" 
     $null = Stop-Transcript -ErrorAction Ignore
