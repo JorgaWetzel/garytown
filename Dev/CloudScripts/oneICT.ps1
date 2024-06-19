@@ -81,7 +81,7 @@ if ($env:SystemDrive -ne 'X:') {
     iex (irm functions.garytown.com)
         
     # Write-Host -ForegroundColor Gray "**Running Test**" 
-    # iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/test.ps1)
+    iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/test.ps1)
      
     # Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
     Set-DefaultProfilePersonalPref
