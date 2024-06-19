@@ -77,12 +77,6 @@ if ($env:SystemDrive -ne 'X:') {
     
     #Add Functions
     iex (irm functions.garytown.com)
-    #Remove Personal Teams
-    Write-Host -ForegroundColor Gray "**Removing Default Chat Tool**" 
-    try {
-        iex (irm https://raw.githubusercontent.com/suazione/CodeDump/main/Set-ConfigureChatAutoInstall.ps1)
-    }
-    catch {}
         
     # Write-Host -ForegroundColor Gray "**Running Test**" 
     # iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/test.ps1)
@@ -131,8 +125,7 @@ if ($env:SystemDrive -ne 'X:') {
     # Setup oneICT Chocolatey Framework
     Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
     Set-Chocolatey
-    # Write-Host "Installing Office 365 Business..."
-    # C:\ProgramData\chocolatey\bin\choco.exe install office365business --params "'/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE'" -y --no-progress --ignore-checksums
+
     Write-Host -ForegroundColor Gray "**Completed  oneICT.ps1 script**" 
     $null = Stop-Transcript -ErrorAction Ignore
 }
