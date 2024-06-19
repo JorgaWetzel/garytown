@@ -86,8 +86,7 @@ if ($env:SystemDrive -ne 'X:') {
     # Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
     Set-DefaultProfilePersonalPref
 
-
-    
+   
     #Try to prevent crap from auto installing
     Write-Host -ForegroundColor Gray "**Disabling Cloud Content**" 
     #Disable-CloudContent
