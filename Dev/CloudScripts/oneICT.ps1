@@ -126,7 +126,7 @@ if ($env:SystemDrive -ne 'X:') {
     Set-Chocolatey
 
     Set-SetupCompleteCreateStart
-    Set-OSDCloudUnattendAuditMode
+    #Set-OSDCloudUnattendAuditMode
     #Set-OSDCloudUnattendAuditModeAutopilot
 
     Write-Host -ForegroundColor Gray "**Completed  oneICT.ps1 script**" 
