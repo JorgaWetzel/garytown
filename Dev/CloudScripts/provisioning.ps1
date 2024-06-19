@@ -11,10 +11,6 @@ do {
 } while (!$ping)
 $ProgressPreference = $ProgressPreference_bk
 
-param(
-    [switch]$first
-)
-
 $Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-Provisioning.log"
 $null = Start-Transcript -Path (Join-Path "C:\OSDCloud\Logs" $Transcript) -ErrorAction Ignore
 
