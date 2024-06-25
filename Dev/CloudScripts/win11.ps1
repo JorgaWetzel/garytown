@@ -66,9 +66,9 @@ if (Test-DISMFromOSDCloudUSB -eq $true){
     }
 }
 
-#>
 
 Enable HPIA | Update HP BIOS | Update HP TPM
+#>
  
 if (Test-HPIASupport){
     #$Global:MyOSDCloud.DevMode = [bool]$True
