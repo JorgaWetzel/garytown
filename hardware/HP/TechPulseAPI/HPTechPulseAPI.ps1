@@ -4,7 +4,7 @@ Information to build taken from:
 https://developers.hp.com/hp-proactive-management/api/hp-techpulse-analytics-api
 
 Please watch this video first and make sure you've created a Developer Account, gained access to the Tech Pulse API, created your API App, and have all of the pre-reqs done.
-https://vimeo.com/461983044
+https://wexlearning.hosted.panopto.com/Panopto/Pages/Embed.aspx?id=7f4d7576-1597-464b-8896-b01a0155da23&autoplay
 
 Region 1 = Defining Variables.
 - Update the variables from you HP Developer portal
@@ -51,7 +51,7 @@ $BaseURL = $BaseURL_US
 $ClientID = "AppClientID"
 $Secret = "AppSecret"
 
-$TokenURI = "https://daas.api.hp.com/oauth/v1/token"
+$TokenURI = "$($BaseURL)/oauth/v1/token"
 $redirect_uri = "https://localhost:5000/"
 
 #Where you want to back up your access token

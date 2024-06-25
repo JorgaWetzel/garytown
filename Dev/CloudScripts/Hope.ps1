@@ -6,7 +6,7 @@ Creates Setup Complete Files
 $ScriptName = 'hope.garytown.com'
 $ScriptVersion = '24.5.20.1'
 
-iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
+iex (irm functions.garytown.com)
 #region functions
 function Set-SetupCompleteCreateStartHOPEonUSB {
     
@@ -114,7 +114,7 @@ if ($env:SystemDrive -ne 'X:') {
     #Set-DOPoliciesGPORegistry
     
     Write-Host -ForegroundColor Gray "**Running Test.garytown.com**" 
-    iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/test.ps1)
+    iex (irm test.garytown.com)
      
     #Set Time Zone to Automatic Update
     #Write-Host -ForegroundColor Gray "**Setting Time Zone for Auto Update**" 

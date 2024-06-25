@@ -16,4 +16,8 @@ if ($Manufacturer -match "Lenovo"){
         Install-LSUpdate -Package $update -Verbose
         $i++
     }
+    $LenovoBackgroundTask = Get-ScheduledTask -TaskName "Background monitor" -ErrorAction SilentlyContinue
+    if ($LenovoBackgroundTask){
+        $LenovoBackgroundTask | Disable-ScheduledTask 
+    }
 }
