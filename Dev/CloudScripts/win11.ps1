@@ -44,14 +44,14 @@ $Global:MyOSDCloud = [ordered]@{
 #$Global:MyOSDCloud.DriverPackName = 'Microsoft Update Catalog'
 
 
-<#
+
 #Used to Determine Driver Pack
 $DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
 
 if ($DriverPack){
     $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
 }
-
+<#
 
 #If Drivers are expanded on the USB Drive, disable installing a Driver Pack
 if (Test-DISMFromOSDCloudUSB -eq $true){
