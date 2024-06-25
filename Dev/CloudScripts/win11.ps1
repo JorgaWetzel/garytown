@@ -1,23 +1,25 @@
 #to Run, boot OSDCloudUSB, at the PS Prompt: iex (irm win11.oneict.ch)
 $ScriptName = 'oneICT'
-$ScriptVersion = '09.04.2024'
+$ScriptVersion = '25.06.2024'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
 #iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 #iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
 
-<Offline Driver Details
+<# Offline Driver Details
 If you extract Driver Packs to your Flash Drive, you can DISM them in while in WinPE and it will make the process much faster, plus ensure driver support for first Boot
 Extract to: OSDCLoudUSB:\OSDCloud\DriverPacks\DISM\$ComputerManufacturer\$ComputerProduct
 Use OSD Module to determine Vars
 $ComputerProduct = (Get-MyComputerProduct)
 $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
+#>
+
 
 
 #Variables to define the Windows OS / Edition etc to be applied during OSDCloud
 $Product = (Get-MyComputerProduct)
 $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
 $OSVersion = 'Windows 11' #Used to Determine Driver Pack
-$OSReleaseID = '22H2' #Used to Determine Driver Pack
+$OSReleaseID = '23H2' #Used to Determine Driver Pack
 $OSName = 'Windows 11 23H2 x64'
 $OSEdition = 'Pro'
 $OSActivation = 'Retail'
@@ -41,9 +43,7 @@ $Global:MyOSDCloud = [ordered]@{
 }
 
 #Testing MS Update Catalog Driver Sync
-$Global:MyOSDCloud.DriverPackName = 'Microsoft Update Catalog'
-
-
+#$Global:MyOSDCloud.DriverPackName = 'Microsoft Update Catalog'
 
 #Used to Determine Driver Pack
 $DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
@@ -51,7 +51,6 @@ $DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OS
 if ($DriverPack){
     $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
 }
-<#
 
 #If Drivers are expanded on the USB Drive, disable installing a Driver Pack
 if (Test-DISMFromOSDCloudUSB -eq $true){
@@ -66,9 +65,7 @@ if (Test-DISMFromOSDCloudUSB -eq $true){
     }
 }
 
-
 Enable HPIA | Update HP BIOS | Update HP TPM
-#>
  
 if (Test-HPIASupport){
     #$Global:MyOSDCloud.DevMode = [bool]$True
@@ -96,8 +93,8 @@ Write-Host "Starting OSDCloud" -ForegroundColor Green
 #write-host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
 
 # Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
-# Start-OSDCloudGUI
-Start-OSDCloudGUIDev
+Start-OSDCloudGUI
+# Start-OSDCloudGUIDev
 
 write-host "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot" -ForegroundColor Green
 <#
