@@ -56,12 +56,12 @@ $firefox_settings =
 },
 [PSCustomObject]@{
     Path  = "SOFTWARE\Policies\Mozilla\Firefox"
-    Value = 1
+    Value = 0
     Name  = "DisableFirefoxAccounts"
 },
 [PSCustomObject]@{
     Path  = "SOFTWARE\Policies\Mozilla\Firefox"
-    Value = 1
+    Value = 0
     Name  = "DisableProfileImport"
 },
 [PSCustomObject]@{
