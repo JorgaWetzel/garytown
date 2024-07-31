@@ -28,9 +28,6 @@ if ($env:SystemDrive -eq 'X:') {
         New-Item -Path $PSFilePath -ItemType File -Force
     }
     # Füge den grundlegenden Inhalt zur SetupComplete.ps1 hinzu, wenn nicht schon vorhanden
-    # Add-Content -Path $PSFilePath "Write-Output 'Starting SetupComplete HOPE Script Process'"
-    # Add-Content -Path $PSFilePath "Write-Output 'iex (irm hope.garytown.com)'"
-    # Add-Content -Path $PSFilePath 'iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/oneICT.ps1)'
     
     # Stelle sicher, dass die SetupComplete.cmd existiert und setze den Inhalt
     if (!(Test-Path -Path $CmdFilePath)) {
@@ -86,7 +83,6 @@ if ($env:SystemDrive -ne 'X:') {
       
     # Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
     Set-DefaultProfilePersonalPref
-
    
     #Try to prevent crap from auto installing
     Write-Host -ForegroundColor Gray "**Disabling Cloud Content**" 
