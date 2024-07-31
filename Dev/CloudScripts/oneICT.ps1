@@ -98,7 +98,7 @@ if ($env:SystemDrive -ne 'X:') {
 
     # setup RunOnce to execute provisioning.ps1 script
     # Write-Host -ForegroundColor Gray "**Running Set-RunOnceScript Script**"
-    # Set-RunOnceScript
+    Set-RunOnceScript
    
     #Windows Updates
     #Write-Host -ForegroundColor Gray "**Running Defender Updates**"
