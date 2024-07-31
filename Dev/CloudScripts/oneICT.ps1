@@ -83,6 +83,10 @@ if ($env:SystemDrive -ne 'X:') {
       
     # Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
     Set-DefaultProfilePersonalPref
+
+    # setup RunOnce to execute provisioning.ps1 script
+    Write-Host -ForegroundColor Gray "**Running Set-RunOnceScript Script**"
+    Set-RunOnceScript
    
     #Try to prevent crap from auto installing
     Write-Host -ForegroundColor Gray "**Disabling Cloud Content**" 
@@ -91,10 +95,6 @@ if ($env:SystemDrive -ne 'X:') {
     #Set Win11 Bypasses
     Write-Host -ForegroundColor Gray "**Enabling Win11 Bypasses**" 
     Set-Win11ReqBypassRegValues
-
-    # setup RunOnce to execute provisioning.ps1 script
-    # Write-Host -ForegroundColor Gray "**Running Set-RunOnceScript Script**"
-    Set-RunOnceScript
    
     #Windows Updates
     #Write-Host -ForegroundColor Gray "**Running Defender Updates**"
