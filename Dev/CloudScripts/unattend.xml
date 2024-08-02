@@ -34,7 +34,7 @@
                 <RunSynchronousCommand wcm:action="add">
                     <Order>2</Order>
                     <Description>Import-Module OSD</Description>
-                    <Path>cmd.exe /c echo powershell.exe Bypass -Command "Import-Module OSD >> C:\OSDCloud\Scripts\SetupComplete\SetupComplete.cmd</Path>
+                    <Path>cmd.exe /c echo powershell.exe Bypass -Command "Import-Module OSD" >> C:\OSDCloud\Scripts\SetupComplete\SetupComplete.cmd</Path>
                 </RunSynchronousCommand>
                 <RunSynchronousCommand wcm:action="add">
                     <Order>3</Order>
