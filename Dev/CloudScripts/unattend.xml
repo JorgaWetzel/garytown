@@ -26,7 +26,7 @@
                 <NetworkLocation>Work</NetworkLocation>
             </OOBE>
             <FirstLogonCommands>
-                 <RunSynchronousCommand wcm:action="add">
+                <RunSynchronousCommand wcm:action="add">
                     <Order>1</Order>
                     <Description>Create SetupComplete.cmd</Description>
                     <Path>cmd.exe /c echo powershell.exe -Command "Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Force" >> C:\OSDCloud\Scripts\SetupComplete\SetupComplete.cmd</Path>
@@ -34,12 +34,12 @@
                 <RunSynchronousCommand wcm:action="add">
                     <Order>2</Order>
                     <Description>Import-Module OSD</Description>
-                    <Path>cmd.exe /c echo powershell.exe Bypass -Command "Import-Module OSD" >> C:\OSDCloud\Scripts\SetupComplete\SetupComplete.cmd</Path>
+                    <Path>cmd.exe /c echo powershell.exe -ExecutionPolicy Bypass -Command "Import-Module OSD" >> C:\OSDCloud\Scripts\SetupComplete\SetupComplete.cmd</Path>
                 </RunSynchronousCommand>
                 <RunSynchronousCommand wcm:action="add">
                     <Order>3</Order>
                     <Description>Invoke-OSDSpecialize</Description>
-                    <Path>Powershell -ExecutionPolicy Bypass -Command "Invoke-OSDSpecialize *>&1 | Out-File -FilePath C:\OSDCloud\Logs\OSDSpecialize.log"</Path>
+                    <Path>cmd.exe /c echo Powershell -ExecutionPolicy Bypass -Command "Invoke-OSDSpecialize *>&1 | Out-File -FilePath C:\OSDCloud\Logs\OSDSpecialize.log" >> C:\OSDCloud\Scripts\SetupComplete\SetupComplete.cmd</Path>
                 </RunSynchronousCommand>
                 <RunSynchronousCommand wcm:action="add">
                     <Order>4</Order>
