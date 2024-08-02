@@ -26,13 +26,7 @@
                 <NetworkLocation>Work</NetworkLocation>
             </OOBE>
             <FirstLogonCommands>
-                <SynchronousCommand wcm:action="add">
-                    <Order>1</Order>
-                    <CommandLine>powershell.exe -noprofile -File C:\Windows\Setup\Scripts\provisioning.ps1</CommandLine>
-                    <Description>First Logon Provovisioning Script</Description>
-                </SynchronousCommand>
-            </FirstLogonCommands>
-            <RunSynchronousCommand wcm:action="add">
+             <RunSynchronousCommand wcm:action="add">
                 <Order>1</Order>
                 <Description>Set Execution Policy</Description>
                 <Path>Powershell -Command "Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Force"</Path>
@@ -47,6 +41,12 @@
                 <Description>Invoke-OSDSpecialize</Description>
                 <Path>Powershell -ExecutionPolicy Bypass -Command "Invoke-OSDSpecialize *>&1 | Out-File -FilePath C:\OSDCloud\Logs\OSDSpecialize.log"</Path>
             </RunSynchronousCommand>
+            <SynchronousCommand wcm:action="add">
+                <Order>4</Order>
+                <CommandLine>powershell.exe -noprofile -File C:\Windows\Setup\Scripts\provisioning.ps1</CommandLine>
+                <Description>First Logon Provovisioning Script</Description>
+            </SynchronousCommand>
+            </FirstLogonCommands>
         </component>
     </settings>
     <settings pass="auditUser">
