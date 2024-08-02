@@ -4,7 +4,7 @@ Creates Setup Complete Files
 #>
 
 $ScriptName = 'oneICT.ps1'
-$ScriptVersion = '24.05.2024'
+$ScriptVersion = '02.08.2024'
 
 #region functions
 iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
