@@ -26,18 +26,23 @@
                 <NetworkLocation>Work</NetworkLocation>
             </OOBE>
             <FirstLogonCommands>
-                <RunSynchronousCommand wcm:action="add">
+                 <RunSynchronousCommand wcm:action="add">
                     <Order>1</Order>
-                    <Description>Get-HPDriverPackLatest</Description>
-                    <Path>Powershell -ExecutionPolicy Bypass -Command "Import-Module OSD *>&1 | Out-File -FilePath C:\OSDCloud\Logs\Import-Module.log"</Path>
+                    <Description>Create SetupComplete.cmd</Description>
+                    <Path>cmd.exe /c echo powershell.exe -Command "Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Force" >> C:\OSDCloud\Scripts\SetupComplete\SetupComplete.cmd</Path>
                 </RunSynchronousCommand>
                 <RunSynchronousCommand wcm:action="add">
                     <Order>2</Order>
+                    <Description>Get-HPDriverPackLatest</Description>
+                    <Path>cmd.exe /c echo powershell.exe Bypass -Command "Import-Module OSD >> C:\OSDCloud\Scripts\SetupComplete\SetupComplete.cmd</Path>
+                </RunSynchronousCommand>
+                <RunSynchronousCommand wcm:action="add">
+                    <Order>3</Order>
                     <Description>Invoke-OSDSpecialize</Description>
                     <Path>Powershell -ExecutionPolicy Bypass -Command "Invoke-OSDSpecialize *>&1 | Out-File -FilePath C:\OSDCloud\Logs\OSDSpecialize.log"</Path>
                 </RunSynchronousCommand>
                 <RunSynchronousCommand wcm:action="add">
-                    <Order>3</Order>
+                    <Order>4</Order>
                     <Description>Append provisioning.ps1 to SetupComplete.cmd</Description>
                     <Path>cmd.exe /c echo powershell.exe -noprofile -File C:\Windows\Setup\Scripts\provisioning.ps1 >> C:\OSDCloud\Scripts\SetupComplete\SetupComplete.cmd</Path>
                 </RunSynchronousCommand>
