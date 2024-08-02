@@ -26,26 +26,26 @@
                 <NetworkLocation>Work</NetworkLocation>
             </OOBE>
             <FirstLogonCommands>
-             <RunSynchronousCommand wcm:action="add">
-                <Order>1</Order>
-                <Description>Set Execution Policy</Description>
-                <Path>Powershell -Command "Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Force"</Path>
-            </RunSynchronousCommand>
-            <RunSynchronousCommand wcm:action="add">
-                <Order>2</Order>
-                <Description>Get-HPDriverPackLatest</Description>
-                <Path>Powershell -ExecutionPolicy Bypass -Command "Get-HPDriverPackLatest -Download *>&1 | Out-File -FilePath C:\OSDCloud\Logs\HPDriverPackLatest.log"</Path>
-            </RunSynchronousCommand>
-            <RunSynchronousCommand wcm:action="add">
-                <Order>3</Order>
-                <Description>Invoke-OSDSpecialize</Description>
-                <Path>Powershell -ExecutionPolicy Bypass -Command "Invoke-OSDSpecialize *>&1 | Out-File -FilePath C:\OSDCloud\Logs\OSDSpecialize.log"</Path>
-            </RunSynchronousCommand>
-            <SynchronousCommand wcm:action="add">
-                <Order>4</Order>
-                <CommandLine>powershell.exe -noprofile -File C:\Windows\Setup\Scripts\provisioning.ps1</CommandLine>
-                <Description>First Logon Provovisioning Script</Description>
-            </SynchronousCommand>
+                <RunSynchronousCommand wcm:action="add">
+                    <Order>1</Order>
+                    <Description>Set Execution Policy</Description>
+                    <Path>Powershell -Command "Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Force"</Path>
+                </RunSynchronousCommand>
+                <RunSynchronousCommand wcm:action="add">
+                    <Order>2</Order>
+                    <Description>Get-HPDriverPackLatest</Description>
+                    <Path>Powershell -ExecutionPolicy Bypass -Command "Get-HPDriverPackLatest -Download *>&1 | Out-File -FilePath C:\OSDCloud\Logs\HPDriverPackLatest.log"</Path>
+                </RunSynchronousCommand>
+                <RunSynchronousCommand wcm:action="add">
+                    <Order>3</Order>
+                    <Description>Invoke-OSDSpecialize</Description>
+                    <Path>Powershell -ExecutionPolicy Bypass -Command "Invoke-OSDSpecialize *>&1 | Out-File -FilePath C:\OSDCloud\Logs\OSDSpecialize.log"</Path>
+                </RunSynchronousCommand>
+                <SynchronousCommand wcm:action="add">
+                    <Order>4</Order>
+                    <CommandLine>powershell.exe -noprofile -File C:\Windows\Setup\Scripts\provisioning.ps1</CommandLine>
+                    <Description>First Logon Provisioning Script</Description>
+                </SynchronousCommand>
             </FirstLogonCommands>
         </component>
     </settings>
