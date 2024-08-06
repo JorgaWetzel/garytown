@@ -25,9 +25,9 @@ $Params = @{
     ZTI = $true
     Firmware = $false
 }
-Start-OSDCloud @Params
+# Start-OSDCloud @Params
 
-# StartOSDCloudGUI
+StartOSDCloudGUI
 
 #=======================================================================
 #   [OS] Params and Start-OSDCloud
