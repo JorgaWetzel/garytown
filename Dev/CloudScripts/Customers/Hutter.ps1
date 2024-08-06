@@ -85,32 +85,6 @@ If (!(Test-Path "C:\ProgramData\OSDeploy")) {
 }
 $OOBEDeployJson | Out-File -FilePath "C:\ProgramData\OSDeploy\OSDeploy.OOBEDeploy.json" -Encoding ascii -Force
 
-#================================================
-#  [PostOS] AutopilotOOBE Configuration Staging
-#================================================
-Write-Host -ForegroundColor Green "Create C:\ProgramData\OSDeploy\OSDeploy.AutopilotOOBE.json"
-$AutopilotOOBEJson = @'
-{
-    "AssignedComputerName" : "$AssignedComputerName",
-    "AddToGroup":  "DEV-WIN-Standard",
-    "Assign":  {
-                   "IsPresent":  true
-               },
-    "GroupTag":  "DEV-WIN-Standard",
-    "Hidden":  [
-
-               ],
-    "PostAction":  "Quit",
-    "Run":  "NetworkingWireless",
-    "Docs":  "https://oneICT.ch/",
-    "Title":  "oneICT Autopilot registrierung"
-}
-'@
-If (!(Test-Path "C:\ProgramData\OSDeploy")) {
-    New-Item "C:\ProgramData\OSDeploy" -ItemType Directory -Force | Out-Null
-}
-$AutopilotOOBEJson | Out-File -FilePath "C:\ProgramData\OSDeploy\OSDeploy.AutopilotOOBE.json" -Encoding ascii -Force
-
 #=======================================================================
 #   Unattend.xml
 #=======================================================================
