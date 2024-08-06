@@ -13,19 +13,22 @@ Install-Module OSD -Force
 Write-Host  -ForegroundColor Green "Importing OSD PowerShell Module"
 Import-Module OSD -Force  
 
+
+#> 
+
 $Params = @{
     OSVersion = "Windows 11"
     OSBuild = "23H2"
     OSEdition = "Pro"
     OSLanguage = "de-DE"
     OSLicense = "Retail"
+	FindImageFile = $true
     ZTI = $true
     Firmware = $false
 }
 Start-OSDCloud @Params
-#> 
 
-StartOSDCloudGUI
+# StartOSDCloudGUI
 
 #=======================================================================
 #   [OS] Params and Start-OSDCloud
