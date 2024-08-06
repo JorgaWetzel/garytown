@@ -142,6 +142,27 @@ $UnattendXml | Out-File -FilePath $AuditUnattendPath -Encoding utf8
 Write-Host -ForegroundColor Cyan 'Use-WindowsUnattend'
 Use-WindowsUnattend -Path 'C:\' -UnattendPath $AuditUnattendPath -Verbose
 
+
+
+#================================================
+#  [OOBE] SetupComplete
+#================================================
+$destinationPath = "C:\OSDCloud\Scripts\SetupComplete\"
+if (-not (Test-Path -Path $destinationPath)) {
+    New-Item -ItemType Directory -Path $destinationPath -Force
+}
+
+$urls = @(
+    "https://raw.githubusercontent.com/JorgaWetzel/OSDCloudMyOLC/Main/SetupComplete.cmd",
+    "https://raw.githubusercontent.com/JorgaWetzel/OSDCloudMyOLC/Main/SetupComplete.ps1"
+)
+
+foreach ($url in $urls) {
+    $fileName = Split-Path -Path $url -Leaf
+    $destinationFile = Join-Path -Path $destinationPath -ChildPath $fileName
+    Invoke-WebRequest -Uri $url -OutFile $destinationFile
+}
+
 #================================================
 #  [PostOS] AutopilotOOBE CMD Command Line
 #================================================
