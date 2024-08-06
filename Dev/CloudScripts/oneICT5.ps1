@@ -34,7 +34,7 @@ $Global:MyOSDCloud = [ordered]@{
     Restart = [bool]$False
     RecoveryPartition = [bool]$true
     OEMActivation = [bool]$True
-    WindowsUpdate = [bool]$true
+    WindowsUpdate = [bool]$False
     WindowsUpdateDrivers = [bool]$False
     WindowsDefenderUpdate = [bool]$False
     SetTimeZone = [bool]$False
@@ -147,7 +147,7 @@ $OOBECMD = @'
 @echo off
 # Execute OOBE Tasks
 start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\keyboard.ps1
-start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\productkey.ps1
+rem start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\productkey.ps1
 start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\autopilotprereq.ps1
 start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\autopilotoobe.ps1
 start /wait powershell.exe -NoL -ExecutionPolicy Bypass -Command "Invoke-WebPSScript https://start-autopilotoobe.osdcloud.ch"
