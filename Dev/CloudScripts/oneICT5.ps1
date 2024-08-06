@@ -148,6 +148,6 @@ $OOBECMD | Out-File -FilePath 'C:\Windows\Setup\scripts\oobe.cmd' -Encoding asci
 #=======================================================================
 #   Restart-Computer
 #=======================================================================
-Write-Host  -ForegroundColor Green "Restarting in 20 seconds!"
-Start-Sleep -Seconds 20
+Write-Host  -ForegroundColor Green "Restarting in 5 seconds!"
+Start-Sleep -Seconds 5
 wpeutil reboot
