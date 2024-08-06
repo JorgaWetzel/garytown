@@ -199,7 +199,7 @@ Use-WindowsUnattend -Path 'C:\' -UnattendPath $AuditUnattendPath -Verbose
 #================================================
 #  [OOBE] SetupComplete
 #================================================
-Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/OSDCloudMyOLC/Main/xOOBEv1.ps1
+# Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/OSDCloudMyOLC/Main/xOOBEv1.ps1
 
 #================================================
 #  [PostOS] Download Provisioning Script
