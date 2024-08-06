@@ -239,8 +239,8 @@ $AutopilotCMD | Out-File -FilePath 'C:\Windows\System32\Autopilot.cmd' -Encoding
 #================================================
 Write-Host -ForegroundColor Green "Create C:\Windows\Setup\Scripts\SetupComplete.cmd"
 $SetupCompleteCMD = @'
-REM RD C:\OSDCloud\OS /S /Q
-REM RD C:\Drivers /S /Q
+RD C:\OSDCloud\OS /S /Q
+RD C:\Drivers /S /Q
 '@
 $SetupCompleteCMD | Out-File -FilePath 'C:\Windows\Setup\Scripts\SetupComplete.cmd' -Encoding ascii -Force
 
