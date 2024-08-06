@@ -137,16 +137,6 @@ Write-Host -ForegroundColor Cyan 'Use-WindowsUnattend'
 Use-WindowsUnattend -Path 'C:\' -UnattendPath $AuditUnattendPath -Verbose
 
 #================================================
-#  [PostOS] Download Provisioning Script
-#================================================
-
-$url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/provisioning.ps1"
-$destinationFolder = "C:\Windows\Setup\Scripts"
-$destinationPath = Join-Path -Path $destinationFolder -ChildPath "provisioning.ps1"
-Invoke-WebRequest -Uri $url -OutFile $destinationPath
-
-
-#================================================
 #  [PostOS] OOBE CMD Command Line
 #================================================
 Write-Host -ForegroundColor Green "Downloading and creating script for OOBE phase"
