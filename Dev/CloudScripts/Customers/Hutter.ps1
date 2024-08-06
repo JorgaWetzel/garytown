@@ -144,12 +144,6 @@ Write-Host -ForegroundColor Green "Downloading and creating script for OOBE phas
 # Ensure the directories exist
 $osdCloudDir = 'C:\OSDCloud\Scripts\SetupComplete'
 $windowsSetupDir = 'C:\Windows\Setup\Scripts'
-if (-Not (Test-Path $osdCloudDir)) {
-    New-Item -ItemType Directory -Path $osdCloudDir -Force
-}
-if (-Not (Test-Path $windowsSetupDir)) {
-    New-Item -ItemType Directory -Path $windowsSetupDir -Force
-}
 
 # Download and create scripts
 Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/OSDCloudMyOLC/Main/SetupComplete.ps1 | Out-File -FilePath "$osdCloudDir\SetupComplete.ps1" -Encoding ascii -Force
@@ -174,5 +168,4 @@ $OOBECMD | Out-File -FilePath "$osdCloudDir\SetupComplete.cmd" -Encoding ascii -
 #=======================================================================
 Write-Host  -ForegroundColor Green "Restarting in 5 seconds!"
 Start-Sleep -Seconds 5
-pause
 wpeutil reboot
