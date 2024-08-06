@@ -101,11 +101,6 @@ $AutopilotOOBEJson = @'
                     "sg-XXX"
     ],
     "Hidden":  [
-                   "AssignedComputerName",
-                   "AssignedUser",
-                   "PostAction",
-                   "GroupTag",
-                   "Assign"
                ],
     "PostAction":  "Quit",
     "Run":  "NetworkingWireless",
