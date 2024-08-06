@@ -48,16 +48,6 @@ function Step-KeyboardLanguage {
     Set-WinDefaultInputMethodOverride -InputTip "0407:00000807"  # Swiss German Keyboard
 }
 
-
-    Write-Host -ForegroundColor Green "Set keyboard language to de-CH"
-    $LanguageList = Get-WinUserLanguageList
-    $LanguageList.Add("de-CH")
-    Set-WinUserLanguageList $LanguageList -Force | Out-Null
-    Start-Sleep -Seconds 5
-    $LanguageList = Get-WinUserLanguageList
-    $LanguageList.Remove(($LanguageList | Where-Object LanguageTag -like 'en-GB'))
-    Set-WinUserLanguageList $LanguageList -Force | Out-Null
-}
 function Step-oobeSetDisplay {
     [CmdletBinding()]
     param ()
