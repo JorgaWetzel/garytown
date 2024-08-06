@@ -166,6 +166,15 @@ foreach ($url in $urls) {
 # Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/OSDCloudMyOLC/Main/xOOBEv1.ps1
 
 #================================================
+#  [PostOS] Download Provisioning Script
+#================================================
+
+$url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/provisioning.ps1"
+$destinationFolder = "C:\Windows\Setup\Scripts"
+$destinationPath = Join-Path -Path $destinationFolder -ChildPath "provisioning.ps1"
+Invoke-WebRequest -Uri $url -OutFile $destinationPath
+
+#================================================
 #  [PostOS] AutopilotOOBE CMD Command Line
 #================================================
 Write-Host -ForegroundColor Green "Create C:\Windows\System32\Autopilot.cmd"
