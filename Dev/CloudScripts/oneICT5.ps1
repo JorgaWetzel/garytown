@@ -16,16 +16,37 @@ Import-Module OSD -Force
 #=======================================================================
 #   [OS] Params and Start-OSDCloud
 #=======================================================================
-$Params = @{
-    OSVersion = "Windows 11"
-    OSBuild = "23H2"
-    OSEdition = "Pro"
-    OSLanguage = "de-DE"
-    OSLicense = "Retail"
-    ZTI = $true
-    Firmware = $false
+#Variables to define the Windows OS / Edition etc to be applied during OSDCloud
+$Product = (Get-MyComputerProduct)
+$Model = (Get-MyComputerModel)
+$Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
+$OSVersion = 'Windows 11' #Used to Determine Driver Pack
+$OSReleaseID = '23H2' #Used to Determine Driver Pack
+$OSName = 'Windows 11 23H2 x64'
+$OSEdition = 'Pro'
+$OSActivation = 'Retail'
+$OSLanguage = 'de-de'
+$OSImageIndex =  '8'
+
+# Full List https://github.com/OSDeploy/OSD/blob/06d544f0bff26b560e19676582d273e1c229cfac/Public/OSDCloud.ps1#L521
+#Set OSDCloud Vars
+$Global:MyOSDCloud = [ordered]@{
+    Restart = [bool]$False
+    RecoveryPartition = [bool]$true
+    OEMActivation = [bool]$True
+    WindowsUpdate = [bool]$true
+    WindowsUpdateDrivers = [bool]$False
+    WindowsDefenderUpdate = [bool]$False
+    SetTimeZone = [bool]$False
+    ClearDiskConfirm = [bool]$False
+    ShutdownSetupComplete = [bool]$False
+    SyncMSUpCatDriverUSB = [bool]$true
+    CheckSHA1 = [bool]$true
 }
-Start-OSDCloud @Params
+
+# Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
+Start-OSDCloudGUI
+# Start-OSDCloudGUIDev
 
 #================================================
 #  [PostOS] OOBEDeploy Configuration
