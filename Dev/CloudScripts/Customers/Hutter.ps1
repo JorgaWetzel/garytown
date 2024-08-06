@@ -140,9 +140,22 @@ Use-WindowsUnattend -Path 'C:\' -UnattendPath $AuditUnattendPath -Verbose
 #  [PostOS] OOBE CMD Command Line
 #================================================
 Write-Host -ForegroundColor Green "Downloading and creating script for OOBE phase"
-Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/OSDCloudMyOLC/Main/SetupComplete.ps1 | Out-File -FilePath 'C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1' -Encoding ascii -Force
-Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/provisioning.ps1 | Out-File -FilePath 'C:\Windows\Setup\Scripts\provisioning.ps1' -Encoding ascii -Force
 
+# Ensure the directories exist
+$osdCloudDir = 'C:\OSDCloud\Scripts\SetupComplete'
+$windowsSetupDir = 'C:\Windows\Setup\Scripts'
+if (-Not (Test-Path $osdCloudDir)) {
+    New-Item -ItemType Directory -Path $osdCloudDir -Force
+}
+if (-Not (Test-Path $windowsSetupDir)) {
+    New-Item -ItemType Directory -Path $windowsSetupDir -Force
+}
+
+# Download and create scripts
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/OSDCloudMyOLC/Main/SetupComplete.ps1 | Out-File -FilePath "$osdCloudDir\SetupComplete.ps1" -Encoding ascii -Force
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/provisioning.ps1 | Out-File -FilePath "$windowsSetupDir\provisioning.ps1" -Encoding ascii -Force
+
+# Create the OOBE CMD command line
 $OOBECMD = @'
 @echo off
 start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1 
@@ -152,7 +165,8 @@ REM RD C:\OSDCloud\OS /S /Q
 REM RD C:\Drivers /S /Q
 exit 
 '@
-$OOBECMD | Out-File -FilePath 'C:\OSDCloud\Scripts\SetupComplete\SetupComplete.cmd' -Encoding ascii -Force
+
+$OOBECMD | Out-File -FilePath "$osdCloudDir\SetupComplete.cmd" -Encoding ascii -Force
 
 
 #=======================================================================
