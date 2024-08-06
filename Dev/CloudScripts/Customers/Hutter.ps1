@@ -144,30 +144,6 @@ $UnattendXml = @'
                     <Description>Set ExecutionPolicy RemoteSigned</Description>
                     <Path>PowerShell -WindowStyle Hidden -Command "Set-ExecutionPolicy RemoteSigned -Force"</Path>
                 </RunSynchronousCommand>
-
-                <RunSynchronousCommand wcm:action="add">
-                    <Order>2</Order>
-                    <Description>Install AutopilotOOBE module</Description>
-                    <Path>PowerShell -WindowStyle Hidden -Command "Install-Module AutopilotOOBE -Force -Verbose"</Path>
-                </RunSynchronousCommand>
-
-                <RunSynchronousCommand wcm:action="add">
-                    <Order>3</Order>
-                    <Description>Start-AutopilotOOBE Command</Description>
-                    <Path>PowerShell -WindowStyle Hidden -Command "Start-AutopilotOOBE"</Path>
-                </RunSynchronousCommand>
-
-                <RunSynchronousCommand wcm:action="add">
-                    <Order>4</Order>
-                    <Description>Run Get-WindowsAutopilotInfo</Description>
-                    <Path>PowerShell -NoProfile -File "C:\Program Files\WindowsPowerShell\Scripts\Get-WindowsAutoPilotInfo.ps1" -Online</Path>
-                </RunSynchronousCommand>
-
-                <RunSynchronousCommand wcm:action="add">
-                    <Order>5</Order>
-                    <Description>Start custom Autopilot script</Description>
-                    <Path>CMD /C C:\Windows\System32\Autopilot.cmd</Path>
-                </RunSynchronousCommand>
             </RunSynchronous>
         </component>
     </settings>
@@ -185,8 +161,6 @@ $UnattendXml | Out-File -FilePath $AuditUnattendPath -Encoding utf8
 
 Write-Host -ForegroundColor Cyan 'Use-WindowsUnattend'
 Use-WindowsUnattend -Path 'C:\' -UnattendPath $AuditUnattendPath -Verbose
-
-
 
 #================================================
 #  [OOBE] SetupComplete
@@ -218,21 +192,6 @@ $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudS
 $destinationFolder = "C:\Windows\Setup\Scripts"
 $destinationPath = Join-Path -Path $destinationFolder -ChildPath "provisioning.ps1"
 Invoke-WebRequest -Uri $url -OutFile $destinationPath
-
-#================================================
-#  [PostOS] AutopilotOOBE CMD Command Line
-#================================================
-Write-Host -ForegroundColor Green "Create C:\Windows\System32\Autopilot.cmd"
-$AutopilotCMD = @'
-PowerShell -NoL -Com Set-ExecutionPolicy RemoteSigned -Force
-Set Path = %PATH%;C:\Program Files\WindowsPowerShell\Scripts
-REM Start /Wait PowerShell -NoL -C Install-Module AutopilotOOBE -Force -Verbose
-Start /Wait PowerShell -NoL -C Install-Module OSD -Force -Verbose
-Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/OSDCloudMyOLC/Main/Set-KeyboardLanguage.ps1
-Start /Wait PowerShell -NoL -C Start-OOBEDeploy
-REM Start /Wait PowerShell -NoL -C Restart-Computer -Force
-'@
-$AutopilotCMD | Out-File -FilePath 'C:\Windows\System32\Autopilot.cmd' -Encoding ascii -Force
 
 #================================================
 #  [PostOS] SetupComplete CMD Command Line
