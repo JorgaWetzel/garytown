@@ -134,10 +134,10 @@ start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scri
 start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\productkey.ps1
 start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\autopilotprereq.ps1
 start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\autopilotoobe.ps1
-start /wait powershell.exe -NoL -ExecutionPolicy Bypass -Command "Invoke-WebPSScript https://start-autopilotoobe.osdcloud.ch"
-start /wait powershell.exe -NoL -ExecutionPolicy Bypass -Command "Start-OOBEDeploy"
-start /wait powershell.exe -NoL -ExecutionPolicy Bypass -Command "Invoke-WebPSScript https://cleanup.osdcloud.ch"
-start /wait powershell.exe -NoL -ExecutionPolicy Bypass -Command "Restart-Computer -Force"
+# start /wait powershell.exe -NoL -ExecutionPolicy Bypass -Command "Invoke-WebPSScript https://start-autopilotoobe.osdcloud.ch"
+# start /wait powershell.exe -NoL -ExecutionPolicy Bypass -Command "Start-OOBEDeploy"
+# start /wait powershell.exe -NoL -ExecutionPolicy Bypass -Command "Invoke-WebPSScript https://cleanup.osdcloud.ch"
+# start /wait powershell.exe -NoL -ExecutionPolicy Bypass -Command "Restart-Computer -Force"
 # Below a PS session for debug and testing in system context, # when not needed 
 # start /wait powershell.exe -NoL -ExecutionPolicy Bypass
 
