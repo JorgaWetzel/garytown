@@ -142,7 +142,6 @@ Use-WindowsUnattend -Path 'C:\' -UnattendPath $AuditUnattendPath -Verbose
 Write-Host -ForegroundColor Green "Downloading and creating script for OOBE phase"
 Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/OSDCloudMyOLC/Main/SetupComplete.ps1 | Out-File -FilePath 'C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1' -Encoding ascii -Force
 Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/provisioning.ps1 | Out-File -FilePath 'C:\Windows\Setup\Scripts' -Encoding ascii -Force
-$destinationFolder = "C:\Windows\Setup\Scripts"
 
 $OOBECMD = @'
 @echo off
