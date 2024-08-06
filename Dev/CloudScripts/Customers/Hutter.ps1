@@ -140,33 +140,18 @@ Use-WindowsUnattend -Path 'C:\' -UnattendPath $AuditUnattendPath -Verbose
 #  [PostOS] OOBE CMD Command Line
 #================================================
 Write-Host -ForegroundColor Green "Downloading and creating script for OOBE phase"
-# Invoke-RestMethod https://raw.githubusercontent.com/AkosBakos/OSDCloud/main/Set-KeyboardLanguage.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\keyboard.ps1' -Encoding ascii -Force
-# Invoke-RestMethod https://raw.githubusercontent.com/AkosBakos/OSDCloud/main/Install-EmbeddedProductKey.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\productkey.ps1' -Encoding ascii -Force
-# Invoke-RestMethod https://check-autopilotprereq.osdcloud.ch | Out-File -FilePath 'C:\Windows\Setup\scripts\autopilotprereq.ps1' -Encoding ascii -Force
-# Invoke-RestMethod https://start-autopilotoobe.osdcloud.ch | Out-File -FilePath 'C:\Windows\Setup\scripts\autopilotoobe.ps1' -Encoding ascii -Force
-Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/OSDCloudMyOLC/Main/SetupComplete.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\SetupComplete.ps1' -Encoding ascii -Force
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/OSDCloudMyOLC/Main/SetupComplete.ps1 | Out-File -FilePath 'C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1' -Encoding ascii -Force
 Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/provisioning.ps1 | Out-File -FilePath 'C:\Windows\Setup\Scripts' -Encoding ascii -Force
 $destinationFolder = "C:\Windows\Setup\Scripts"
 
 $OOBECMD = @'
 @echo off
-# Execute OOBE Tasks
-# start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\keyboard.ps1
-# start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\productkey.ps1
-# start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\autopilotprereq.ps1
-# start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\autopilotoobe.ps1
-
-start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\SetupComplete.ps1 
+start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1 
 reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" /v "execute_provisioning" /t REG_SZ /d "cmd /c powershell.exe -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\provisioning.ps1" /f
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\OOBE" /v "DisablePrivacyExperience" /t REG_DWORD /d 1 /f
-
-# start /wait powershell.exe -NoL -ExecutionPolicy Bypass -Command "Restart-Computer -Force"
-# Below a PS session for debug and testing in system context, # when not needed 
-# start /wait powershell.exe -NoL -ExecutionPolicy Bypass
-
 exit 
 '@
-$OOBECMD | Out-File -FilePath '"C:\OSDCloud\Scripts\SetupComplete\oobe.cmd' -Encoding ascii -Force
+$OOBECMD | Out-File -FilePath 'C:\OSDCloud\Scripts\SetupComplete\SetupComplete.cmd' -Encoding ascii -Force
 
 
 #================================================
