@@ -104,8 +104,8 @@ $AutopilotOOBEJson = @'
                ],
     "PostAction":  "Quit",
     "Run":  "NetworkingWireless",
-    "Docs":  "https://google.com/",
-    "Title":  "PoC Autopilot Register"
+    "Docs":  "https://oneICT.ch/",
+    "Title":  "oneICT Autopilot Registrierung"
 }
 '@
 If (!(Test-Path "C:\ProgramData\OSDeploy")) {
