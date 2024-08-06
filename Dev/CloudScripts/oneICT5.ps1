@@ -129,7 +129,7 @@ $AutopilotOOBEJson = @"
     "PostAction":  "Quit",
     "Run":  "NetworkingWireless",
     "Docs":  "https://google.com/",
-    "Title":  "Autopilot Manual Register"
+    "Title":  "oneICT Autopilot registrierung"
 }
 "@
 
