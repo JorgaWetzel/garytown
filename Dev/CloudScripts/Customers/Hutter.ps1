@@ -5,21 +5,17 @@ if ((Get-MyComputerModel) -match 'Virtual') {
     Write-Host  -ForegroundColor Green "Setting Display Resolution to 1600x"
     Set-DisRes 1600
 }
-
 <#
 Write-Host -ForegroundColor Green "Updating OSD PowerShell Module"
 Install-Module OSD -Force
 
 Write-Host  -ForegroundColor Green "Importing OSD PowerShell Module"
-Import-Module OSD -Force  
-
-
-#> 
+Import-Module OSD -Force   
+#>
 
 #=======================================================================
 #   [OS] Params and Start-OSDCloud
 #=======================================================================
-
 #Variables to define the Windows OS / Edition etc to be applied during OSDCloud
 $Product = (Get-MyComputerProduct)
 $Model = (Get-MyComputerModel)
@@ -51,24 +47,6 @@ $Global:MyOSDCloud = [ordered]@{
 # Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
 Start-OSDCloudGUI
 # Start-OSDCloudGUIDev
-
-
-#================================================
-#  [PostOS] Tweaks
-#================================================
-iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
-#Set Win11 Bypasses
-Write-Host -ForegroundColor Gray "**Enabling Win11 Bypasses**" 
-Set-Win11ReqBypassRegValues
-
-#================================================
-#  [PostOS] Download Provisioning Script
-#================================================
-
-$url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/provisioning.ps1"
-$destinationFolder = "C:\Windows\Setup\Scripts"
-$destinationPath = Join-Path -Path $destinationFolder -ChildPath "provisioning.ps1"
-Invoke-WebRequest -Uri $url -OutFile $destinationPath
 
 #================================================
 #  [PostOS] OOBEDeploy Configuration
@@ -105,7 +83,6 @@ $OOBEDeployJson = @'
                     "Microsoft.XboxGameOverlay",
                     "Microsoft.XboxGamingOverlay",
                     "Microsoft.XboxIdentityProvider",
-                    "Microsoft.XboxSpeechToTextOverlay",
                     "Microsoft.ZuneMusic",
                     "Microsoft.ZuneVideo"
                    ],
@@ -129,7 +106,7 @@ Write-Host -ForegroundColor Green "Define Computername:"
 $Serial = Get-WmiObject Win32_bios | Select-Object -ExpandProperty SerialNumber
 $TargetComputername = $Serial.Substring(4,3)
 
-$AssignedComputerName = "Hutter-$TargetComputername"
+$AssignedComputerName = "AkosCloud-$TargetComputername"
 Write-Host -ForegroundColor Red $AssignedComputerName
 Write-Host ""
 
@@ -143,16 +120,11 @@ $AutopilotOOBEJson = @"
                },
     "GroupTag":  "DEV-WIN-Standard",
     "Hidden":  [
-                   "AddToGroup",
-                   "AssignedUser",
-                   "PostAction",
-                   "GroupTag",
-                   "Assign"
                ],
     "PostAction":  "Quit",
     "Run":  "NetworkingWireless",
     "Docs":  "https://google.com/",
-    "Title":  "Autopilot Manual Register"
+    "Title":  "oneICT Autopilot registrierung"
 }
 "@
 
@@ -162,37 +134,32 @@ If (!(Test-Path "C:\ProgramData\OSDeploy")) {
 $AutopilotOOBEJson | Out-File -FilePath "C:\ProgramData\OSDeploy\OSDeploy.AutopilotOOBE.json" -Encoding ascii -Force
 
 #================================================
-#  [PostOS] AutopilotOOBE CMD Command Line
+#  [PostOS] OOBE CMD Command Line
 #================================================
-Write-Host -ForegroundColor Green "Create C:\Windows\System32\OOBE.cmd"
-$OOBECMD = @'
-PowerShell -NoL -Com Set-ExecutionPolicy RemoteSigned -Force
-Set Path = %PATH%;C:\Program Files\WindowsPowerShell\Scripts
-Start /Wait PowerShell -NoL -C Install-Module AutopilotOOBE -Force -Verbose
-Start /Wait PowerShell -NoL -C Install-Module OSD -Force -Verbose
-Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Set-KeyboardLanguage.ps1
-Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Install-EmbeddedProductKey.ps1
-Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/AP-Prereq.ps1
-Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Start-AutopilotOOBE.ps1
-Start /Wait PowerShell -NoL -C Start-OOBEDeploy
-Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://tpm.osdcloud.ch
-rem Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/AkosBakos/OSDCloud/main/Lenovo_BIOS_Settings.ps1
-Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://cleanup.osdcloud.ch
-reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" /v "execute_provisioning" /t REG_SZ /d "cmd /c powershell.exe -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\provisioning.ps1" /f
-reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\OOBE" /v "DisablePrivacyExperience" /t REG_DWORD /d 1 /f
-Start /Wait PowerShell -NoL -C Restart-Computer -Force
-'@
-$OOBECMD | Out-File -FilePath 'C:\Windows\System32\OOBE.cmd' -Encoding ascii -Force
+Write-Host -ForegroundColor Green "Downloading and creating script for OOBE phase"
+Invoke-RestMethod https://raw.githubusercontent.com/AkosBakos/OSDCloud/main/Set-KeyboardLanguage.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\keyboard.ps1' -Encoding ascii -Force
+Invoke-RestMethod https://raw.githubusercontent.com/AkosBakos/OSDCloud/main/Install-EmbeddedProductKey.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\productkey.ps1' -Encoding ascii -Force
+Invoke-RestMethod https://check-autopilotprereq.osdcloud.ch | Out-File -FilePath 'C:\Windows\Setup\scripts\autopilotprereq.ps1' -Encoding ascii -Force
+Invoke-RestMethod https://start-autopilotoobe.osdcloud.ch | Out-File -FilePath 'C:\Windows\Setup\scripts\autopilotoobe.ps1' -Encoding ascii -Force
 
-#================================================
-#  [PostOS] SetupComplete CMD Command Line
-#================================================
-Write-Host -ForegroundColor Green "Create C:\Windows\Setup\Scripts\SetupComplete.cmd"
-$SetupCompleteCMD = @'
-powershell.exe -Command Set-ExecutionPolicy RemoteSigned -Force
-powershell.exe -Command "& {IEX (IRM https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/oobetasks.ps1)}"
+
+$OOBECMD = @'
+@echo off
+# Execute OOBE Tasks
+start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\keyboard.ps1
+start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\productkey.ps1
+start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\autopilotprereq.ps1
+start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\autopilotoobe.ps1
+# start /wait powershell.exe -NoL -ExecutionPolicy Bypass -Command "Invoke-WebPSScript https://start-autopilotoobe.osdcloud.ch"
+# start /wait powershell.exe -NoL -ExecutionPolicy Bypass -Command "Start-OOBEDeploy"
+# start /wait powershell.exe -NoL -ExecutionPolicy Bypass -Command "Invoke-WebPSScript https://cleanup.osdcloud.ch"
+# start /wait powershell.exe -NoL -ExecutionPolicy Bypass -Command "Restart-Computer -Force"
+# Below a PS session for debug and testing in system context, # when not needed 
+# start /wait powershell.exe -NoL -ExecutionPolicy Bypass
+
+exit 
 '@
-$SetupCompleteCMD | Out-File -FilePath 'C:\Windows\Setup\Scripts\SetupComplete.cmd' -Encoding ascii -Force
+$OOBECMD | Out-File -FilePath 'C:\Windows\Setup\scripts\oobe.cmd' -Encoding ascii -Force
 
 #=======================================================================
 #   Restart-Computer
