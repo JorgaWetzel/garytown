@@ -45,6 +45,9 @@ $Global:MyOSDCloud = [ordered]@{
     CheckSHA1 = [bool]$true
 }
 
+# Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
+Start-OSDCloudGUI
+# Start-OSDCloudGUIDev
 
 #=======================================================================
 #   [OS] Params and Start-OSDCloud
