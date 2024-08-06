@@ -15,7 +15,10 @@ Import-Module OSD -Force
 
 
 #> 
-iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
+
+#=======================================================================
+#   [OS] Params and Start-OSDCloud
+#=======================================================================
 
 #Variables to define the Windows OS / Edition etc to be applied during OSDCloud
 $Product = (Get-MyComputerProduct)
@@ -49,10 +52,14 @@ $Global:MyOSDCloud = [ordered]@{
 Start-OSDCloudGUI
 # Start-OSDCloudGUIDev
 
-#=======================================================================
-#   [OS] Params and Start-OSDCloud
-#=======================================================================
 
+#================================================
+#  [PostOS] Tweaks
+#================================================
+iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
+#Set Win11 Bypasses
+Write-Host -ForegroundColor Gray "**Enabling Win11 Bypasses**" 
+Set-Win11ReqBypassRegValues
 
 #================================================
 #  [PostOS] OOBEDeploy Configuration
