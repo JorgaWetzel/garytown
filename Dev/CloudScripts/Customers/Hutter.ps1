@@ -213,11 +213,14 @@ $OOBECMD = @'
 # start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\productkey.ps1
 # start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\autopilotprereq.ps1
 # start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\autopilotoobe.ps1
+
 start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\SetupComplete.ps1 
+reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" /v "execute_provisioning" /t REG_SZ /d "cmd /c powershell.exe -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\provisioning.ps1" /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\OOBE" /v "DisablePrivacyExperience" /t REG_DWORD /d 1 /f
 
 # start /wait powershell.exe -NoL -ExecutionPolicy Bypass -Command "Restart-Computer -Force"
 # Below a PS session for debug and testing in system context, # when not needed 
-#start /wait powershell.exe -NoL -ExecutionPolicy Bypass
+# start /wait powershell.exe -NoL -ExecutionPolicy Bypass
 
 exit 
 '@
