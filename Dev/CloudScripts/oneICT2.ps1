@@ -163,6 +163,8 @@ foreach ($url in $urls) {
     Invoke-WebRequest -Uri $url -OutFile $destinationFile
 }
 
+# https://raw.githubusercontent.com/JorgaWetzel/OSDCloudMyOLC/Main/xOOBEv1.ps1
+
 #================================================
 #  [PostOS] AutopilotOOBE CMD Command Line
 #================================================
