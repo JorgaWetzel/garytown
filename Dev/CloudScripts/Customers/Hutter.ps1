@@ -22,7 +22,6 @@ $Params = @{
     OSEdition = "Pro"
     OSLanguage = "de-DE"
     OSLicense = "Retail"
-    FindImageFile = $true
     ZTI = $true
     Firmware = $false
 }
