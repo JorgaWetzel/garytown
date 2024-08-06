@@ -91,21 +91,19 @@ $OOBEDeployJson | Out-File -FilePath "C:\ProgramData\OSDeploy\OSDeploy.OOBEDeplo
 Write-Host -ForegroundColor Green "Create C:\ProgramData\OSDeploy\OSDeploy.AutopilotOOBE.json"
 $AutopilotOOBEJson = @'
 {
+    "AssignedComputerName" : "$AssignedComputerName",
+    "AddToGroup":  "DEV-WIN-Standard",
     "Assign":  {
                    "IsPresent":  true
                },
-    "GroupTag":  "IMM-Hybrid-Shared",
-    "AddToGroup": "sg-XXX",
-    "AddToGroupOptions":  [
-                    "sg-XXX",
-                    "sg-XXX"
-    ],
+    "GroupTag":  "DEV-WIN-Standard",
     "Hidden":  [
+
                ],
     "PostAction":  "Quit",
     "Run":  "NetworkingWireless",
     "Docs":  "https://oneICT.ch/",
-    "Title":  "oneICT Autopilot Registrierung"
+    "Title":  "oneICT Autopilot registrierung"
 }
 '@
 If (!(Test-Path "C:\ProgramData\OSDeploy")) {
