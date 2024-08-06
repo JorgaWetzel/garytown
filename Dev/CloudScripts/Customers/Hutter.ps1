@@ -166,7 +166,7 @@ reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\OOBE" /v "DisablePrivacyExperi
 
 exit 
 '@
-$OOBECMD | Out-File -FilePath 'C:\Windows\Setup\scripts\oobe.cmd' -Encoding ascii -Force
+$OOBECMD | Out-File -FilePath '"C:\OSDCloud\Scripts\SetupComplete\oobe.cmd' -Encoding ascii -Force
 
 
 #================================================
