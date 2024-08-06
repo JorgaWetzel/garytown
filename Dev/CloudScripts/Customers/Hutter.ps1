@@ -160,4 +160,5 @@ $OOBECMD | Out-File -FilePath 'C:\OSDCloud\Scripts\SetupComplete\SetupComplete.c
 #=======================================================================
 Write-Host  -ForegroundColor Green "Restarting in 5 seconds!"
 Start-Sleep -Seconds 5
+pause
 wpeutil reboot
