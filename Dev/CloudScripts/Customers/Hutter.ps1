@@ -193,16 +193,6 @@ $destinationFolder = "C:\Windows\Setup\Scripts"
 $destinationPath = Join-Path -Path $destinationFolder -ChildPath "provisioning.ps1"
 Invoke-WebRequest -Uri $url -OutFile $destinationPath
 
-#================================================
-#  [PostOS] SetupComplete CMD Command Line
-#================================================
-Write-Host -ForegroundColor Green "Create C:\Windows\Setup\Scripts\SetupComplete.cmd"
-$SetupCompleteCMD = @'
-powershell.exe -Command Set-ExecutionPolicy RemoteSigned -Force
-powershell.exe -Command "& {IEX (IRM https://raw.githubusercontent.com/JorgaWetzel/OSDCloudMyOLC/Main/SetupComplete.ps1)}"
-'@
-$SetupCompleteCMD | Out-File -FilePath 'C:\OSDCloud\Scripts\SetupComplete\SetupComplete.cmd' -Encoding ascii -Force
-
 
 #================================================
 #  [PostOS] OOBE CMD Command Line
@@ -212,7 +202,9 @@ Write-Host -ForegroundColor Green "Downloading and creating script for OOBE phas
 # Invoke-RestMethod https://raw.githubusercontent.com/AkosBakos/OSDCloud/main/Install-EmbeddedProductKey.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\productkey.ps1' -Encoding ascii -Force
 # Invoke-RestMethod https://check-autopilotprereq.osdcloud.ch | Out-File -FilePath 'C:\Windows\Setup\scripts\autopilotprereq.ps1' -Encoding ascii -Force
 # Invoke-RestMethod https://start-autopilotoobe.osdcloud.ch | Out-File -FilePath 'C:\Windows\Setup\scripts\autopilotoobe.ps1' -Encoding ascii -Force
-Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/OSDCloudMyOLC/Main/SetupComplete.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\SetupComplete.ps1 ' -Encoding ascii -Force
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/OSDCloudMyOLC/Main/SetupComplete.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\SetupComplete.ps1' -Encoding ascii -Force
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/provisioning.ps1 | Out-File -FilePath 'C:\Windows\Setup\Scripts' -Encoding ascii -Force
+$destinationFolder = "C:\Windows\Setup\Scripts"
 
 $OOBECMD = @'
 @echo off
