@@ -120,11 +120,6 @@ $AutopilotOOBEJson = @"
                },
     "GroupTag":  "DEV-WIN-Standard",
     "Hidden":  [
-                   "AddToGroup",
-                   "AssignedUser",
-                   "PostAction",
-                   "GroupTag",
-                   "Assign"
                ],
     "PostAction":  "Quit",
     "Run":  "NetworkingWireless",
