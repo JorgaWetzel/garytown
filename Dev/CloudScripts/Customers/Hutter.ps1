@@ -49,6 +49,23 @@ Start-OSDCloudGUI
 # Start-OSDCloudGUIDev
 
 #================================================
+#  [PostOS] Tweaks
+#================================================
+iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
+#Set Win11 Bypasses
+Write-Host -ForegroundColor Gray "**Enabling Win11 Bypasses**" 
+Set-Win11ReqBypassRegValues
+
+#================================================
+#  [PostOS] Download Provisioning Script
+#================================================
+
+$url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/provisioning.ps1"
+$destinationFolder = "C:\Windows\Setup\Scripts"
+$destinationPath = Join-Path -Path $destinationFolder -ChildPath "provisioning.ps1"
+Invoke-WebRequest -Uri $url -OutFile $destinationPath
+
+#================================================
 #  [PostOS] OOBEDeploy Configuration
 #================================================
 Write-Host -ForegroundColor Green "Create C:\ProgramData\OSDeploy\OSDeploy.OOBEDeploy.json"
