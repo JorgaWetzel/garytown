@@ -331,15 +331,15 @@ function Step-oobeStopComputer {
 # Execute functions
 Step-KeyboardLanguage
 Step-oobeExecutionPolicy
-Step-oobePackageManagement
-Step-oobeTrustPSGallery
-Step-oobeSetDisplay
-Step-oobeSetRegionLanguage
-Step-oobeSetDateTime
-Step-oobeRegisterAutopilot
-Step-EmbeddedProductKey
-Step-oobeRemoveAppxPackage
-Step-oobeAddCapability
+#Step-oobePackageManagement
+#Step-oobeTrustPSGallery
+#Step-oobeSetDisplay
+#Step-oobeSetRegionLanguage
+#Step-oobeSetDateTime
+#Step-oobeRegisterAutopilot
+#Step-EmbeddedProductKey
+#Step-oobeRemoveAppxPackage
+#Step-oobeAddCapability
 # Step-oobeUpdateDrivers
 # Step-oobeUpdateWindows
 # Invoke-Webhook
