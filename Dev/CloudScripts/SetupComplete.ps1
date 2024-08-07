@@ -1,15 +1,3 @@
-#if ((Test-WebConnection) -ne $true){Write-error "No Internet, Sleeping 2 Minutes" ; start-sleep -seconds 120}'
-#iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/oneICT2.ps1)'
-
-
-[CmdletBinding()]
-param()
-#region Initialize
-
-#Start the Transcript
-$Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-OSDCloud.log"
-$null = Start-Transcript -Path (Join-Path "$env:SystemRoot\Temp" $Transcript) -ErrorAction Ignore
-
 #=================================================
 #   oobeCloud Settings
 #=================================================
