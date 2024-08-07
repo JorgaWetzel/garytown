@@ -30,7 +30,7 @@ $Params = @{
     ZTI = $true
     Firmware = $false
 }
-# Start-OSDCloud @Params
+Start-OSDCloud @Params
 
 $Product = (Get-MyComputerProduct)
 $Model = (Get-MyComputerModel)
@@ -60,7 +60,7 @@ $Global:MyOSDCloud = [ordered]@{
 }
 
 # Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
-Start-OSDCloudGUI
+# Start-OSDCloudGUI
 # Start-OSDCloudGUIDev
 
 #================================================
