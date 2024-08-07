@@ -1,3 +1,11 @@
+[CmdletBinding()]
+param()
+#region Initialize
+
+#Start the Transcript
+$Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-SetupComplete.log"
+$null = Start-Transcript -Path (Join-Path "$env:SystemRoot\Temp" $Transcript) -ErrorAction Ignore
+
 #=================================================
 #   oobeCloud Settings
 #=================================================
@@ -330,10 +338,12 @@ Step-oobeSetDateTime
 Step-oobeRegisterAutopilot
 Step-EmbeddedProductKey
 Step-oobeRemoveAppxPackage
-Step-oobeAddCapability
-Step-oobeUpdateDrivers
-Step-oobeUpdateWindows
+# Step-oobeAddCapability
+# Step-oobeUpdateDrivers
+# Step-oobeUpdateWindows
 # Invoke-Webhook
 Step-oobeRestartComputer
-Step-oobeStopComputer
+# Step-oobeStopComputer
 #=================================================
+
+Stop-Transcript
