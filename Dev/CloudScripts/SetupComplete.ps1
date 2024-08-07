@@ -32,7 +32,7 @@ function Step-KeyboardLanguage {
     Write-Host "Setting Keyboard and Language to German (Switzerland)"
 
     Set-WinUILanguageOverride -Language "de-CH"
-    Set-WinUserLanguageList -LanguageList "de-CH"
+    Set-WinUserLanguageList -LanguageList "de-CH" -Force
     Set-WinSystemLocale -SystemLocale "de-CH"
     Set-WinHomeLocation -GeoId 19  # 19 corresponds to Switzerland
     Set-Culture -CultureInfo "de-CH"
@@ -43,6 +43,7 @@ function Step-KeyboardLanguage {
     Set-WinUILanguageOverride -Language "de-CH"
     Set-WinDefaultInputMethodOverride -InputTip "0407:00000807"  # Swiss German Keyboard
 }
+
 
 function Step-oobeSetDisplay {
     [CmdletBinding()]
