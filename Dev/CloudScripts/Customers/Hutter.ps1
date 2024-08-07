@@ -30,7 +30,7 @@ $Params = @{
     ZTI = $true
     Firmware = $false
 }
-Start-OSDCloud @Params
+# Start-OSDCloud @Params
 
 $Product = (Get-MyComputerProduct)
 $Model = (Get-MyComputerModel)
@@ -59,6 +59,9 @@ $Global:MyOSDCloud = [ordered]@{
     CheckSHA1 = [bool]$true
 }
 
+# Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
+Start-OSDCloudGUI
+# Start-OSDCloudGUIDev
 
 #================================================
 #  [PostOS] OOBEDeploy Configuration
