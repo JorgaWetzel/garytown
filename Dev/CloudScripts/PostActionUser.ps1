@@ -18,7 +18,7 @@ $trigger = New-ScheduledTaskTrigger -AtLogOn
 $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -RunOnlyIfNetworkAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 1)
 $principal = New-ScheduledTaskPrincipal "BUILTIN\Users" -RunLevel Highest
 $task = New-ScheduledTask -Action $action -Trigger $trigger -Settings $settings -Description "OSDCloud Post Action" -Principal $principal
-Register-ScheduledTask $ScheduledTaskName -InputObject $task -User $env:USERNAME -Password (Read-Host -AsSecureString -Prompt "Enter your password")
+Register-ScheduledTask $ScheduledTaskName -InputObject $task
 
 # Zweites Skript, das bei Benutzeranmeldung ausgeführt wird
 $PostActionScript = @'
@@ -55,9 +55,6 @@ foreach ($url in $urls) {
     # Ausführen des Skripts
     . $scriptPath
 }
-
-
-# Version=1
 
 # syspin ["file"] #### or syspin ["file"] "commandstring"
 # 5386  : Pin to taskbar
