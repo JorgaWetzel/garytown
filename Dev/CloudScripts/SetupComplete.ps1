@@ -372,6 +372,23 @@ Step-oobeRestartComputer
 # Step-oobeStopComputer
 #=================================================
 
+#region functions
+iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
+iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions2.ps1)
+#endregion
+
+# setup RunOnce to execute provisioning.ps1 script
+Write-Host -ForegroundColor Gray "**Running Set-RunOnceScript Script**"
+Set-RunOnceScript
+
+#Try to prevent crap from auto installing
+Write-Host -ForegroundColor Gray "**Disabling Cloud Content**" 
+#Disable-CloudContent
+
+#Set Win11 Bypasses
+Write-Host -ForegroundColor Gray "**Enabling Win11 Bypasses**" 
+Set-Win11ReqBypassRegValues
+
 #Windows Updates
 #Write-Host -ForegroundColor Gray "**Running Defender Updates**"
 #Update-DefenderStack
@@ -380,9 +397,23 @@ Step-oobeRestartComputer
 #Write-Host -ForegroundColor Gray "**Running Driver Updates**"
 #Start-WindowsUpdateDriver
 
-#region functions
-iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
-iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions2.ps1)
-#endregion
+#Store Updates
+#Write-Host -ForegroundColor Gray "**Running Winget Updates**"
+#Write-Host -ForegroundColor Gray "Invoke-UpdateScanMethodMSStore"
+#Invoke-UpdateScanMethodMSStore
+#Write-Host -ForegroundColor Gray "winget upgrade --all --accept-package-agreements --accept-source-agreements"
+#winget upgrade --all --accept-package-agreements --accept-source-agreements
+
+#Modified Version of Andrew's Debloat Script
+#Write-Host -ForegroundColor Gray "**Running Debloat Script**" 
+#iex (irm https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Debloat.ps1)
+
+#Set Time Zone
+# Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
+# Set-TimeZoneFromIP
+   
+# Setup oneICT Chocolatey Framework
+Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
+Set-Chocolatey
 
 Stop-Transcript
