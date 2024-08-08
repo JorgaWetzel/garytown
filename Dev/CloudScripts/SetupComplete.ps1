@@ -380,4 +380,9 @@ Step-oobeRestartComputer
 #Write-Host -ForegroundColor Gray "**Running Driver Updates**"
 #Start-WindowsUpdateDriver
 
+#region functions
+iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
+iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions2.ps1)
+#endregion
+
 Stop-Transcript
