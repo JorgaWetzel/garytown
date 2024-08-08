@@ -337,8 +337,8 @@ Step-oobeRestartComputer
 Set-DefaultProfilePersonalPref
 
 # setup RunOnce to execute provisioning.ps1 script
-Write-Host -ForegroundColor Gray "**Running Set-RunOnceScript Script**"
-Set-RunOnceScript
+# Write-Host -ForegroundColor Gray "**Running Set-RunOnceScript Script**"
+# Set-RunOnceScript
 
 #Try to prevent crap from auto installing
 Write-Host -ForegroundColor Gray "**Disabling Cloud Content**" 
