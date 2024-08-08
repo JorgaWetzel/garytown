@@ -366,7 +366,7 @@ function Step-oobeStopComputer {
 #Step-oobeRemoveAppxPackage
 #Step-oobeAddCapability
 #Step-oobeUpdateDrivers
-#Step-oobeUpdateWindows
+Step-oobeUpdateWindows
 # Invoke-Webhook
 Step-oobeRestartComputer
 # Step-oobeStopComputer
