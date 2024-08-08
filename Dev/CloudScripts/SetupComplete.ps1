@@ -6,8 +6,12 @@ param()
 $Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-SetupComplete.log"
 $null = Start-Transcript -Path (Join-Path "C:\OSDCloud\Logs" $Transcript) -ErrorAction Ignore
 
+#region functions
 iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
+iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
+iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions2.ps1)
+#endregion
 
 function Step-KeyboardLanguage {
 
@@ -328,11 +332,6 @@ Step-oobeUpdateWindows
 Step-oobeRestartComputer
 # Step-oobeStopComputer
 #=================================================
-
-#region functions
-iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
-iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions2.ps1)
-#endregion
 
 # Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
 Set-DefaultProfilePersonalPref
