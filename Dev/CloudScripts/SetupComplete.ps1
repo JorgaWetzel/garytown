@@ -327,9 +327,8 @@ function Step-oobeStopComputer {
 #Step-oobeRemoveAppxPackage
 #Step-oobeAddCapability
 #Step-oobeUpdateDrivers
-Step-oobeUpdateWindows
+# Step-oobeUpdateWindows
 # Invoke-Webhook
-Step-oobeRestartComputer
 # Step-oobeStopComputer
 #=================================================
 
@@ -374,5 +373,7 @@ Set-Win11ReqBypassRegValues
 # Setup oneICT Chocolatey Framework
 Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
 Set-Chocolatey
+
+Step-oobeRestartComputer
 
 Stop-Transcript
