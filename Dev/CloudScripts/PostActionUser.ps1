@@ -85,6 +85,9 @@ function Remove-AppFromTaskbar($appname) {
 # Remove-AppFromTaskbar 'HP Support Assistant'
 # Remove-AppFromTaskbar 'Microsoft Teams'
 Remove-AppFromTaskbar 'Microsoft Store'
+
+# Deaktivieren der geplanten Aufgabe nach der ersten Ausführung
+Disable-ScheduledTask -TaskName $ScheduledTaskName
 '@
 
 # Skript in Datei speichern
