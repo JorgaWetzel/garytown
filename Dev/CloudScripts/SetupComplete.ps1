@@ -333,15 +333,15 @@ Step-KeyboardLanguage
 Step-oobeExecutionPolicy
 #Step-oobePackageManagement
 #Step-oobeTrustPSGallery
-#Step-oobeSetDisplay
-#Step-oobeSetRegionLanguage
+Step-oobeSetDisplay
+Step-oobeSetRegionLanguage
 #Step-oobeSetDateTime
 #Step-oobeRegisterAutopilot
 #Step-EmbeddedProductKey
 #Step-oobeRemoveAppxPackage
 #Step-oobeAddCapability
-# Step-oobeUpdateDrivers
-# Step-oobeUpdateWindows
+#Step-oobeUpdateDrivers
+Step-oobeUpdateWindows
 # Invoke-Webhook
 Step-oobeRestartComputer
 # Step-oobeStopComputer
