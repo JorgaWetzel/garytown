@@ -120,11 +120,6 @@ $UnattendXml = @'
                     <Description>Set ExecutionPolicy RemoteSigned</Description>
                     <Path>PowerShell -WindowStyle Hidden -Command "Set-ExecutionPolicy RemoteSigned -Force"</Path>
                 </RunSynchronousCommand>
-                <RunSynchronousCommand wcm:action="add">
-                    <Order>2</Order>
-                    <Description>Run Provisioning Script</Description>
-                    <Path>powershell.exe -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\provisioning.ps1</Path>
-                </RunSynchronousCommand>
             </RunSynchronous>
         </component>
     </settings>
