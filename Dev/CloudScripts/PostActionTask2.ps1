@@ -93,13 +93,13 @@ foreach ($url in $urls) {
     . $scriptPath
 }
 
-# Chocolatey software installation
-choco.exe install office365business --params "'/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE'" -y --no-progress --ignore-checksums
-
 $packages = "TeamViewer","adobereader","microsoft-teams-new-bootstrapper","googlechrome","7zip.install","firefox","vlc","jre8","powertoys","onedrive","Pdf24","vcredist140","zoom","notepadplusplus.install","onenote","onedrive"
 $packages | %{
     choco install $_ -y --no-progress --ignore-checksums
 }
+
+# Chocolatey software installation
+choco.exe install office365business --params "'/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE'" -y --no-progress --ignore-checksums
 
 # Version=1
 
