@@ -372,4 +372,12 @@ Step-oobeRestartComputer
 # Step-oobeStopComputer
 #=================================================
 
+#Windows Updates
+#Write-Host -ForegroundColor Gray "**Running Defender Updates**"
+#Update-DefenderStack
+#Write-Host -ForegroundColor Gray "**Running Windows Updates**"
+#Start-WindowsUpdate
+#Write-Host -ForegroundColor Gray "**Running Driver Updates**"
+#Start-WindowsUpdateDriver
+
 Stop-Transcript
