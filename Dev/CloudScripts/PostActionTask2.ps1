@@ -6,8 +6,8 @@ if (!(Test-Path -Path ($ScriptPath | split-path))){New-Item -Path ($ScriptPath |
 New-Item -Path $RegistryPath -ItemType Directory -Force | Out-Null
 New-ItemProperty -Path $RegistryPath -Name "TriggerPostActions" -PropertyType dword -Value 1 | Out-Null
 
-$action = (New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File $ScriptPath")
-$trigger = New-ScheduledTaskTrigger -AtStartup
+$action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File $ScriptPath -WindowStyle Normal"
+$trigger = New-ScheduledTaskTrigger -AtLogon
 $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -RunOnlyIfNetworkAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 1)
 $principal = New-ScheduledTaskPrincipal "NT Authority\System" -RunLevel Highest
 $task = New-ScheduledTask -Action $action -Trigger $trigger -Settings $settings -Description "OSDCloud Post Action" -Principal $principal
@@ -15,6 +15,10 @@ Register-ScheduledTask $ScheduledTaskName -InputObject $task -User SYSTEM
 
 # Script That Runs:
 $PostActionScript = @'
+
+# Start the Transcript
+$Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-PostActions.log"
+$null = Start-Transcript -Path (Join-Path "C:\OSDCloud\Logs" $Transcript) -ErrorAction Ignore
 
 # wait for network
 $ProgressPreference_bk = $ProgressPreference
@@ -121,4 +125,50 @@ Invoke-WebRequest -Uri $url32 -OutFile $output
 & "$env:TEMP\syspin.exe" "$env:ALLUSERSPROFILE\Microsoft\Windows\Start Menu\Programs\Excel.lnk" 51201
 & "$env:TEMP\syspin.exe" "$env:ALLUSERSPROFILE\Microsoft\Windows\Start Menu\Programs\Firefox.lnk" 51201
 
-function Remove
+function Remove-AppFromTaskbar($appname) {
+    ((New-Object -Com Shell.Application).NameSpace('shell:::{4234d49b-0245-4df3-b780-3893943456e1}').Items() | Where-Object { $_.Name -eq $appname }).Verbs() | Where-Object { $_.Name.replace('&', '') -match 'Unpin from taskbar' -or $_.Name.replace('&','') -match 'Von Taskleiste lösen'} | ForEach-Object { $_.DoIt(); $exec = $true }
+}
+
+Remove-AppFromTaskbar "Microsoft Store"
+# Remove-AppFromTaskbar 'HP Support Assistant'
+# Remove-AppFromTaskbar 'Microsoft Teams'
+Remove-AppFromTaskbar 'Microsoft Store'
+
+do {
+    "Availabe actions:",
+    "   1 - Lokalen Admin erstellen",
+    "   2 - Computername ändern",
+    "   3 - Computer neu starten",
+    "   4 - Programme installieren",
+    "   0 - Skript schliessen" | Out-Host
+    $selected = Read-Host "Eintrag auswaehlen"
+    switch ($selected) {
+        1 {
+            $credential = Get-Credential -Message "Bitte geben Sie den Benutzernamen und das Passwort für den neuen lokalen Administrator an"
+            New-LocalUser -Name $credential.UserName -Password $credential.Password -PasswordNeverExpires:$true | Add-LocalGroupMember -Group "Administratoren"
+            break
+        }
+        2 {
+            Read-Host "Computername eintragen" | select @{n = 'NewName'; e = { $_ } } | Rename-Computer
+            break
+        }
+        3 {
+            Restart-Computer
+            break
+        }
+        4 {
+            #irm https://raw.githubusercontent.com/JorgaWetzel/winutil/main/winutil.ps1 | iex
+            irm https://raw.githubusercontent.com/ChrisTitusTech/winutil/main/winutil.ps1 | iex
+            break
+        }
+    }
+} while ($selected -ne 0)
+
+# best place to add more actions
+Write-Host "Alles ist fertig." -ForegroundColor Green
+Read-Host
+
+$null = Stop-Transcript -ErrorAction Ignore
+'@
+
+$PostActionScript | Out-File -FilePath $ScriptPath -Force
