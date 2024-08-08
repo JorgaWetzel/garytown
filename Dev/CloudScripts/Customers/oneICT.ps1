@@ -57,6 +57,9 @@ $Global:MyOSDCloud = [ordered]@{
     ShutdownSetupComplete = [bool]$False
     SyncMSUpCatDriverUSB = [bool]$true
     CheckSHA1 = [bool]$true
+    ImageFileFullName = "D:\OSDCloud\OS\24H2.wim"
+    ImageFileItem = "D:\OSDCloud\OS\24H2.wim"
+    ImageFileName = "24H2"    
 }
 
 # Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
