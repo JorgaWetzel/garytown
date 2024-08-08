@@ -153,8 +153,8 @@ $osdCloudDir = 'C:\OSDCloud\Scripts\SetupComplete'
 $windowsSetupDir = 'C:\Windows\Setup\Scripts'
 
 # Download and create scripts
-#Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/SetupComplete.ps1 | Out-File -FilePath "$osdCloudDir\SetupComplete.ps1" -Encoding ascii -Force
-Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/provisioning.ps1 | Out-File -FilePath "$windowsSetupDir\provisioning.ps1" -Encoding ascii -Force
+# Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/SetupComplete.ps1 | Out-File -FilePath "$osdCloudDir\SetupComplete.ps1" -Encoding ascii -Force
+# Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/provisioning.ps1 | Out-File -FilePath "$windowsSetupDir\provisioning.ps1" -Encoding ascii -Force
 Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/startlayout.xml | Out-File -FilePath "$windowsSetupDir\startlayout.xml" -Encoding ascii -Force
 
 # Create the OOBE CMD command line
