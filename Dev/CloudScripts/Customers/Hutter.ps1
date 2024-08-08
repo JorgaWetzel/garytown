@@ -1,5 +1,5 @@
 $ScriptName = 'oneICT.ps1'
-$ScriptVersion = '24.05.2024'
+$ScriptVersion = '08.08.2024'
 
 
 #================================================
