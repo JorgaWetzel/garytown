@@ -42,25 +42,11 @@ $OSEdition = 'Pro'
 $OSActivation = 'Retail'
 $OSLanguage = 'de-de'
 $OSImageIndex =  '8'
+$ImageFileFullName = "D:\OSDCloud\OS\24H2.wim"
+$ImageFileItem = "D:\OSDCloud\OS\24H2.wim"
+$ImageFileName = "24H2"
 
 # Full List https://github.com/OSDeploy/OSD/blob/06d544f0bff26b560e19676582d273e1c229cfac/Public/OSDCloud.ps1#L521
-#Set OSDCloud Vars
-$Global:MyOSDCloud = [ordered]@{
-    Restart = [bool]$False
-    RecoveryPartition = [bool]$true
-    OEMActivation = [bool]$True
-    WindowsUpdate = [bool]$true
-    WindowsUpdateDrivers = [bool]$False
-    WindowsDefenderUpdate = [bool]$False
-    SetTimeZone = [bool]$False
-    ClearDiskConfirm = [bool]$False
-    ShutdownSetupComplete = [bool]$False
-    SyncMSUpCatDriverUSB = [bool]$true
-    CheckSHA1 = [bool]$true
-    ImageFileFullName = "D:\OSDCloud\OS\24H2.wim"
-    ImageFileItem = "D:\OSDCloud\OS\24H2.wim"
-    ImageFileName = "24H2"    
-}
 
 # Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
 # Start-OSDCloudGUI
