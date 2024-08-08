@@ -340,7 +340,7 @@ Step-oobeRegisterAutopilot
 Step-EmbeddedProductKey
 #Step-oobeRemoveAppxPackage
 #Step-oobeAddCapability
-#Step-oobeUpdateDrivers
+Step-oobeUpdateDrivers
 Step-oobeUpdateWindows
 # Invoke-Webhook
 Step-oobeRestartComputer
