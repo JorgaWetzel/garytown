@@ -377,6 +377,9 @@ iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/
 iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions2.ps1)
 #endregion
 
+# Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
+Set-DefaultProfilePersonalPref
+
 # setup RunOnce to execute provisioning.ps1 script
 Write-Host -ForegroundColor Gray "**Running Set-RunOnceScript Script**"
 Set-RunOnceScript
