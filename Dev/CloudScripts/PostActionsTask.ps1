@@ -47,11 +47,6 @@ Invoke-UpdateScanMethodMSStore
 #Enable "Notify me when a restart is required to finish updating"
 New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings -Name RestartNotificationsAllowed2 -PropertyType dword -Value 1
 
-$LenovoBackgroundTask = Get-ScheduledTask -TaskName "Background monitor" -ErrorAction SilentlyContinue
-if ($LenovoBackgroundTask){
-    Disable-ScheduledTask -TaskName "Background monitor"
-}
-
 #Wait and retrigger Store Updates
 Start-Sleep -Seconds 100
 Invoke-UpdateScanMethodMSStore
@@ -60,7 +55,7 @@ if ($CurrentRun -eq 3){
     if (Test-HPIASupport -eq $true){
         Run-HPIA -Category All -Action Install -NoninteractiveMode
     }
-    iex (irm dell.garytown.com)
+    
 }
 
 if (($CurrentRun -ge 2) -and ($CurrentRun -lt 5)){
