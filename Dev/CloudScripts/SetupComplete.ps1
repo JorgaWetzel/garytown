@@ -16,7 +16,32 @@ $Global:oobeCloud = @{
     oobeRegisterAutopilot = $false
     oobeRegisterAutopilotCommand = 'Get-WindowsAutopilotInfo -Online -GroupTag Demo -Assign'
     oobeRemoveAppxPackage = $false
-    oobeRemoveAppxPackageName = 'Solitaire'
+    oobeRemoveAppxPackageName = "Solitaire", 
+                                "MicrosoftTeams",
+                                "Microsoft.BingWeather",
+                                "Microsoft.BingNews",
+                                "Microsoft.GamingApp",
+                                "Microsoft.GetHelp",
+                                "Microsoft.Getstarted",
+                                "Microsoft.Messaging",
+                                "Microsoft.MicrosoftOfficeHub",
+                                "Microsoft.MicrosoftSolitaireCollection",
+                                "Microsoft.MSPaint",
+                                "Microsoft.People",
+                                "Microsoft.PowerAutomateDesktop",
+                                "Microsoft.StorePurchaseApp",
+                                "Microsoft.Todos",
+                                "microsoft.windowscommunicationsapps",
+                                "Microsoft.WindowsFeedbackHub",
+                                "Microsoft.WindowsMaps",
+                                "Microsoft.WindowsSoundRecorder",
+                                "Microsoft.Xbox.TCUI",
+                                "Microsoft.XboxGameOverlay",
+                                "Microsoft.XboxGamingOverlay",
+                                "Microsoft.XboxIdentityProvider",
+                                "Microsoft.XboxSpeechToTextOverlay",
+                                "Microsoft.ZuneMusic",
+                                "Microsoft.ZuneVideo"
     oobeAddCapability = $false
     oobeAddCapabilityName = 'GroupPolicy','ServerManager','VolumeActivation'
     oobeUpdateDrivers = $true
