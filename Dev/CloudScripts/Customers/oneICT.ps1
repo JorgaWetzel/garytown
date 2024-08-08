@@ -76,15 +76,8 @@ if ($DriverPack){
     $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
 }
 
-# Full List https://github.com/OSDeploy/OSD/blob/06d544f0bff26b560e19676582d273e1c229cfac/Public/OSDCloud.ps1#L521
-
-# Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
-# Start-OSDCloudGUI
-Start-OSDCloudGUIDev
-
 #Enable HPIA | Update HP BIOS | Update HP TPM
- 
-if (Test-HPIASupport){
+ if (Test-HPIASupport){
     #$Global:MyOSDCloud.DevMode = [bool]$True
     $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
     if ($Product -ne '83B2' -or $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
@@ -98,6 +91,11 @@ if (Test-HPIASupport){
 
 #write variables to console
 Write-Output $Global:MyOSDCloud
+
+# Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
+# Start-OSDCloudGUI
+Start-OSDCloudGUIDev
+
 
 #=======================================================================
 #   Unattend.xml
