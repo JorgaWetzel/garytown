@@ -33,6 +33,14 @@ do {
 } while (!$ping)
 $ProgressPreference = $ProgressPreference_bk
 
+# Chocolatey software installation
+choco.exe install office365business --params "'/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE'" -y --no-progress --ignore-checksums
+
+$packages = "TeamViewer","adobereader","microsoft-teams-new-bootstrapper","googlechrome","7zip.install","firefox","vlc","jre8","powertoys","onedrive","Pdf24","vcredist140","zoom","notepadplusplus.install","onenote","onedrive"
+$packages | %{
+    choco install $_ -y --no-progress --ignore-checksums
+}
+
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
 Invoke-Expression -Command (Invoke-RestMethod -Uri functions.osdcloud.com)
 
@@ -55,14 +63,6 @@ if (Get-Command 'WinGet' -ErrorAction SilentlyContinue) {
 # osdcloud-UpdateDefenderStack
 # osdcloud-NetFX
 osdcloud-HPIAExecute
-
-# Chocolatey software installation
-choco.exe install office365business --params "'/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE'" -y --no-progress --ignore-checksums
-
-$packages = "TeamViewer","adobereader","microsoft-teams-new-bootstrapper","googlechrome","7zip.install","firefox","vlc","jre8","powertoys","onedrive","Pdf24","vcredist140","zoom","notepadplusplus.install","onenote","onedrive"
-$packages | %{
-    choco install $_ -y --no-progress --ignore-checksums
-}
 
 $null = Stop-Transcript -ErrorAction Ignore
 
