@@ -1,10 +1,5 @@
-$PackageName = "UserFTA"
-
-Start-Transcript -Path "C:\OSDCloud\Logs\$PackageName.txt" -Force
-
-$scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
-Start-Process -FilePath "$scriptPath\SetUserFTA.exe" -ArgumentList "$scriptPath\FTA.txt" -Wait
-
+Start-Transcript -Path "C:\OSDCloud\Logs\UserFTA.txt" -Force
+Start-Process -FilePath "C:\OSDCloud\UserFTA\SetUserFTA.exe" -ArgumentList "C:\OSDCloud\UserFTA\FTA.txt" -Wait
+# Export Settings
+# & "C:\OSDCloud\UserFTA\GetUserFTA.exe" > "C:\OSDCloud\UserFTA\NewFTA.txt"
 Stop-Transcript
-
-
