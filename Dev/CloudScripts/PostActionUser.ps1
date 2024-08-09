@@ -54,7 +54,7 @@ while (-not (Get-Process -Name explorer -ErrorAction SilentlyContinue)) {
 }
 
 # Transkript für das PostAction-Skript erstellen
-$Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-PostActionsUser.log"
+$Transcript = "PostActionsUser.log"
 $TranscriptPath = "C:\OSDCloud\Logs"
 if (-not (Test-Path $TranscriptPath)) {
     New-Item -ItemType Directory -Path $TranscriptPath -Force | Out-Null
