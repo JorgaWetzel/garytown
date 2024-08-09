@@ -48,7 +48,7 @@ if ($Executed -ne $null -and $Executed.$ExecutionFlag -eq $true) {
 }
 
 # Transkript für das PostAction-Skript erstellen
-$Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-PostActionsScript.log"
+$Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-PostActionsUser.log"
 $TranscriptPath = "C:\OSDCloud\Logs"
 if (-not (Test-Path $TranscriptPath)) {
     New-Item -ItemType Directory -Path $TranscriptPath -Force | Out-Null
