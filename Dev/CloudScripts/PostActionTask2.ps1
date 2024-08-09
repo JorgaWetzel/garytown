@@ -34,8 +34,10 @@ do {
 $ProgressPreference = $ProgressPreference_bk
 
 # Chocolatey software installation
+Write-Host -ForegroundColor Green "Office wird installiert"
 choco.exe install office365business --params "'/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE'" -y --no-progress --ignore-checksums --force
 
+Write-Host -ForegroundColor Green "Standart Apps werden installiert"
 $packages = "TeamViewer","adobereader","microsoft-teams-new-bootstrapper","googlechrome","7zip.install","firefox","vlc","jre8","powertoys","onedrive","Pdf24","vcredist140","zoom","notepadplusplus.install","onenote","onedrive"
 $packages | %{
     choco install $_ -y --no-progress --ignore-checksums
