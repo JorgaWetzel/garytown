@@ -764,3 +764,338 @@ Register-ScheduledTask -TaskName $schtaskName -Trigger $trigger1,$trigger2 -Acti
     # write-host "============IPv6 Status============" -ForegroundColor Magenta
     get-NetAdapterBinding -Name '*' -ComponentID 'ms_tcpip6' | format-table -AutoSize -Property Name, Enabled 
     }
+
+Write-Host -ForegroundColor Green "[+] Step-KeyboardLanguage"
+function Step-KeyboardLanguage {
+
+    Write-Host "Setting Keyboard and Language to German (Switzerland)"
+
+    Set-WinUILanguageOverride -Language "de-CH"
+    Set-WinUserLanguageList -LanguageList "de-CH" -Force
+    Set-WinSystemLocale -SystemLocale "de-CH"
+    Set-WinHomeLocation -GeoId 19  # 19 corresponds to Switzerland
+    Set-Culture -CultureInfo "de-CH"
+
+    $languageList = New-WinUserLanguageList -Language "de-CH"
+    Set-WinUserLanguageList $languageList -Force
+
+    Set-WinUILanguageOverride -Language "de-CH"
+    Set-WinDefaultInputMethodOverride -InputTip "0407:00000807"  # Swiss German Keyboard
+}
+
+Write-Host -ForegroundColor Green "[+] Step-oobeSetDisplay"
+function Step-oobeSetDisplay {
+    [CmdletBinding()]
+    param ()
+    if (($env:UserName -eq 'defaultuser0') -and ($Global:oobeCloud.oobeSetDisplay -eq $true)) {
+        Write-Host -ForegroundColor Yellow 'Verify the Display Resolution and Scale is set properly'
+        Start-Process 'ms-settings:display' | Out-Null
+        $ProcessId = (Get-Process -Name 'SystemSettings').Id
+        if ($ProcessId) {
+            Wait-Process $ProcessId
+        }
+    }
+}
+
+Write-Host -ForegroundColor Green "[+] Step-oobeSetRegionLanguage"
+function Step-oobeSetRegionLanguage {
+    [CmdletBinding()]
+    param ()
+    if (($env:UserName -eq 'defaultuser0') -and ($Global:oobeCloud.oobeSetRegionLanguage -eq $true)) {
+        Write-Host -ForegroundColor Yellow 'Setting Region Language to de-CH'
+        Set-WinSystemLocale de-CH
+        Set-WinHomeLocation -GeoId 19  # 19 corresponds to Switzerland
+        Set-Culture de-CH
+        Set-WinUserLanguageList de-CH -Force
+    }
+}
+
+Write-Host -ForegroundColor Green "[+] Step-oobeSetDateTime"
+function Step-oobeSetDateTime {
+    [CmdletBinding()]
+    param ()
+    if (($env:UserName -eq 'defaultuser0') -and ($Global:oobeCloud.oobeSetDateTime -eq $true)) {
+        Write-Host -ForegroundColor Yellow 'Setting time zone to W. Europe Standard Time'
+        Write-Host -ForegroundColor Yellow 'If this is not configured properly, Certificates and Domain Join may fail'
+        Set-TimeZone -Name 'W. Europe Standard Time' -PassThru
+    }
+}
+
+Write-Host -ForegroundColor Green "[+] Step-oobeExecutionPolicy"
+function Step-oobeExecutionPolicy {
+    [CmdletBinding()]
+    param ()
+    if ($env:UserName -eq 'defaultuser0') {
+        if ((Get-ExecutionPolicy) -ne 'RemoteSigned') {
+            Write-Host -ForegroundColor Cyan 'Set-ExecutionPolicy RemoteSigned'
+            Set-ExecutionPolicy RemoteSigned -Force
+        }
+    }
+}
+
+Write-Host -ForegroundColor Green "[+] Step-oobePackageManagement"
+function Step-oobePackageManagement {
+    [CmdletBinding()]
+    param ()
+    if ($env:UserName -eq 'defaultuser0') {
+        if (Get-Module -Name PowerShellGet -ListAvailable | Where-Object {$_.Version -ge '2.2.5'}) {
+            Write-Host -ForegroundColor Cyan 'PowerShellGet 2.2.5 or greater is installed'
+        }
+        else {
+            Write-Host -ForegroundColor Cyan 'Install-Package PackageManagement,PowerShellGet'
+            Install-Package -Name PowerShellGet -MinimumVersion 2.2.5 -Force -Confirm:$false -Source PSGallery | Out-Null
+    
+            Write-Host -ForegroundColor Cyan 'Import-Module PackageManagement,PowerShellGet'
+            Import-Module PackageManagement,PowerShellGet -Force
+        }
+    }
+}
+
+Write-Host -ForegroundColor Green "[+] Step-oobeTrustPSGallery"
+function Step-oobeTrustPSGallery {
+    [CmdletBinding()]
+    param ()
+    if ($env:UserName -eq 'defaultuser0') {
+        $PSRepository = Get-PSRepository -Name PSGallery
+        if ($PSRepository)
+        {
+            if ($PSRepository.InstallationPolicy -ne 'Trusted')
+            {
+                Write-Host -ForegroundColor Cyan 'Set-PSRepository PSGallery Trusted'
+                Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+            }
+        }
+    }
+}
+
+Write-Host -ForegroundColor Green "[+] Step-oobeInstallModuleAutopilot"
+function Step-oobeInstallModuleAutopilot {
+    [CmdletBinding()]
+    param ()
+    if ($env:UserName -eq 'defaultuser0') {
+        $Requirement = Import-Module WindowsAutopilotIntune -PassThru -ErrorAction Ignore
+        if (-not $Requirement)
+        {
+            Write-Host -ForegroundColor Cyan 'Install-Module AzureAD,Microsoft.Graph.Intune,WindowsAutopilotIntune'
+            Install-Module WindowsAutopilotIntune -Force
+        }
+    }
+}
+
+Write-Host -ForegroundColor Green "[+] Step-oobeInstallModuleAzureAd"
+function Step-oobeInstallModuleAzureAd {
+    [CmdletBinding()]
+    param ()
+    if ($env:UserName -eq 'defaultuser0') {
+        $Requirement = Import-Module AzureAD -PassThru -ErrorAction Ignore
+        if (-not $Requirement)
+        {
+            Write-Host -ForegroundColor Cyan 'Install-Module AzureAD'
+            Install-Module AzureAD -Force
+        }
+    }
+}
+
+Write-Host -ForegroundColor Green "[+] Step-oobeInstallScriptAutopilot"
+function Step-oobeInstallScriptAutopilot {
+    [CmdletBinding()]
+    param ()
+    if ($env:UserName -eq 'defaultuser0') {
+        $Requirement = Get-InstalledScript -Name Get-WindowsAutoPilotInfo -ErrorAction SilentlyContinue
+        if (-not $Requirement)
+        {
+            Write-Host -ForegroundColor Cyan 'Install-Script Get-WindowsAutoPilotInfo'
+            Install-Script -Name Get-WindowsAutoPilotInfo -Force
+        }
+    }
+}
+
+Write-Host -ForegroundColor Green "[+] Step-oobeRegisterAutopilot"
+function Step-oobeRegisterAutopilot {
+    [CmdletBinding()]
+    param (
+        [System.String]
+        $Command
+    )
+    if (($env:UserName -eq 'defaultuser0') -and ($Global:oobeCloud.oobeRegisterAutopilot -eq $true)) {
+        Step-oobeInstallModuleAutopilot
+        Step-oobeInstallModuleAzureAd
+        Step-oobeInstallScriptAutopilot
+
+        Write-Host -ForegroundColor Cyan 'Registering Device in Autopilot in new PowerShell window ' -NoNewline
+        $AutopilotProcess = Start-Process PowerShell.exe -ArgumentList "-Command $Command" -PassThru
+        Write-Host -ForegroundColor Green "(Process Id $($AutopilotProcess.Id))"
+        Return $AutopilotProcess
+    }
+}
+
+Write-Host -ForegroundColor Green "[+] Step-oobeRemoveAppxPackage"
+function Step-oobeRemoveAppxPackage {
+    if (($env:UserName -eq 'defaultuser0') -and ($Global:oobeCloud.oobeRemoveAppxPackage -eq $true)) {
+        Write-Host -ForegroundColor Cyan 'Removing Appx Packages'
+        foreach ($Item in $Global:oobeCloud.oobeRemoveAppxPackageName) {
+            if (Get-Command Get-AppxProvisionedPackage) {
+                Get-AppxProvisionedPackage -Online | Where-Object {$_.DisplayName -Match $Item} | ForEach-Object {
+                    Write-Host -ForegroundColor DarkGray $_.DisplayName
+                    if ((Get-Command Remove-AppxProvisionedPackage).Parameters.ContainsKey('AllUsers')) {
+                        Try
+                        {
+                            $null = Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName
+                        }
+                        Catch
+                        {
+                            Write-Warning "AllUsers Appx Provisioned Package $($_.PackageName) did not remove successfully"
+                        }
+                    }
+                    else {
+                        Try
+                        {
+                            $null = Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName
+                        }
+                        Catch
+                        {
+                            Write-Warning "Appx Provisioned Package $($_.PackageName) did not remove successfully"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+Write-Host -ForegroundColor Green "[+] Step-oobeAddCapability"
+function Step-oobeAddCapability {
+    if (($env:UserName -eq 'defaultuser0') -and ($Global:oobeCloud.oobeAddCapability -eq $true)) {
+        Write-Host -ForegroundColor Cyan "Add-WindowsCapability"
+        foreach ($Item in $Global:oobeCloud.oobeAddCapabilityName) {
+            $WindowsCapability = Get-WindowsCapability -Online -Name "*$Item*" -ErrorAction SilentlyContinue | Where-Object {$_.State -ne 'Installed'}
+            if ($WindowsCapability) {
+                foreach ($Capability in $WindowsCapability) {
+                    Write-Host -ForegroundColor DarkGray $Capability.DisplayName
+                    $Capability | Add-WindowsCapability -Online | Out-Null
+                }
+            }
+        }
+    }
+}
+
+Write-Host -ForegroundColor Green "[+] Step-oobeUpdateDrivers"
+function Step-oobeUpdateDrivers {
+    [CmdletBinding()]
+    param ()
+    if (($env:UserName -eq 'defaultuser0') -and ($Global:oobeCloud.oobeUpdateDrivers -eq $true)) {
+        Write-Host -ForegroundColor Cyan 'Updating Windows Drivers'
+        if (!(Get-Module PSWindowsUpdate -ListAvailable -ErrorAction Ignore)) {
+            try {
+                Install-Module PSWindowsUpdate -Force
+                Import-Module PSWindowsUpdate -Force
+            }
+            catch {
+                Write-Warning 'Unable to install PSWindowsUpdate Driver Updates'
+            }
+        }
+        if (Get-Module PSWindowsUpdate -ListAvailable -ErrorAction Ignore) {
+            Start-Process PowerShell.exe -ArgumentList "-Command Install-WindowsUpdate -UpdateType Driver -AcceptAll -IgnoreReboot" -Wait
+        }
+    }
+}
+
+Write-Host -ForegroundColor Green "[+] Step-oobeUpdateWindows"
+function Step-oobeUpdateWindows {
+    [CmdletBinding()]
+    param ()
+    if (($env:UserName -eq 'defaultuser0') -and ($Global:oobeCloud.oobeUpdateWindows -eq $true)) {
+        Write-Host -ForegroundColor Cyan 'Updating Windows'
+        if (!(Get-Module PSWindowsUpdate -ListAvailable)) {
+            try {
+                Install-Module PSWindowsUpdate -Force
+                Import-Module PSWindowsUpdate -Force
+            }
+            catch {
+                Write-Warning 'Unable to install PSWindowsUpdate Windows Updates'
+            }
+        }
+        if (Get-Module PSWindowsUpdate -ListAvailable -ErrorAction Ignore) {
+            #Write-Host -ForegroundColor DarkCyan 'Add-WUServiceManager -MicrosoftUpdate -Confirm:$false'
+            Add-WUServiceManager -MicrosoftUpdate -Confirm:$false | Out-Null
+            #Write-Host -ForegroundColor DarkCyan 'Install-WindowsUpdate -UpdateType Software -AcceptAll -IgnoreReboot'
+            #Install-WindowsUpdate -UpdateType Software -AcceptAll -IgnoreReboot -NotTitle 'Malicious'
+            #Write-Host -ForegroundColor DarkCyan 'Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -IgnoreReboot'
+            Start-Process PowerShell.exe -ArgumentList "-Command Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -IgnoreReboot -NotTitle 'Preview' -NotKBArticleID 'KB890830','KB5005463','KB4481252'" -Wait
+        }
+    }
+}
+
+Write-Host -ForegroundColor Green "[+] Invoke-Webhook"
+function Invoke-Webhook {
+    $BiosSerialNumber = Get-MyBiosSerialNumber
+    $ComputerManufacturer = Get-MyComputerManufacturer
+    $ComputerModel = Get-MyComputerModel
+    
+    $URI = 'https://XXXX.webhook.office.com/webhookb2/YYYY'
+    $JSON = @{
+        "@type"    = "MessageCard"
+        "@context" = "<http://schema.org/extensions>"
+        "title"    = 'OSDCloud Information'
+        "text"     = "The following client has been successfully deployed:<br>
+                    BIOS Serial Number: **$($BiosSerialNumber)**<br>
+                    Computer Manufacturer: **$($ComputerManufacturer)**<br>
+                    Computer Model: **$($ComputerModel)**"
+        } | ConvertTo-JSON
+        
+        $Params = @{
+        "URI"         = $URI
+        "Method"      = 'POST'
+        "Body"        = $JSON
+        "ContentType" = 'application/json'
+        }
+        Invoke-RestMethod @Params | Out-Null
+}
+
+Write-Host -ForegroundColor Green "[+] Step-oobeRestartComputer"
+function Step-oobeRestartComputer {
+    [CmdletBinding()]
+    param ()
+    if (($env:UserName -eq 'defaultuser0') -and ($Global:oobeCloud.oobeRestartComputer -eq $true)) {
+        Write-Host -ForegroundColor Cyan 'Build Complete!'
+        Write-Warning 'Device will restart in 30 seconds.  Press Ctrl + C to cancel'
+        Stop-Transcript
+        Start-Sleep -Seconds 30
+        Restart-Computer
+    }
+}
+
+Write-Host -ForegroundColor Green "[+] Step-EmbeddedProductKey"
+function Step-EmbeddedProductKey {
+    [CmdletBinding()]
+    param ()
+    if (($env:UserName -eq 'defaultuser0') -and ($Global:oobeCloud.EmbeddedProductKey -eq $true)) {
+        Write-Host -ForegroundColor Green "Get embedded product key"
+        $Key = (Get-WmiObject SoftwareLicensingService).OA3xOriginalProductKey
+        If ($Key) {
+            Write-Host -ForegroundColor Green "Installing embedded product key"
+            Invoke-Command -ScriptBlock {& 'cscript.exe' "$env:windir\system32\slmgr.vbs" '/ipk' "$($Key)"}
+            Start-Sleep -Seconds 5
+
+            Write-Host -ForegroundColor Green "Activating embedded product key"
+            Invoke-Command -ScriptBlock {& 'cscript.exe' "$env:windir\system32\slmgr.vbs" '/ato'}
+            Start-Sleep -Seconds 5
+        }
+        Else {
+            Write-Host -ForegroundColor Red 'No embedded product key found.'
+        }
+    }
+}
+
+Write-Host -ForegroundColor Green "[+] Step-oobeStopComputer"
+function Step-oobeStopComputer {
+    [CmdletBinding()]
+    param ()
+    if (($env:UserName -eq 'defaultuser0') -and ($Global:oobeCloud.oobeStopComputer -eq $true)) {
+        Write-Host -ForegroundColor Cyan 'Build Complete!'
+        Write-Warning 'Device will shutdown in 30 seconds. Press Ctrl + C to cancel'
+        Stop-Transcript
+        Start-Sleep -Seconds 30
+        Stop-Computer
+    }
+}
