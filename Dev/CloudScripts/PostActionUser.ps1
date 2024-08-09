@@ -9,7 +9,7 @@ $null = Start-Transcript -Path (Join-Path $TranscriptPath $Transcript) -ErrorAct
 # Pfad und Name der geplanten Aufgabe und des Skripts
 $RegistryPath = "HKCU:\SOFTWARE\OSDCloud"  # Verwendung von HKEY_CURRENT_USER für benutzerspezifische Einstellungen
 $ScriptPath = "$env:UserProfile\Documents\OSDCloud\PostActionsUser.ps1"  # Benutzerzugänglicher Pfad
-$ScheduledTaskName = 'OSDCloudPostAction'
+$ScheduledTaskName = 'OSDCloudPostActionUser'
 $ExecutionFlag = "PostActionExecutedUser"
 
 # Sicherstellen, dass der Pfad existiert
