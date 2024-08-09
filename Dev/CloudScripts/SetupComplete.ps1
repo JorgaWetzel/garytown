@@ -355,6 +355,7 @@ Copy-UserInternationalSettingsToSystem -WelcomeScreen $True -NewUser $True
 "powercfg /x -standby-timeout-ac 0",
 "powercfg /x -hibernate-timeout-ac 0" | % {
     cmd /c $_
+}
 
 $app_packages = 
 "Microsoft.WindowsCamera",
