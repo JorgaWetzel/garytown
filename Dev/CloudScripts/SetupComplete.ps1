@@ -20,8 +20,8 @@ Step-KeyboardLanguage
 # Step-oobePackageManagement
 # Step-oobeTrustPSGallery
 # Step-oobeSetDisplay
-# Step-oobeSetRegionLanguage
-# Step-oobeSetDateTime
+Step-oobeSetRegionLanguage
+Step-oobeSetDateTime
 #Step-oobeRegisterAutopilot
 #Step-EmbeddedProductKey
 #Step-oobeRemoveAppxPackage
@@ -40,7 +40,7 @@ Set-DefaultProfilePersonalPref
 # Set-RunOnceScript
 
 #Try to prevent crap from auto installing
-Write-Host -ForegroundColor Gray "**Disabling Cloud Content**" 
+#Write-Host -ForegroundColor Gray "**Disabling Cloud Content**" 
 #Disable-CloudContent
 
 #Set Win11 Bypasses
@@ -76,7 +76,6 @@ Set-Win11ReqBypassRegValues
 Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
 Set-Chocolatey
 
-Write-Warning 'Device restart'
+'
 Stop-Transcript
-Start-Sleep -Seconds 1
-Restart-Computer
+
