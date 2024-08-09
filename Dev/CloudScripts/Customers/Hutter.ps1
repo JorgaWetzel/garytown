@@ -1,4 +1,4 @@
-m $ScriptName = 'oneICT.ps1'
+$ScriptName = 'oneICT.ps1'
 $ScriptVersion = '08.08.2024'
 iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
