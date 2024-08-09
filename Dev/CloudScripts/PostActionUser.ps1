@@ -1,11 +1,3 @@
-# Transkript erstellen
-$Transcript = "PostActionsUser.log"
-$TranscriptPath = "C:\OSDCloud\Logs"
-if (-not (Test-Path $TranscriptPath)) {
-    New-Item -ItemType Directory -Path $TranscriptPath -Force | Out-Null
-}
-$null = Start-Transcript -Path (Join-Path $TranscriptPath $Transcript) -ErrorAction Ignore
-
 # Pfad und Name der geplanten Aufgabe und des Skripts
 $RegistryPath = "HKCU:\SOFTWARE\OSDCloud"  # Verwendung von HKEY_CURRENT_USER für benutzerspezifische Einstellungen
 $ScriptPath = "$env:UserProfile\Documents\OSDCloud\PostActionsUser.ps1"  # Benutzerzugänglicher Pfad
@@ -32,6 +24,13 @@ Register-ScheduledTask $ScheduledTaskName -InputObject $task
 
 # Zweites Skript, das bei Benutzeranmeldung ausgeführt wird
 $PostActionScript = @'
+# Transkript erstellen
+$Transcript = "PostActionsUser.log"
+$TranscriptPath = "C:\OSDCloud\Logs"
+if (-not (Test-Path $TranscriptPath)) {
+    New-Item -ItemType Directory -Path $TranscriptPath -Force | Out-Null
+}
+$null = Start-Transcript -Path (Join-Path $TranscriptPath $Transcript) -ErrorAction Ignore
 
 # Überprüfen, ob die PostAction bereits ausgeführt wurde
 $RegistryPath = "HKCU:\SOFTWARE\OSDCloud"
@@ -191,7 +190,6 @@ New-ItemProperty -Path $RegistryPath -Name $ExecutionFlag -PropertyType DWORD -V
 
 # Transkript beenden
 Stop-Transcript
-
 '@
 
 # Skript in Datei speichern
