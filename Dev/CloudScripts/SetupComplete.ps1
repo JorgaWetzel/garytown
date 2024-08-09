@@ -35,22 +35,23 @@ iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/
 
 
 # Execute functions
-Step-KeyboardLanguage
+# Step-KeyboardLanguage
 # Step-oobeExecutionPolicy
 # Step-oobePackageManagement
 # Step-oobeTrustPSGallery
 # Step-oobeSetDisplay
-Step-oobeSetRegionLanguage
-Step-oobeSetDateTime
-#Step-oobeRegisterAutopilot
-#Step-EmbeddedProductKey
-#Step-oobeRemoveAppxPackage
-#Step-oobeAddCapability
-#Step-oobeUpdateDrivers
+# Step-oobeSetRegionLanguage
+# Step-oobeSetDateTime
+# Step-oobeRegisterAutopilot
+# Step-EmbeddedProductKey
+# Step-oobeRemoveAppxPackage
+# Step-oobeAddCapability
+# Step-oobeUpdateDrivers
 # Step-oobeUpdateWindows
 # Invoke-Webhook
+# Step-oobeRestartComputer
 # Step-oobeStopComputer
-#=================================================
+
 
 # Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
 Set-DefaultProfilePersonalPref
@@ -99,7 +100,7 @@ Set-Chocolatey
 Write-Host "Setting Keyboard and Language to German (Switzerland) for Default User"
 Set-DefaultUserLanguageAndKeyboard
 
-Step-oobeRestartComputer
+
 
 Stop-Transcript
 
