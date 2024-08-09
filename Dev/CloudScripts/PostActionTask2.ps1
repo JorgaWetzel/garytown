@@ -48,6 +48,9 @@ $packages | %{
 # osdcloud-UpdateDefenderStack
 # osdcloud-NetFX
 
+#HP Driver Updates
+Write-Host -ForegroundColor Gray "**Running HP Image Assistant Driver & Firmware Upadtes**"
+osdcloud-HPIAExecute
 
 #Windows Updates
 Write-Host -ForegroundColor Gray "**Running Defender Updates**"
@@ -57,8 +60,7 @@ Start-WindowsUpdate
 Write-Host -ForegroundColor Gray "**Running Driver Updates**"
 Start-WindowsUpdateDriver
 
-#HP Driver Updates
-osdcloud-HPIAExecute
+
 
 REM RD C:\OSDCloud\OS /S /Q
 REM RD C:\Drivers /S /Q
