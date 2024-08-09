@@ -62,6 +62,17 @@ if (Get-Command 'WinGet' -ErrorAction SilentlyContinue) {
 # Write-Host -ForegroundColor Green "[+] pwsh.osdcloud.com Complete"
 # osdcloud-UpdateDefenderStack
 # osdcloud-NetFX
+
+
+#Windows Updates
+Write-Host -ForegroundColor Gray "**Running Defender Updates**"
+Update-DefenderStack
+Write-Host -ForegroundColor Gray "**Running Windows Updates**"
+Start-WindowsUpdate
+Write-Host -ForegroundColor Gray "**Running Driver Updates**"
+Start-WindowsUpdateDriver
+
+#HP Driver Updates
 osdcloud-HPIAExecute
 
 $null = Stop-Transcript -ErrorAction Ignore
