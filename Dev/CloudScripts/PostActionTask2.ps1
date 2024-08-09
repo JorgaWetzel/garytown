@@ -17,7 +17,7 @@ Register-ScheduledTask $ScheduledTaskName -InputObject $task -User SYSTEM
 $PostActionScript = @'
 
 # Start the Transcript
-$Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-PostActions.log"
+$Transcript = "PostActions.log"
 $null = Start-Transcript -Path (Join-Path "C:\OSDCloud\Logs" $Transcript) -ErrorAction Ignore
 
 # wait for network
