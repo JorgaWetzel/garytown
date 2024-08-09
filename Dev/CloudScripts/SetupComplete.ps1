@@ -349,6 +349,13 @@ Set-WinHomeLocation 19
 # Regionale Einstellungen für neue Benutzerkonten und Willkommensbildschirm kopieren
 Copy-UserInternationalSettingsToSystem -WelcomeScreen $True -NewUser $True
 
+# Configure power settings
+# Disable sleep, hibernate and monitor standby on AC
+"powercfg /x -monitor-timeout-ac 0",
+"powercfg /x -standby-timeout-ac 0",
+"powercfg /x -hibernate-timeout-ac 0" | % {
+    cmd /c $_
+
 
 Stop-Transcript
 
