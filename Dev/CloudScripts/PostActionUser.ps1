@@ -55,9 +55,17 @@ if (-not (Test-Path $TranscriptPath)) {
 }
 $null = Start-Transcript -Path (Join-Path $TranscriptPath $Transcript) -ErrorAction Ignore
 
-iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions2.ps1)
-
-Step-KeyboardLanguage
+# Language Settings
+Write-Host "Setting Keyboard and Language to German (Switzerland)"
+Set-WinUILanguageOverride -Language "de-CH"
+Set-WinUserLanguageList -LanguageList "de-CH" -Force
+Set-WinSystemLocale -SystemLocale "de-CH"
+Set-WinHomeLocation -GeoId 19  # 19 corresponds to Switzerland
+Set-Culture -CultureInfo "de-CH"
+$languageList = New-WinUserLanguageList -Language "de-CH"
+Set-WinUserLanguageList $languageList -Force
+Set-WinUILanguageOverride -Language "de-CH"
+Set-WinDefaultInputMethodOverride -InputTip "0407:00000807"  # Swiss German Keyboard
 
 # Pfade zu den Anwendungen
 $OutlookPath = "C:\Program Files\Microsoft Office\root\Office16\OUTLOOK.EXE"
