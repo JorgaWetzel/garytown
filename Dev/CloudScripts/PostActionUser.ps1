@@ -1,5 +1,5 @@
 # Transkript erstellen
-$Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-PostActionsUser.log"
+$Transcript = "PostActionsUser.log"
 $TranscriptPath = "C:\OSDCloud\Logs"
 if (-not (Test-Path $TranscriptPath)) {
     New-Item -ItemType Directory -Path $TranscriptPath -Force | Out-Null
@@ -50,11 +50,11 @@ if ($Executed -ne $null -and $Executed.$ExecutionFlag -eq $true) {
 # Warten auf den Desktop-Explorer (explorer.exe)
 while (-not (Get-Process -Name explorer -ErrorAction SilentlyContinue)) {
     Write-Host "Warten, bis der Desktop vollständig geladen ist..."
-    Start-Sleep -Seconds 2
+    Start-Sleep -Seconds 30
 }
 
 # Transkript für das PostAction-Skript erstellen
-$Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-PostActionsUser.log"
+$Transcript = "PostActionsUser.log"
 $TranscriptPath = "C:\OSDCloud\Logs"
 if (-not (Test-Path $TranscriptPath)) {
     New-Item -ItemType Directory -Path $TranscriptPath -Force | Out-Null
