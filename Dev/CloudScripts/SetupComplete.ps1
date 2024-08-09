@@ -100,7 +100,12 @@ Set-Chocolatey
 Write-Host "Setting Keyboard and Language to German (Switzerland) for Default User"
 Set-DefaultUserLanguageAndKeyboard
 
-
+osdcloud-SetExecutionPolicy
+osdcloud-SetPowerShellProfile
+osdcloud-InstallPackageManagement
+osdcloud-TrustPSGallery
+osdcloud-InstallPowerShellModule -Name Pester
+osdcloud-InstallPowerShellModule -Name PSReadLine
 
 Stop-Transcript
 
