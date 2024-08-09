@@ -53,11 +53,11 @@ Write-Host -ForegroundColor Gray "**Running HP Image Assistant Driver & Firmware
 osdcloud-HPIAExecute
 
 #Windows Updates
-Write-Host -ForegroundColor Gray "**Running Defender Updates**"
+Write-Host -ForegroundColor Gray "**Running Microsoft Defender Updates**"
 Update-DefenderStack
-Write-Host -ForegroundColor Gray "**Running Windows Updates**"
+Write-Host -ForegroundColor Gray "**Running Microsoft Windows Updates**"
 Start-WindowsUpdate
-Write-Host -ForegroundColor Gray "**Running Driver Updates**"
+Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
 Start-WindowsUpdateDriver
 
 
