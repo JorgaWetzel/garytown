@@ -138,6 +138,7 @@ function Remove-AppFromTaskbar($appname) {
 # Remove-AppFromTaskbar 'Microsoft Teams'
 Remove-AppFromTaskbar 'Microsoft Store'
 
+<#
 # *** UserFTA Konfiguration herunterladen und installieren ***
 Write-Host "*** UserFTA Konfiguration herunterladen und installieren ***"
 $zielVerzeichnis = "C:\OSDCloud\UserFTA"
@@ -159,6 +160,7 @@ if (Test-Path -Path $installSkriptPfad) {
 } else {
     Write-Error "Das Installationsskript wurde nicht gefunden."
 }
+#>
 
 # *** Ausführen von Winget-Befehlen ***
 Write-Host "*** Ausführen von Winget-Befehlen ***"
