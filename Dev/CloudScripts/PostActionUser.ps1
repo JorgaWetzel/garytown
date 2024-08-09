@@ -47,6 +47,12 @@ if ($Executed -ne $null -and $Executed.$ExecutionFlag -eq $true) {
     Exit
 }
 
+# Warten auf den Desktop-Explorer (explorer.exe)
+while (-not (Get-Process -Name explorer -ErrorAction SilentlyContinue)) {
+    Write-Host "Warten, bis der Desktop vollständig geladen ist..."
+    Start-Sleep -Seconds 2
+}
+
 # Transkript für das PostAction-Skript erstellen
 $Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-PostActionsUser.log"
 $TranscriptPath = "C:\OSDCloud\Logs"
