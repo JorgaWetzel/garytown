@@ -1,27 +1,59 @@
+# Transkript erstellen
+$Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-PostActionsUser.log"
+$TranscriptPath = "C:\OSDCloud\Logs"
+if (-not (Test-Path $TranscriptPath)) {
+    New-Item -ItemType Directory -Path $TranscriptPath -Force | Out-Null
+}
+$null = Start-Transcript -Path (Join-Path $TranscriptPath $Transcript) -ErrorAction Ignore
+
 # Pfad und Name der geplanten Aufgabe und des Skripts
-$RegistryPath = "HKLM:\SOFTWARE\OSDCloud"
-$ScriptPath = "$env:ProgramData\OSDCloud\PostActionsUser.ps1"
-$ScheduledTaskName = 'OSDCloudPostActionUser'
+$RegistryPath = "HKCU:\SOFTWARE\OSDCloud"  # Verwendung von HKEY_CURRENT_USER für benutzerspezifische Einstellungen
+$ScriptPath = "$env:UserProfile\Documents\OSDCloud\PostActionsUser.ps1"  # Benutzerzugänglicher Pfad
+$ScheduledTaskName = 'OSDCloudPostAction'
+$ExecutionFlag = "PostActionExecutedUser"
 
 # Sicherstellen, dass der Pfad existiert
 if (!(Test-Path -Path ($ScriptPath | split-path))) {
     New-Item -Path ($ScriptPath | split-path) -ItemType Directory -Force | Out-Null
 }
 
-# Registry-Eintrag erstellen
-New-Item -Path $RegistryPath -ItemType Directory -Force | Out-Null
-New-ItemProperty -Path $RegistryPath -Name "TriggerPostActions" -PropertyType dword -Value 1 | Out-Null
+# Registry-Eintrag erstellen, wenn er nicht existiert
+if (-not (Test-Path $RegistryPath)) {
+    New-Item -Path $RegistryPath -ItemType Directory -Force | Out-Null
+}
 
 # Geplante Aufgabe erstellen
 $action = (New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File $ScriptPath")
 $trigger = New-ScheduledTaskTrigger -AtLogOn
 $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -RunOnlyIfNetworkAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 1)
-$principal = New-ScheduledTaskPrincipal "NT AUTHORITY\SYSTEM" -RunLevel Highest
+$principal = New-ScheduledTaskPrincipal $env:USERNAME
 $task = New-ScheduledTask -Action $action -Trigger $trigger -Settings $settings -Description "OSDCloud Post Action" -Principal $principal
 Register-ScheduledTask $ScheduledTaskName -InputObject $task
 
 # Zweites Skript, das bei Benutzeranmeldung ausgeführt wird
 $PostActionScript = @'
+
+# Überprüfen, ob die PostAction bereits ausgeführt wurde
+$RegistryPath = "HKCU:\SOFTWARE\OSDCloud"
+$ExecutionFlag = "PostActionExecuted"
+
+if (-not (Test-Path -Path $RegistryPath)) {
+    New-Item -Path $RegistryPath -ItemType Directory -Force | Out-Null
+}
+
+$Executed = Get-ItemProperty -Path $RegistryPath -Name $ExecutionFlag -ErrorAction SilentlyContinue
+if ($Executed -ne $null -and $Executed.$ExecutionFlag -eq $true) {
+    Write-Output "PostActions wurden bereits für diesen Benutzer ausgeführt."
+    Exit
+}
+
+# Transkript für das PostAction-Skript erstellen
+$Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-PostActionsScript.log"
+$TranscriptPath = "C:\OSDCloud\Logs"
+if (-not (Test-Path $TranscriptPath)) {
+    New-Item -ItemType Directory -Path $TranscriptPath -Force | Out-Null
+}
+$null = Start-Transcript -Path (Join-Path $TranscriptPath $Transcript) -ErrorAction Ignore
 
 # Warten, bis OUTLOOK.EXE existiert
 $OutlookPath = "C:\Program Files\Microsoft Office\root\Office16\OUTLOOK.EXE"
@@ -29,7 +61,7 @@ while (-not (Test-Path $OutlookPath)) {
     Start-Sleep -Seconds 30
 }
 
-$provisioning = [System.IO.DirectoryInfo]"$($env:ProgramData)\provisioning"
+$provisioning = [System.IO.DirectoryInfo]"$env:UserProfile\Documents\OSDCloud\provisioning"
 $urls = @(
     "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_brave.ps1",
     "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_chrome.ps1",
@@ -86,9 +118,16 @@ function Remove-AppFromTaskbar($appname) {
 # Remove-AppFromTaskbar 'Microsoft Teams'
 Remove-AppFromTaskbar 'Microsoft Store'
 
-# Deaktivieren der geplanten Aufgabe nach der ersten Ausführung
-Disable-ScheduledTask -TaskName $ScheduledTaskName
+# Setzen des Ausführungsflags
+New-ItemProperty -Path $RegistryPath -Name $ExecutionFlag -PropertyType DWORD -Value 1 -Force | Out-Null
+
+# Transkript beenden
+Stop-Transcript
+
 '@
 
 # Skript in Datei speichern
 $PostActionScript | Out-File -FilePath $ScriptPath -Force
+
+# Transkript beenden
+Stop-Transcript
