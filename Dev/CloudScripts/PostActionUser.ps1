@@ -109,7 +109,7 @@ while (-not (Test-Path $FirefoxPath)) {
     Start-Sleep -Seconds 30
 }
 
-
+<#
 # *** syspin herunterladen und Verknüpfungen anheften ***
 Write-Host "*** syspin herunterladen und Verknüpfungen anheften ***"
 $url32 = 'http://www.technosys.net/download.aspx?file=syspin.exe'
@@ -126,6 +126,8 @@ Write-Host "*** Verknüpfungen an die Taskleiste und Startmenü anheften ***"
 & "$env:TEMP\syspin.exe" "$env:ALLUSERSPROFILE\Microsoft\Windows\Start Menu\Programs\Word.lnk" 51201
 & "$env:TEMP\syspin.exe" "$env:ALLUSERSPROFILE\Microsoft\Windows\Start Menu\Programs\Excel.lnk" 51201
 & "$env:TEMP\syspin.exe" "$env:ALLUSERSPROFILE\Microsoft\Windows\Start Menu\Programs\Firefox.lnk" 51201
+
+#>
 
 # *** Entfernen unerwünschter Apps von der Taskleiste ***
 Write-Host "*** Entfernen unerwünschter Apps von der Taskleiste ***"
