@@ -1099,3 +1099,35 @@ function Step-oobeStopComputer {
         Stop-Computer
     }
 }
+
+Write-Host -ForegroundColor Green "[+] Set-DefaultUserLanguageAndKeyboard"
+function Set-DefaultUserLanguageAndKeyboard {
+    # Pfad zur ntuser.dat des Default Users
+    $REG_defaultuser = "c:\users\default\ntuser.dat"
+    $VirtualRegistryPath_defaultuser = "HKLM\DefUser" # Virtueller Registrierungspfad
+    $VirtualRegistryPath_software = "HKLM:\DefUser\Software" # PowerShell Pfad
+
+    # Sicherstellen, dass der Registry Hive nicht bereits geladen ist
+    if (Test-Path -Path $VirtualRegistryPath_software) {
+        reg unload $VirtualRegistryPath_defaultuser | Out-Null
+        Start-Sleep -Seconds 1
+    }
+    
+    # Laden des Default User Registry Hive
+    reg load $VirtualRegistryPath_defaultuser $REG_defaultuser | Out-Null
+
+    # Sprache und Tastaturlayout setzen
+    Write-Host "Setting Keyboard and Language to German (Switzerland) for Default User"
+    
+    # Set-WinUILanguageOverride und andere Cmdlets direkt funktionieren nicht im Kontext des Default User Registry Hive,
+    # aber du kannst die entsprechenden Registrierungswerte manuell setzen.
+
+    Set-ItemProperty -Path "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\RunOnce" `
+                     -Name "SetLanguageAndKeyboard" `
+                     -Value 'powershell -command "& {Set-WinUILanguageOverride -Language \"de-CH\"; Set-WinUserLanguageList -LanguageList \"de-CH\" -Force; Set-WinSystemLocale -SystemLocale \"de-CH\"; Set-WinHomeLocation -GeoId 19; Set-Culture -CultureInfo \"de-CH\"; Set-WinUILanguageOverride -Language \"de-CH\"; Set-WinDefaultInputMethodOverride -InputTip \"0407:00000807\"}"'
+
+    # Registry Hive entladen
+    reg unload $VirtualRegistryPath_defaultuser | Out-Null
+
+    Write-Host "Default User Language and Keyboard settings have been set."
+}
