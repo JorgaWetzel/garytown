@@ -334,6 +334,21 @@ foreach ($setting in $settings) {
     $registry.Dispose()
 }
 
+# Zeitzone konfigurieren
+Get-TimeZone -ListAvailable | ?{$_.DisplayName -like "*Zürich*"} | Set-TimeZone
+
+# Regionale Einstellungen / Gebietsschema / Tastaturlayout konfigurieren
+# Schweizerdeutsch
+$region = "de-CH"
+
+Set-Culture $region
+Set-WinSystemLocale $region
+Set-WinUserLanguageList $region, "de-ch" -force -wa silentlycontinue
+Set-WinHomeLocation 19
+
+# Regionale Einstellungen für neue Benutzerkonten und Willkommensbildschirm kopieren
+Copy-UserInternationalSettingsToSystem -WelcomeScreen $True -NewUser $True
+
 
 Stop-Transcript
 
