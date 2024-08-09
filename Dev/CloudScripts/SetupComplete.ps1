@@ -356,6 +356,34 @@ Copy-UserInternationalSettingsToSystem -WelcomeScreen $True -NewUser $True
 "powercfg /x -hibernate-timeout-ac 0" | % {
     cmd /c $_
 
+$app_packages = 
+"Microsoft.WindowsCamera",
+"Clipchamp.Clipchamp",
+"Microsoft.WindowsAlarms",
+"Microsoft.549981C3F5F10", # Cortana
+"Microsoft.WindowsFeedbackHub",
+"microsoft.windowscommunicationsapps",
+"Microsoft.WindowsMaps",
+"Microsoft.ZuneMusic",
+"Microsoft.BingNews",
+"Microsoft.Todos",
+"Microsoft.ZuneVideo",
+"Microsoft.MicrosoftOfficeHub",
+"Microsoft.OutlookForWindows",
+"Microsoft.People",
+"Microsoft.PowerAutomateDesktop",
+"MicrosoftCorporationII.QuickAssist",
+"Microsoft.ScreenSketch",
+"Microsoft.MicrosoftSolitaireCollection",
+"Microsoft.WindowsSoundRecorder",
+"Microsoft.MicrosoftStickyNotes",
+"Microsoft.BingWeather",
+"Microsoft.Xbox.TCUI",
+"Microsoft.GamingApp",
+"Microsoft.Windows.Ai.Copilot.Provider"
+
+Get-AppxProvisionedPackage -Online | ?{$_.DisplayName -in $app_packages} | Remove-AppxProvisionedPackage -Online -AllUser
+
 
 Stop-Transcript
 
