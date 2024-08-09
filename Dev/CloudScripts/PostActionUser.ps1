@@ -109,43 +109,6 @@ while (-not (Test-Path $FirefoxPath)) {
     Start-Sleep -Seconds 30
 }
 
-# *** Konfigurationsskripte für Browser herunterladen und ausführen ***
-Write-Host "*** Konfigurationsskripte für Browser herunterladen und ausführen ***"
-$provisioning = [System.IO.DirectoryInfo]"$env:UserProfile\Documents\OSDCloud\provisioning"
-$urls = @(
-    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_brave.ps1",
-    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_chrome.ps1",
-    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_edge.ps1",
-    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_firefox.ps1"
-)
-
-# *** Sicherstellen, dass das Verzeichnis existiert ***
-Write-Host "*** Sicherstellen, dass das Verzeichnis existiert ***"
-if (-not (Test-Path $provisioning)) {
-    Write-Host "Erstelle Verzeichnis für Provisioning..."
-    New-Item -ItemType Directory -Path $provisioning -Force
-} else {
-    Write-Host "Provisioning-Verzeichnis existiert bereits."
-}
-
-# *** Herunterladen und Ausführen der Konfigurationsskripte ***
-Write-Host "*** Herunterladen und Ausführen der Konfigurationsskripte ***"
-foreach ($url in $urls) {
-    $scriptName = [System.IO.Path]::GetFileName($url)
-    $scriptPath = Join-Path -Path $provisioning -ChildPath $scriptName
-    
-    # Herunterladen, wenn das Skript noch nicht existiert
-    if (-not (Test-Path $scriptPath)) {
-        Write-Host "Herunterladen von $url ..."
-        Invoke-WebRequest -Uri $url -OutFile $scriptPath
-    } else {
-        Write-Host "$scriptName existiert bereits."
-    }
-    
-    # Ausführen des Skripts
-    Write-Host "Ausführen von $scriptName ..."
-    . $scriptPath
-}
 
 # *** syspin herunterladen und Verknüpfungen anheften ***
 Write-Host "*** syspin herunterladen und Verknüpfungen anheften ***"
