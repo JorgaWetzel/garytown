@@ -355,6 +355,8 @@ Set-Win11ReqBypassRegValues
 #Write-Host -ForegroundColor Gray "**Running Driver Updates**"
 #Start-WindowsUpdateDriver
 
+#osdcloud-HPIAExecute
+
 #Store Updates
 #Write-Host -ForegroundColor Gray "**Running Winget Updates**"
 #Write-Host -ForegroundColor Gray "Invoke-UpdateScanMethodMSStore"
