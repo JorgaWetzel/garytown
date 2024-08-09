@@ -61,6 +61,17 @@ Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
 Start-WindowsUpdateDriver
 
 
+
+# Prevent Outlook (new) and Dev Home from installing
+"HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate",
+"HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\OutlookUpdate",
+"HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\OutlookUpdate",
+"HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\DevHomeUpdate" | %{
+    ri $_ -force
+}
+
+
+
 Write-Host "**Taskbar Layout"
 # Show packagedAppId for Windows store apps:
 # Get-AppxPackage | select @{n='name';e={"$($_.PackageFamilyName)!app"}} | ?{$_.name -like "**"}
