@@ -137,6 +137,23 @@ function Remove-AppFromTaskbar($appname) {
 # Remove-AppFromTaskbar 'Microsoft Teams'
 Remove-AppFromTaskbar 'Microsoft Store'
 
+# UserFTA
+$zielVerzeichnis = "C:\OSDCloud\UserFTA"
+if (-not (Test-Path -Path $zielVerzeichnis)) {
+    New-Item -ItemType Directory -Path $zielVerzeichnis -Force
+}
+$dateiUrl = "https://github.com/JorgaWetzel/garytown/raw/master/Dev/CloudScripts/UserFTA.zip"
+$speicherPfad = "$zielVerzeichnis\UserFTA.zip"
+Invoke-WebRequest -Uri $dateiUrl -OutFile $speicherPfad
+Expand-Archive -Path $speicherPfad -DestinationPath $zielVerzeichnis -Force
+$installSkriptPfad = "$zielVerzeichnis\install.ps1"
+
+if (Test-Path -Path $installSkriptPfad) {
+    & $installSkriptPfad
+} else {
+    Write-Error "Das Installationsskript wurde nicht gefunden."
+}
+
 # Setzen des Ausführungsflags
 New-ItemProperty -Path $RegistryPath -Name $ExecutionFlag -PropertyType DWORD -Value 1 -Force | Out-Null
 
