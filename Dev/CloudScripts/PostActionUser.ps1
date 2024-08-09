@@ -59,11 +59,26 @@ iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/
 
 Step-KeyboardLanguage
 
-# Warten, bis OUTLOOK.EXE existiert
+# Pfade zu den Anwendungen
 $OutlookPath = "C:\Program Files\Microsoft Office\root\Office16\OUTLOOK.EXE"
+$ChromePath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
+$FirefoxPath = "$env:ALLUSERSPROFILE\Microsoft\Windows\Start Menu\Programs\Firefox.lnk"
+
+# Warten, bis OUTLOOK.EXE existiert
 while (-not (Test-Path $OutlookPath)) {
     Start-Sleep -Seconds 30
 }
+
+# Warten, bis Chrome.exe existiert
+while (-not (Test-Path $ChromePath)) {
+    Start-Sleep -Seconds 30
+}
+
+# Warten, bis Firefox.lnk existiert
+while (-not (Test-Path $FirefoxPath)) {
+    Start-Sleep -Seconds 30
+}
+
 
 $provisioning = [System.IO.DirectoryInfo]"$env:UserProfile\Documents\OSDCloud\provisioning"
 $urls = @(
