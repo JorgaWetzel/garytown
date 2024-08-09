@@ -6,6 +6,26 @@ param()
 $Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-SetupComplete.log"
 $null = Start-Transcript -Path (Join-Path "C:\OSDCloud\Logs" $Transcript) -ErrorAction Ignore
 
+#=================================================
+#   oobeCloud Settings
+#=================================================
+$Global:oobeCloud = @{
+    oobeSetDisplay = $false
+    oobeSetRegionLanguage = $false
+    oobeSetDateTime = $false
+    oobeRegisterAutopilot = $false
+    oobeRegisterAutopilotCommand = 'Get-WindowsAutopilotInfo -Online -GroupTag Demo -Assign'
+    oobeRemoveAppxPackage = $false
+    oobeRemoveAppxPackageName = 'Solitaire'
+    oobeAddCapability = $false
+    oobeAddCapabilityName = 'GroupPolicy','ServerManager','VolumeActivation'
+    oobeUpdateDrivers = $true
+    oobeUpdateWindows = $true
+    oobeRestartComputer = $false
+    EmbeddedProductKey = $false
+    oobeStopComputer = $false
+}
+
 #region functions
 iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
