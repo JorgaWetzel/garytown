@@ -201,13 +201,6 @@ if (Test-Path -Path $installSkriptPfad) {
 Write-Host "*** Ausführen von Winget-Befehlen ***"
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion (WindowsPhase Phase)"
 
-
-osdcloud-SetExecutionPolicy
-osdcloud-SetPowerShellProfile
-osdcloud-InstallPackageManagement
-osdcloud-TrustPSGallery
-osdcloud-InstallPowerShellModule -Name Pester
-osdcloud-InstallPowerShellModule -Name PSReadLine
 # powershell Invoke-Expression -Command (Invoke-RestMethod -Uri pwsh.live)
 osdcloud-InstallWinGet
 if (Get-Command 'WinGet' -ErrorAction SilentlyContinue) {
