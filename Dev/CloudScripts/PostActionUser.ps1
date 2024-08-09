@@ -55,6 +55,10 @@ if (-not (Test-Path $TranscriptPath)) {
 }
 $null = Start-Transcript -Path (Join-Path $TranscriptPath $Transcript) -ErrorAction Ignore
 
+iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions2.ps1)
+
+Step-KeyboardLanguage
+
 # Warten, bis OUTLOOK.EXE existiert
 $OutlookPath = "C:\Program Files\Microsoft Office\root\Office16\OUTLOOK.EXE"
 while (-not (Test-Path $OutlookPath)) {
