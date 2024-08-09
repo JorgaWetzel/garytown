@@ -90,6 +90,7 @@ Set-Chocolatey
 Write-Host "Setting Keyboard and Language to German (Switzerland) for Default User"
 Set-DefaultUserLanguageAndKeyboard
 
+Write-Host "**Installing Winget Stuff"
 osdcloud-SetExecutionPolicy
 osdcloud-SetPowerShellProfile
 osdcloud-InstallPackageManagement
