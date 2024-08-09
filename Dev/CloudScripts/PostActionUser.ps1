@@ -50,7 +50,7 @@ if ($Executed -ne $null -and $Executed.$ExecutionFlag -eq $true) {
 # Warten auf den Desktop-Explorer (explorer.exe)
 while (-not (Get-Process -Name explorer -ErrorAction SilentlyContinue)) {
     Write-Host "Warten, bis der Desktop vollständig geladen ist..."
-    Start-Sleep -Seconds 2
+    Start-Sleep -Seconds 30
 }
 
 # Transkript für das PostAction-Skript erstellen
