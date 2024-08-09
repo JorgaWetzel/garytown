@@ -96,6 +96,17 @@ Set-Win11ReqBypassRegValues
 Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
 Set-Chocolatey
 
+Write-Host "Setting Keyboard and Language to German (Switzerland)"
+Set-WinUILanguageOverride -Language "de-CH"
+Set-WinUserLanguageList -LanguageList "de-CH" -Force
+Set-WinSystemLocale -SystemLocale "de-CH"
+Set-WinHomeLocation -GeoId 19  # 19 corresponds to Switzerland
+Set-Culture -CultureInfo "de-CH"
+$languageList = New-WinUserLanguageList -Language "de-CH"
+Set-WinUserLanguageList $languageList -Force
+Set-WinUILanguageOverride -Language "de-CH"
+Set-WinDefaultInputMethodOverride -InputTip "0407:00000807"  # Swiss German Keyboard
+
 Step-oobeRestartComputer
 
 Stop-Transcript
