@@ -76,6 +76,7 @@ Set-Win11ReqBypassRegValues
 Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
 Set-Chocolatey
 
-Step-oobeRestartComputer
-
+Write-Warning 'Device restart'
 Stop-Transcript
+Start-Sleep -Seconds 1
+Restart-Computer
