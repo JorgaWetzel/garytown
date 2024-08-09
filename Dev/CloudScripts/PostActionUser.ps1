@@ -1,7 +1,7 @@
 # Pfad und Name der geplanten Aufgabe und des Skripts
 $RegistryPath = "HKLM:\SOFTWARE\OSDCloud"
 $ScriptPath = "$env:ProgramData\OSDCloud\PostActionsUser.ps1"
-$ScheduledTaskName = 'OSDCloudPostAction'
+$ScheduledTaskName = 'OSDCloudPostActionUser'
 
 # Sicherstellen, dass der Pfad existiert
 if (!(Test-Path -Path ($ScriptPath | split-path))) {
@@ -16,7 +16,7 @@ New-ItemProperty -Path $RegistryPath -Name "TriggerPostActions" -PropertyType dw
 $action = (New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File $ScriptPath")
 $trigger = New-ScheduledTaskTrigger -AtLogOn
 $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -RunOnlyIfNetworkAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 1)
-$principal = New-ScheduledTaskPrincipal "BUILTIN\Users" -RunLevel Highest
+$principal = New-ScheduledTaskPrincipal "NT AUTHORITY\SYSTEM" -RunLevel Highest
 $task = New-ScheduledTask -Action $action -Trigger $trigger -Settings $settings -Description "OSDCloud Post Action" -Principal $principal
 Register-ScheduledTask $ScheduledTaskName -InputObject $task
 
