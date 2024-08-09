@@ -76,6 +76,7 @@ Set-Win11ReqBypassRegValues
 Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
 Set-Chocolatey
 
-'
+Step-oobeRestartComputer
+
 Stop-Transcript
 
