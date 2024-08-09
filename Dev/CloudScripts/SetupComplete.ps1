@@ -122,5 +122,7 @@ $app_packages =
 "Microsoft.Xbox.TCUI",
 "Microsoft.GamingApp"
 
+Get-AppxProvisionedPackage -Online | ?{$_.DisplayName -in $app_packages} | Remove-AppxProvisionedPackage -Online -AllUser
+
 Stop-Transcript
 
