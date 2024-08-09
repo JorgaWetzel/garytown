@@ -43,23 +43,6 @@ $packages | %{
     choco install $_ -y --no-progress --ignore-checksums
 }
 
-Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
-Invoke-Expression -Command (Invoke-RestMethod -Uri functions.osdcloud.com)
-
-osdcloud-SetExecutionPolicy
-osdcloud-SetPowerShellProfile
-osdcloud-InstallPackageManagement
-osdcloud-TrustPSGallery
-osdcloud-InstallPowerShellModule -Name Pester
-osdcloud-InstallPowerShellModule -Name PSReadLine
-# powershell Invoke-Expression -Command (Invoke-RestMethod -Uri pwsh.live)
-osdcloud-InstallWinGet
-if (Get-Command 'WinGet' -ErrorAction SilentlyContinue) {
-    Write-Host -ForegroundColor Green '[+] winget upgrade --all --accept-source-agreements --accept-package-agreements'
-    Write-Host -ForegroundColor Green '[+] winget install company portal (unternehmenbsportal)'
-    winget install --id "9WZDNCRFJ3PZ" --exact --source msstore --accept-package-agreements --accept-source-agreements
-}
-
 # osdcloud-InstallPwsh
 # Write-Host -ForegroundColor Green "[+] pwsh.osdcloud.com Complete"
 # osdcloud-UpdateDefenderStack

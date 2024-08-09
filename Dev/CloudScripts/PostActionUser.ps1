@@ -47,6 +47,12 @@ if ($Executed -ne $null -and $Executed.$ExecutionFlag -eq $true) {
     Exit
 }
 
+# Warten auf den Desktop-Explorer (explorer.exe)
+while (-not (Get-Process -Name explorer -ErrorAction SilentlyContinue)) {
+    Write-Host "Warten, bis der Desktop vollständig geladen ist..."
+    Start-Sleep -Seconds 2
+}
+
 # Transkript für das PostAction-Skript erstellen
 $Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-PostActionsUser.log"
 $TranscriptPath = "C:\OSDCloud\Logs"
@@ -55,9 +61,17 @@ if (-not (Test-Path $TranscriptPath)) {
 }
 $null = Start-Transcript -Path (Join-Path $TranscriptPath $Transcript) -ErrorAction Ignore
 
-iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions2.ps1)
-
-Step-KeyboardLanguage
+# Language Settings
+Write-Host "Setting Keyboard and Language to German (Switzerland)"
+Set-WinUILanguageOverride -Language "de-CH"
+Set-WinUserLanguageList -LanguageList "de-CH" -Force
+Set-WinSystemLocale -SystemLocale "de-CH"
+Set-WinHomeLocation -GeoId 19  # 19 corresponds to Switzerland
+Set-Culture -CultureInfo "de-CH"
+$languageList = New-WinUserLanguageList -Language "de-CH"
+Set-WinUserLanguageList $languageList -Force
+Set-WinUILanguageOverride -Language "de-CH"
+Set-WinDefaultInputMethodOverride -InputTip "0407:00000807"  # Swiss German Keyboard
 
 # Pfade zu den Anwendungen
 $OutlookPath = "C:\Program Files\Microsoft Office\root\Office16\OUTLOOK.EXE"
@@ -136,6 +150,41 @@ function Remove-AppFromTaskbar($appname) {
 # Remove-AppFromTaskbar 'HP Support Assistant'
 # Remove-AppFromTaskbar 'Microsoft Teams'
 Remove-AppFromTaskbar 'Microsoft Store'
+
+# UserFTA
+$zielVerzeichnis = "C:\OSDCloud\UserFTA"
+if (-not (Test-Path -Path $zielVerzeichnis)) {
+    New-Item -ItemType Directory -Path $zielVerzeichnis -Force
+}
+$dateiUrl = "https://github.com/JorgaWetzel/garytown/raw/master/Dev/CloudScripts/UserFTA.zip"
+$speicherPfad = "$zielVerzeichnis\UserFTA.zip"
+Invoke-WebRequest -Uri $dateiUrl -OutFile $speicherPfad
+Expand-Archive -Path $speicherPfad -DestinationPath $zielVerzeichnis -Force
+$installSkriptPfad = "$zielVerzeichnis\install.ps1"
+
+if (Test-Path -Path $installSkriptPfad) {
+    & $installSkriptPfad
+} else {
+    Write-Error "Das Installationsskript wurde nicht gefunden."
+}
+
+# Winget Stuff
+Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion (WindowsPhase Phase)"
+Invoke-Expression -Command (Invoke-RestMethod -Uri functions.osdcloud.com)
+
+osdcloud-SetExecutionPolicy
+osdcloud-SetPowerShellProfile
+osdcloud-InstallPackageManagement
+osdcloud-TrustPSGallery
+osdcloud-InstallPowerShellModule -Name Pester
+osdcloud-InstallPowerShellModule -Name PSReadLine
+# powershell Invoke-Expression -Command (Invoke-RestMethod -Uri pwsh.live)
+osdcloud-InstallWinGet
+if (Get-Command 'WinGet' -ErrorAction SilentlyContinue) {
+    Write-Host -ForegroundColor Green '[+] winget upgrade --all --accept-source-agreements --accept-package-agreements'
+    Write-Host -ForegroundColor Green '[+] winget install company portal (unternehmenbsportal)'
+    winget install --id "9WZDNCRFJ3PZ" --exact --source msstore --accept-package-agreements --accept-source-agreements
+}
 
 # Setzen des Ausführungsflags
 New-ItemProperty -Path $RegistryPath -Name $ExecutionFlag -PropertyType DWORD -Value 1 -Force | Out-Null
