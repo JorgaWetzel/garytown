@@ -165,8 +165,6 @@ REM start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\
 REM reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" /v "execute_provisioning" /t REG_SZ /d "cmd /c powershell.exe -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\provisioning.ps1" /f
 REM add "HKLM\SOFTWARE\Policies\Microsoft\Windows\OOBE" /v "DisablePrivacyExperience" /t REG_DWORD /d 1 /f
 REM start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1 
-REM RD C:\OSDCloud\OS /S /Q
-REM RD C:\Drivers /S /Q
 exit 
 '@
 
