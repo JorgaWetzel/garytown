@@ -77,6 +77,9 @@ Start-WindowsUpdateDriver
 #HP Driver Updates
 osdcloud-HPIAExecute
 
+REM RD C:\OSDCloud\OS /S /Q
+REM RD C:\Drivers /S /Q
+
 $null = Stop-Transcript -ErrorAction Ignore
 
 # Lösche den geplanten Task, damit das Skript nicht erneut ausgeführt wird
