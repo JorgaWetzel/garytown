@@ -101,7 +101,7 @@ osdcloud-InstallPowerShellModule -Name PSReadLine
 
 Write-Host "**Taskbar Layout"
 # Show packagedAppId for Windows store apps:
-Get-AppxPackage | select @{n='name';e={"$($_.PackageFamilyName)!app"}} | ?{$_.name -like "**"}
+# Get-AppxPackage | select @{n='name';e={"$($_.PackageFamilyName)!app"}} | ?{$_.name -like "**"}
 
 $taskbar_layout =
 @"
