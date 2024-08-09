@@ -80,6 +80,21 @@ osdcloud-HPIAExecute
 REM RD C:\OSDCloud\OS /S /Q
 REM RD C:\Drivers /S /Q
 
+# Remove Desktop Shortcuts
+$Shortcuts2Remove = "Google Chrome.lnk", "VLC media player.lnk", "Adobe Acrobat.lnk", "VLC media player.lnk", "Firefox.lnk", "PDFCreator.lnk", "TeamViewer.lnk", "Microsoft Edge.lnk", "FileMaker Pro.lnk", "Google Earth.lnk", "LayOut 2023.lnk", "LibreOffice 7.4.lnk", "PDFCreator.lnk", "PDF-XChange Editor.lnk", "PDF-XChange Editor.lnk", "SIA-Reader.lnk", "SIA-Reader.lnk", "Solibri.lnk", "SonicWall NetExtender.lnk", "Style Builder.lnk", "VLC media player.lnk", "Zoom.lnk", "Spotify.lnk", "SEH UTN Manager.lnk", "SketchUp 2023.lnk", "Easy Product Finder 2.lnk", "Google Earth Pro.lnk", "Revit 2022 (AirTop1).lnk", "liNear CAD 22 (AirTop1).lnk", "AutoCAD 2022 (AirTop1).lnk", "Abmelden (AirTop1).lnk" 
+$DesktopPaths = @("C:\Users\*\Desktop\*", "C:\Users\*\*\Desktop\*")  # Mehrere Pfade als Array
+try {
+    foreach ($DesktopPath in $DesktopPaths) {
+        $ShortcutsOnClient = Get-ChildItem $DesktopPath
+        foreach ($shortcut in $Shortcuts2Remove) {
+            $($ShortcutsOnClient | Where-Object -FilterScript {$_.Name -like "$($shortcut.Split('.')[0])*"}) | Remove-Item -Force
+        }
+    }
+    Write-Host "Unwanted shortcut(s) removed."
+} catch {
+    Write-Error "Error removing shortcut(s)"
+}
+
 $null = Stop-Transcript -ErrorAction Ignore
 
 # Lösche den geplanten Task, damit das Skript nicht erneut ausgeführt wird
