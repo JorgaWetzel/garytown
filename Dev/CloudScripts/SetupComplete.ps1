@@ -373,17 +373,22 @@ $app_packages =
 "Microsoft.People",
 "Microsoft.PowerAutomateDesktop",
 "MicrosoftCorporationII.QuickAssist",
-"Microsoft.ScreenSketch",
 "Microsoft.MicrosoftSolitaireCollection",
 "Microsoft.WindowsSoundRecorder",
 "Microsoft.MicrosoftStickyNotes",
 "Microsoft.BingWeather",
 "Microsoft.Xbox.TCUI",
-"Microsoft.GamingApp",
-"Microsoft.Windows.Ai.Copilot.Provider"
+"Microsoft.GamingApp"
 
 Get-AppxProvisionedPackage -Online | ?{$_.DisplayName -in $app_packages} | Remove-AppxProvisionedPackage -Online -AllUser
 
+# Prevent Outlook (new) and Dev Home from installing
+"HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate",
+"HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\OutlookUpdate",
+"HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\OutlookUpdate",
+"HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\DevHomeUpdate" | %{
+    ri $_ -force
+}
 
 Stop-Transcript
 
