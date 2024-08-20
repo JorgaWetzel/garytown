@@ -46,9 +46,9 @@ $OSEdition = 'Pro'
 $OSActivation = 'Retail'
 $OSLanguage = 'de-de'
 $OSImageIndex =  '8'
-$ImageFileFullName = "D:\OSDCloud\OS\24H2.wim"
-$ImageFileItem = "D:\OSDCloud\OS\24H2.wim"
-$ImageFileName = "24H2"
+#$ImageFileFullName = "D:\OSDCloud\OS\24H2.wim"
+#$ImageFileItem = "D:\OSDCloud\OS\24H2.wim"
+#$ImageFileName = "24H2"
 
 # Full List https://github.com/OSDeploy/OSD/blob/06d544f0bff26b560e19676582d273e1c229cfac/Public/OSDCloud.ps1#L521
 #Set OSDCloud Vars
