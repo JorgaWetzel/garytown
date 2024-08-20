@@ -67,8 +67,8 @@ $Global:MyOSDCloud = [ordered]@{
 }
 
 # Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
-# Start-OSDCloudGUI
-Start-OSDCloudGUIDev
+Start-OSDCloudGUI
+# Start-OSDCloudGUIDev
 
 #Testing MS Update Catalog Driver Sync
 #$Global:MyOSDCloud.DriverPackName = 'Microsoft Update Catalog'
