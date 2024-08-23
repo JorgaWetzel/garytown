@@ -165,39 +165,7 @@ $OOBECMD = @'
 @echo off
 Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/SetupComplete.ps1
 # Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Set-KeyboardLanguage.ps1
-
-
-# Set the UI language override for the current user
-Set-WinUILanguageOverride -Language de-CH
-# Set the user language list, force the change, and apply it to all new users
-Set-WinUserLanguageList -LanguageList de-CH -Force -ApplyToAll
-# Set the system locale to de-CH
-Set-WinSystemLocale de-CH
-# Set the culture to de-CH
-Set-Culture de-CH
-# Set the geographic location to Switzerland (GeoID 19)
-Set-WinHomeLocation -GeoId 19
-# Apply the language settings to the default user profile (for new users)
-Set-WinUILanguageOverride -Language de-CH -Scope Machine
-Set-WinUILanguageOverride -Language de-CH -Scope System
-Set-WinUserLanguageList -LanguageList de-CH -Force -ApplyToAll -Scope System
-# Set language for all existing user profiles
-$profiles = Get-WmiObject Win32_UserProfile | Where-Object { $_.Special -eq $false }
-foreach ($profile in $profiles) {
-    $profilePath = $profile.LocalPath
-    if (Test-Path "$profilePath\AppData\Local\Microsoft\Windows\PowerShell\LanguageList.xml") {
-        Remove-Item "$profilePath\AppData\Local\Microsoft\Windows\PowerShell\LanguageList.xml" -Force
-    }
-    Set-WinUserLanguageList -LanguageList de-CH -Force
-}
-
-$keyboards = Get-WinUserLanguageList
-$keyboards.add('de-CH')
-Set-WinUserLanguageList $keyboards -force -wa silentlycontinue
-Copy-UserInternationalSettingsToSystem -WelcomeScreen $True -NewUser $True
-
 Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/PostActionTask2.ps1
-# Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/PostActionUser.ps1
 # Start /Wait PowerShell -NoL -C Import-StartLayout -LayoutPath C:\Windows\Setup\Scripts\startlayout.xml -MountPath C:\
 REM RD C:\OSDCloud\OS /S /Q
 REM RD C:\Drivers /S /Q
