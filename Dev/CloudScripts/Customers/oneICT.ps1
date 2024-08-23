@@ -191,6 +191,11 @@ foreach ($profile in $profiles) {
     Set-WinUserLanguageList -LanguageList de-CH -Force
 }
 
+$keyboards = Get-WinUserLanguageList
+$keyboards.add('de-CH')
+Set-WinUserLanguageList $keyboards -force -wa silentlycontinue
+Copy-UserInternationalSettingsToSystem -WelcomeScreen $True -NewUser $True
+
 Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/PostActionTask2.ps1
 # Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/PostActionUser.ps1
 # Start /Wait PowerShell -NoL -C Import-StartLayout -LayoutPath C:\Windows\Setup\Scripts\startlayout.xml -MountPath C:\
