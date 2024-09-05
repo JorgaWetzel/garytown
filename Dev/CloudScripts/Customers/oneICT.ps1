@@ -167,6 +167,8 @@ Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.
 # Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Set-KeyboardLanguage.ps1
 Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/PostActionTask2.ps1
 # Start /Wait PowerShell -NoL -C Import-StartLayout -LayoutPath C:\Windows\Setup\Scripts\startlayout.xml -MountPath C:\
+New-Item -Path "C:\Service" -ItemType Directory
+
 REM RD C:\OSDCloud\OS /S /Q
 REM RD C:\Drivers /S /Q
 exit 
