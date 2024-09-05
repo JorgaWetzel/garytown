@@ -142,7 +142,7 @@ foreach ($setting in $settings) {
 
 # *** Konfigurationsskripte für Browser herunterladen und ausführen ***
 Write-Host "*** Konfigurationsskripte für Browser herunterladen und ausführen ***"
-$provisioning = [System.IO.DirectoryInfo]"$env:UserProfile\Documents\OSDCloud\provisioning"
+$provisioning = [System.IO.DirectoryInfo]"C:\OSDCloud\Scripts"
 $urls = @(
     "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_brave.ps1",
     "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_chrome.ps1",
