@@ -160,6 +160,7 @@ Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.
 Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/PostActionTask2.ps1
 # Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/PostActionUser.ps1
 # Start /Wait PowerShell -NoL -C Import-StartLayout -LayoutPath C:\Windows\Setup\Scripts\startlayout.xml -MountPath C:\
+New-Item -Path "C:\Service" -ItemType Directory
 
 REM start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\provisioning.ps1
 REM reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" /v "execute_provisioning" /t REG_SZ /d "cmd /c powershell.exe -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\provisioning.ps1" /f
