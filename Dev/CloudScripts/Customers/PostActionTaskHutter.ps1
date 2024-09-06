@@ -1,5 +1,5 @@
 $ScriptName = 'functions.oneict.ch'
-$ScriptVersion = '10.04.2024'
+$ScriptVersion = '06.09.2024'
 Set-ExecutionPolicy Bypass -Force
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
