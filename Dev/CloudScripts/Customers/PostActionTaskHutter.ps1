@@ -327,12 +327,16 @@ try {
 
 
 # Define the folder paths
-$folder1 = "C:\Program Files\oneICT\EndpointManager\Data"
-$folder2 = "C:\Program Files\oneICT\EndpointManager\Log"
+$parentFolder = "C:\Program Files\oneICT\EndpointManager"
+$folder1 = "$parentFolder\Data"
+$folder2 = "$parentFolder\Log"
+
+# Create the folders if they do not exist
 New-Item -Path $folder1 -ItemType Directory -Force
 New-Item -Path $folder2 -ItemType Directory -Force
 
 # Define the permission rule for Everyone
+$aclParent = Get-Acl $parentFolder
 $acl1 = Get-Acl $folder1
 $acl2 = Get-Acl $folder2
 
@@ -342,9 +346,13 @@ $inheritance = [System.Security.AccessControl.InheritanceFlags]::ContainerInheri
 $propagation = [System.Security.AccessControl.PropagationFlags]::None
 $accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule($everyone, $rights, $inheritance, $propagation, [System.Security.AccessControl.AccessControlType]::Allow)
 
-# Add the rule to the ACL
+# Add the rule to the ACL of the parent folder and subfolders
+$aclParent.AddAccessRule($accessRule)
 $acl1.AddAccessRule($accessRule)
 $acl2.AddAccessRule($accessRule)
+
+# Apply the updated ACL to the parent folder and subfolders
+Set-Acl -Path $parentFolder -AclObject $aclParent
 Set-Acl -Path $folder1 -AclObject $acl1
 Set-Acl -Path $folder2 -AclObject $acl2
 
