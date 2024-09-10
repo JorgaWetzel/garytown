@@ -328,6 +328,29 @@ try {
     Write-Error "Error removing shortcut(s)"
 }
 
+# Define the folder paths
+$folder1 = "C:\Program Files\oneICT\EndpointManager\Data"
+$folder2 = "C:\Program Files\oneICT\EndpointManager\Log"
+New-Item -Path $folder1 -ItemType Directory -Force
+New-Item -Path $folder2 -ItemType Directory -Force
+
+# Define the permission rule for Everyone
+$acl1 = Get-Acl $folder1
+$acl2 = Get-Acl $folder2
+
+$everyone = [System.Security.Principal.NTAccount]"Jeder"
+$rights = [System.Security.AccessControl.FileSystemRights]::FullControl
+$inheritance = [System.Security.AccessControl.InheritanceFlags]::ContainerInherit, [System.Security.AccessControl.InheritanceFlags]::ObjectInherit
+$propagation = [System.Security.AccessControl.PropagationFlags]::None
+$accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule($everyone, $rights, $inheritance, $propagation, [System.Security.AccessControl.AccessControlType]::Allow)
+
+# Add the rule to the ACL
+$acl1.AddAccessRule($accessRule)
+$acl2.AddAccessRule($accessRule)
+Set-Acl -Path $folder1 -AclObject $acl1
+Set-Acl -Path $folder2 -AclObject $acl2
+
+
 REM RD C:\OSDCloud\OS /S /Q
 REM RD C:\Drivers /S /Q
 
