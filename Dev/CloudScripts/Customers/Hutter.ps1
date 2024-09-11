@@ -93,9 +93,31 @@ Write-Output $Global:MyOSDCloud
 
 $UnattendXml = @'
 <?xml version="1.0" encoding="utf-8"?>
-<unattend xmlns="urn:schemas-microsoft-com:unattend">
     <settings pass="specialize">
-        <component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <component name="Microsoft-Windows-IE-InternetExplorer" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" 
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" 
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <LocalIntranetSites>*.internal.loc</LocalIntranetSites>
+            <Home_Page>https://www.google.ch</Home_Page>
+            <DisableFirstRunWizard>true</DisableFirstRunWizard>
+        </component>
+        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" 
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" 
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <TimeZone>W. Europe Standard Time</TimeZone>
+            <RegisteredOrganization>Zander Tools</RegisteredOrganization>
+            <RegisteredOwner>Zander Tools</RegisteredOwner>
+        </component>
+        <component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" 
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" 
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <InputLocale>0807:00000807</InputLocale>
+            <SystemLocale>en-US</SystemLocale>
+            <UserLocale>de-CH</UserLocale>
+        </component>
+        <component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" 
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" 
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <RunSynchronous>
                 <RunSynchronousCommand wcm:action="add">
                     <Order>1</Order>
@@ -104,16 +126,41 @@ $UnattendXml = @'
                 </RunSynchronousCommand>
             </RunSynchronous>
         </component>
+        <component name="Microsoft-Windows-TPM-Tasks" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" 
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" 
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <ClearTpm>1</ClearTpm>
+        </component>
     </settings>
     <settings pass="oobeSystem">
-        <component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" 
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" 
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <OOBE>
+                <HideEULAPage>true</HideEULAPage>
+                <HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
+                <HideOnlineAccountScreens>false</HideOnlineAccountScreens>
+                <HideLocalAccountScreen>true</HideLocalAccountScreen>
+                <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+                <ProtectYourPC>3</ProtectYourPC>
+                <SkipMachineOOBE>true</SkipMachineOOBE>
+                <SkipUserOOBE>true</SkipUserOOBE>
+                <UnattendEnableRetailDemo>false</UnattendEnableRetailDemo>
+            </OOBE>
+        </component>
+        <component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" 
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" 
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <Reseal>
                 <Mode>Audit</Mode>
+                <ForceShutdownNow>false</ForceShutdownNow>
             </Reseal>
         </component>
     </settings>
     <settings pass="auditUser">
-        <component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" 
+            xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" 
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <RunSynchronous>
                 <RunSynchronousCommand wcm:action="add">
                     <Order>1</Order>
@@ -123,6 +170,8 @@ $UnattendXml = @'
             </RunSynchronous>
         </component>
     </settings>
+    <cpi:offlineImage cpi:source="catalog://nuc1/dw10x/sources/install_windows 10 enterprise.clg" 
+        xmlns:cpi="urn:schemas-microsoft-com:cpi" />
 </unattend>
 '@
 
