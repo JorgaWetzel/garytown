@@ -87,8 +87,8 @@ Set-Win11ReqBypassRegValues
 Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
 Set-Chocolatey
 
-Write-Host "Setting Keyboard and Language to German (Switzerland) for Default User"
-Set-DefaultUserLanguageAndKeyboard
+# Write-Host "Setting Keyboard and Language to German (Switzerland) for Default User"
+# Set-DefaultUserLanguageAndKeyboard
 
 # Configure power settings
 # Disable sleep, hibernate and monitor standby on AC
