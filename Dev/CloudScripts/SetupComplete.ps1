@@ -87,8 +87,6 @@ Set-Win11ReqBypassRegValues
 Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
 Set-Chocolatey
 
-# Write-Host "Setting Keyboard and Language to German (Switzerland) for Default User"
-# Set-DefaultUserLanguageAndKeyboard
 
 # Configure power settings
 # Disable sleep, hibernate and monitor standby on AC
@@ -123,9 +121,6 @@ $app_packages =
 "Microsoft.GamingApp"
 
 Get-AppxProvisionedPackage -Online | ?{$_.DisplayName -in $app_packages} | Remove-AppxProvisionedPackage -Online -AllUser
-
-#Restart
-restart-computer
 
 Stop-Transcript
 
