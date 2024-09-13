@@ -109,8 +109,6 @@ $OOBEDeployJson = @'
                     "Microsoft.Messaging",
                     "Microsoft.MicrosoftOfficeHub",
                     "Microsoft.MicrosoftSolitaireCollection",
-                    "Microsoft.MicrosoftStickyNotes",
-                    "Microsoft.MSPaint",
                     "Microsoft.People",
                     "Microsoft.PowerAutomateDesktop",
                     "Microsoft.StorePurchaseApp",
@@ -124,7 +122,6 @@ $OOBEDeployJson = @'
                     "Microsoft.XboxGamingOverlay",
                     "Microsoft.XboxIdentityProvider",
                     "Microsoft.XboxSpeechToTextOverlay",
-                    "Microsoft.YourPhone",
                     "Microsoft.ZuneMusic",
                     "Microsoft.ZuneVideo"
                    ],
