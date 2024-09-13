@@ -184,13 +184,12 @@ $AutopilotOOBEJson | Out-File -FilePath "C:\ProgramData\OSDeploy\OSDeploy.Autopi
 #  [PostOS] OOBE CMD Command Line
 #================================================
 Write-Host -ForegroundColor Green "Downloading and creating script for OOBE phase"
-Invoke-RestMethod https://raw.githubusercontent.com/AkosBakos/OSDCloud/main/Set-KeyboardLanguage.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\keyboard.ps1' -Encoding ascii -Force
-# Invoke-RestMethod https://github.com/JorgaWetzel/garytown/blob/master/Dev/CloudScripts/Set-KeyboardLanguage.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\keyboard.ps1' -Encoding ascii -Force
-Invoke-RestMethod https://github.com/JorgaWetzel/garytown/blob/master/Dev/CloudScripts/AP-Prereq.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\autopilotprereq.ps1' -Encoding ascii -Force
-Invoke-RestMethod https://github.com/JorgaWetzel/garytown/blob/master/Dev/CloudScripts/Start-AutopilotOOBE.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\autopilotoobe.ps1' -Encoding ascii -Force
-Invoke-RestMethod https://github.com/JorgaWetzel/garytown/blob/master/Dev/CloudScripts/PostActionTask2.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\PostActionTask.ps1' -Encoding ascii -Force
-Invoke-RestMethod https://github.com/JorgaWetzel/garytown/blob/master/Dev/CloudScripts/SetupComplete.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\SetupComplete.ps1' -Encoding ascii -Force
-Invoke-RestMethod https://github.com/JorgaWetzel/garytown/blob/master/Dev/CloudScripts/PostActionsTask.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\PostActionUser.ps1' -Encoding ascii -Force
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/Set-KeyboardLanguage.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\keyboard.ps1' -Encoding ascii -Force
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/AP-Prereq.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\autopilotprereq.ps1' -Encoding ascii -Force
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/Start-AutopilotOOBE.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\autopilotoobe.ps1' -Encoding ascii -Force
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/PostActionTask2.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\PostActionTask.ps1' -Encoding ascii -Force
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/SetupComplete.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\SetupComplete.ps1' -Encoding ascii -Force
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/PostActionUser.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\PostActionUser.ps1' -Encoding ascii -Force
 
 $OOBECMD = @'
 @echo off
