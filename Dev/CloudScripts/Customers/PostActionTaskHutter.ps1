@@ -350,12 +350,6 @@ try {
     Set-Acl -Path $folder1 -AclObject $acl1
     Set-Acl -Path $folder2 -AclObject $acl2
 
-    "powercfg /x -monitor-timeout-ac 0",
-    "powercfg /x -standby-timeout-ac 0",
-    "powercfg /x -hibernate-timeout-ac 0" | % {
-        cmd /c $_
-    }
-
     # Entfernen von Verzeichnissen
     # cmd /c "RD C:\OSDCloud\OS /S /Q"
     # cmd /c "RD C:\Drivers /S /Q"
