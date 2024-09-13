@@ -192,14 +192,13 @@ Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/he
 $OOBECMD = @'
 @echo off
 # Execute OOBE Tasks
-start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\scripts\SetupComplete.ps1
-cal powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\scripts\PostActionTask.ps1
 start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\keyboard.ps1
 start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\productkey.ps1
 start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\autopilotprereq.ps1
 start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\autopilotoobe.ps1
+start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\scripts\SetupComplete.ps1
+cal powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\scripts\PostActionTask.ps1
 
-# Start /Wait PowerShell -NoL -C Restart-Computer -Force
 # start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\scripts\PostActionUser.ps1
 
 # Below a PS session for debug and testing in system context, # when not needed 
