@@ -122,5 +122,8 @@ $app_packages =
 
 Get-AppxProvisionedPackage -Online | ?{$_.DisplayName -in $app_packages} | Remove-AppxProvisionedPackage -Online -AllUser
 
+# Restart-Computer -Force
+shutdown /r /t 10
+
 Stop-Transcript
 
