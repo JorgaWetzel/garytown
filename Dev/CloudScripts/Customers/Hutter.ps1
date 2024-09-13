@@ -198,6 +198,7 @@ start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setu
 start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\autopilotprereq.ps1
 start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\autopilotoobe.ps1
 start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\SetupComplete.ps1
+Start /Wait PowerShell -NoL -C Restart-Computer -Force
 exit
 '@
 $OOBECMD | Out-File -FilePath 'C:\Windows\Setup\Scripts\oobe.cmd' -Encoding ascii -Force
