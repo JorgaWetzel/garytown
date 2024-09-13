@@ -192,25 +192,10 @@ Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/he
 $OOBECMD = @'
 @echo off
 REM Planen der Ausführung der Skripte nach dem nächsten Neustart
-# reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" /v PostOOBEScripts /d "C:\Windows\Setup\Scripts\PostOOBE.cmd" /f
 start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\keyboard.ps1
-# Start /Wait PowerShell -NoL -C Restart-Computer -Force
 exit
 '@
 $OOBECMD | Out-File -FilePath 'C:\Windows\Setup\Scripts\oobe.cmd' -Encoding ascii -Force
-
-<#
-#================================================
-#  [PostOS] SetupComplete CMD Command Line
-#================================================
-Write-Host -ForegroundColor Green "Create C:\Windows\Setup\Scripts\SetupComplete.cmd"
-$SetupCompleteCMD = @'
-@echo off
-powershell.exe -Command Set-ExecutionPolicy RemoteSigned -Force
-exit
-'@
-$SetupCompleteCMD | Out-File -FilePath 'C:\Windows\Setup\Scripts\SetupComplete.cmd' -Encoding ascii -Force
-#>
 
 #================================================
 #  [PostOS] SetupComplete CMD Command Line OSDCloud
