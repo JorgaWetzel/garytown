@@ -357,8 +357,8 @@ try {
     }
 
     # Entfernen von Verzeichnissen
-    cmd /c "RD C:\OSDCloud\OS /S /Q"
-    cmd /c "RD C:\Drivers /S /Q"
+    # cmd /c "RD C:\OSDCloud\OS /S /Q"
+    # cmd /c "RD C:\Drivers /S /Q"
 
     # Beende das Transkript
     $null = Stop-Transcript -ErrorAction Ignore
