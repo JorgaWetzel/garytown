@@ -200,8 +200,9 @@ start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scri
 start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\autopilotprereq.ps1
 start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\autopilotoobe.ps1
 start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\scripts\PostActionTask.ps1
-# start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\scripts\SetupComplete.ps1
+start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\scripts\SetupComplete.ps1
 # start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\scripts\PostActionUser.ps1
+Start /Wait PowerShell -NoL -C Restart-Computer -Force
 
 # Below a PS session for debug and testing in system context, # when not needed 
 # start /wait powershell.exe -NoL -ExecutionPolicy Bypass
