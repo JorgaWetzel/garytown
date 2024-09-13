@@ -192,9 +192,9 @@ Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/he
 $OOBECMD = @'
 @echo off
 REM Planen der Ausführung der Skripte nach dem nächsten Neustart
-reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" /v PostOOBEScripts /d "C:\Windows\Setup\Scripts\PostOOBE.cmd" /f
+# reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" /v PostOOBEScripts /d "C:\Windows\Setup\Scripts\PostOOBE.cmd" /f
 start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\keyboard.ps1
-Start /Wait PowerShell -NoL -C Restart-Computer -Force
+# Start /Wait PowerShell -NoL -C Restart-Computer -Force
 exit
 '@
 $OOBECMD | Out-File -FilePath 'C:\Windows\Setup\Scripts\oobe.cmd' -Encoding ascii -Force
@@ -221,8 +221,8 @@ $osdCloudDir = 'C:\OSDCloud\Scripts\SetupComplete'
 $OOBECMD = @'
 @echo off
 start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\productkey.ps1
-start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\autopilotprereq.ps1
-start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\autopilotoobe.ps1
+# start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\autopilotprereq.ps1
+# start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\autopilotoobe.ps1
 start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1 
 call powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\PostActionTask.ps1
 exit 
