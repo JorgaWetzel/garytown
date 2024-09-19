@@ -50,8 +50,8 @@ try {
     }
 
     # HP Driver Updates
-    Write-Host -ForegroundColor Gray "**Running HP Image Assistant Driver & Firmware Updates**"
-    osdcloud-HPIAExecute
+    # Write-Host -ForegroundColor Gray "**Running HP Image Assistant Driver & Firmware Updates**"
+    # osdcloud-HPIAExecute
 
     # Windows Updates
     Write-Host -ForegroundColor Gray "**Running Microsoft Defender Updates**"
