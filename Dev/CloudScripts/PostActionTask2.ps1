@@ -367,6 +367,19 @@ Start-WindowsUpdate
 Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
 Start-WindowsUpdateDriver
 
+# Zertifikat
+$url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/choclatey.cer"
+$tempPath = "$env:TEMP\choclatey.cer"
+Invoke-WebRequest -Uri $url -OutFile $tempPath
+# Öffnen des Zertifikatspeichers für "TrustedPeople" unter "LocalMachine"
+$certStore = New-Object System.Security.Cryptography.X509Certificates.X509Store("TrustedPeople", "LocalMachine")
+$certStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
+$cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($tempPath)
+$certStore.Add($cert)
+$certStore.Close()
+Remove-Item -Path $tempPath
+Write-Host "Das Zertifikat wurde erfolgreich zu TrustedPeople unter LocalMachine hinzugefuegt."
+
 REM RD C:\OSDCloud\OS /S /Q
 REM RD C:\Drivers /S /Q
 
