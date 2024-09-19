@@ -41,12 +41,12 @@ try {
 
     # Installation von Chocolatey-Software
     Write-Host -ForegroundColor Green "Office wird installiert"
-    choco.exe install office365business --params "/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE" -y --no-progress --ignore-checksums --force
+    choco.exe upgrade office365business --params "/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE" -y --no-progress --ignore-checksums --force
 
     Write-Host -ForegroundColor Green "Standard Apps werden installiert"
     $packages = "TeamViewer","googlechrome","firefox","adobereader","microsoft-teams-new-bootstrapper","7zip.install","vlc","jre8","powertoys","onedrive","Pdf24","vcredist140","zoom","notepadplusplus.install","onenote","onedrive"
     $packages | ForEach-Object {
-        choco install $_ -y --no-progress --ignore-checksums
+        choco upgrade $_ -y --no-progress --ignore-checksums
     }
 
     # HP Driver Updates
