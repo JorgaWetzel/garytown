@@ -49,17 +49,6 @@ try {
         choco install $_ -y --no-progress --ignore-checksums
     }
 
-    # HP Driver Updates
-    # Write-Host -ForegroundColor Gray "**Running HP Image Assistant Driver & Firmware Updates**"
-    # osdcloud-HPIAExecute
-
-    # Windows Updates
-    Write-Host -ForegroundColor Gray "**Running Microsoft Defender Updates**"
-    Update-DefenderStack
-    Write-Host -ForegroundColor Gray "**Running Microsoft Windows Updates**"
-    Start-WindowsUpdate
-    Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
-    Start-WindowsUpdateDriver
 
     # Prevent Outlook (new) and Dev Home from installing
     "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate",
@@ -355,6 +344,18 @@ try {
     "powercfg /x -hibernate-timeout-ac 0" | % {
         cmd /c $_
     }
+
+    # HP Driver Updates
+    # Write-Host -ForegroundColor Gray "**Running HP Image Assistant Driver & Firmware Updates**"
+    # osdcloud-HPIAExecute
+
+    # Windows Updates
+    Write-Host -ForegroundColor Gray "**Running Microsoft Defender Updates**"
+    Update-DefenderStack
+    Write-Host -ForegroundColor Gray "**Running Microsoft Windows Updates**"
+    Start-WindowsUpdate
+    Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
+    Start-WindowsUpdateDriver
 
     # Entfernen von Verzeichnissen
     # cmd /c "RD C:\OSDCloud\OS /S /Q"
