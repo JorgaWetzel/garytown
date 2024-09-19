@@ -308,8 +308,6 @@ try {
         Write-Error "Error removing shortcut(s)"
     }
 
-powershell
-Code kopieren
 # Define the folder paths
 $parentFolder = "C:\Program Files\oneICT\EndpointManager"
 $folder1 = "$parentFolder\Data"
