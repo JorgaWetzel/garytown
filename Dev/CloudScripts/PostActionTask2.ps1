@@ -49,8 +49,8 @@ $packages | %{
 # osdcloud-NetFX
 
 #HP Driver Updates
-Write-Host -ForegroundColor Gray "**Running HP Image Assistant Driver & Firmware Upadtes**"
-osdcloud-HPIAExecute
+# Write-Host -ForegroundColor Gray "**Running HP Image Assistant Driver & Firmware Upadtes**"
+# osdcloud-HPIAExecute
 
 #Windows Updates
 Write-Host -ForegroundColor Gray "**Running Microsoft Defender Updates**"
@@ -168,7 +168,7 @@ foreach ($url in $urls) {
     # Herunterladen, wenn das Skript noch nicht existiert
     if (-not (Test-Path $scriptPath)) {
         Write-Host "Herunterladen von $url ..."
-        Invoke-WebRequest -Uri $url -OutFile $scriptPath
+        Invoke-WebRequest -Uri $url -OutFile $scriptPathosdcloud-HPIAExecute
     } else {
         Write-Host "$scriptName existiert bereits."
     }
