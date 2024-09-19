@@ -309,35 +309,43 @@ try {
         Write-Error "Error removing shortcut(s)"
     }
 
-    # Define the folder paths
-    $parentFolder = "C:\Program Files\oneICT\EndpointManager"
-    $folder1 = "$parentFolder\Data"
-    $folder2 = "$parentFolder\Log"
+   powershell
+Code kopieren
+# Define the folder paths
+$parentFolder = "C:\Program Files\oneICT\EndpointManager"
+$folder1 = "$parentFolder\Data"
+$folder2 = "$parentFolder\Log"
+$folder3 = "C:\service"
 
-    # Create the folders if they do not exist
-    New-Item -Path $folder1 -ItemType Directory -Force | Out-Null
-    New-Item -Path $folder2 -ItemType Directory -Force | Out-Null
+# Create the folders if they do not exist
+New-Item -Path $folder1 -ItemType Directory -Force | Out-Null
+New-Item -Path $folder2 -ItemType Directory -Force | Out-Null
+New-Item -Path $folder3 -ItemType Directory -Force | Out-Null
 
-    # Define the permission rule for Everyone
-    $aclParent = Get-Acl $parentFolder
-    $acl1 = Get-Acl $folder1
-    $acl2 = Get-Acl $folder2
+# Define the permission rule for Everyone
+$aclParent = Get-Acl $parentFolder
+$acl1 = Get-Acl $folder1
+$acl2 = Get-Acl $folder2
+$acl3 = Get-Acl $folder3
 
-    $everyone = [System.Security.Principal.NTAccount]"Jeder"
-    $rights = [System.Security.AccessControl.FileSystemRights]::FullControl
-    $inheritance = [System.Security.AccessControl.InheritanceFlags]::ContainerInherit, [System.Security.AccessControl.InheritanceFlags]::ObjectInherit
-    $propagation = [System.Security.AccessControl.PropagationFlags]::None
-    $accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule($everyone, $rights, $inheritance, $propagation, [System.Security.AccessControl.AccessControlType]::Allow)
+$everyone = [System.Security.Principal.NTAccount]"Jeder"
+$rights = [System.Security.AccessControl.FileSystemRights]::FullControl
+$inheritance = [System.Security.AccessControl.InheritanceFlags]::ContainerInherit, [System.Security.AccessControl.InheritanceFlags]::ObjectInherit
+$propagation = [System.Security.AccessControl.PropagationFlags]::None
+$accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule($everyone, $rights, $inheritance, $propagation, [System.Security.AccessControl.AccessControlType]::Allow)
 
-    # Add the rule to the ACL of the parent folder and subfolders
-    $aclParent.AddAccessRule($accessRule)
-    $acl1.AddAccessRule($accessRule)
-    $acl2.AddAccessRule($accessRule)
+# Add the rule to the ACL of the parent folder and subfolders
+$aclParent.AddAccessRule($accessRule)
+$acl1.AddAccessRule($accessRule)
+$acl2.AddAccessRule($accessRule)
+$acl3.AddAccessRule($accessRule)
 
-    # Apply the updated ACL to the parent folder and subfolders
-    Set-Acl -Path $parentFolder -AclObject $aclParent
-    Set-Acl -Path $folder1 -AclObject $acl1
-    Set-Acl -Path $folder2 -AclObject $acl2
+# Apply the updated ACL to the parent folder and subfolders
+Set-Acl -Path $parentFolder -AclObject $aclParent
+Set-Acl -Path $folder1 -AclObject $acl1
+Set-Acl -Path $folder2 -AclObject $acl2
+Set-Acl -Path $folder3 -AclObject $acl3
+
 
     "powercfg /x -monitor-timeout-ac 0",
     "powercfg /x -standby-timeout-ac 0",
