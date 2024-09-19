@@ -356,18 +356,28 @@ Set-Acl -Path $folder3 -AclObject $acl3
     Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
     Start-WindowsUpdateDriver
 
-    # Zertifikat
-    $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/choclatey.cer"
-    $tempPath = "$env:TEMP\choclatey.cer"
-    Invoke-WebRequest -Uri $url -OutFile $tempPath
-    # Öffnen des Zertifikatspeichers für "TrustedPeople" unter "LocalMachine"
-    $certStore = New-Object System.Security.Cryptography.X509Certificates.X509Store("TrustedPeople", "LocalMachine")
-    $certStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
-    $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($tempPath)
-    $certStore.Add($cert)
-    $certStore.Close()
-    Remove-Item -Path $tempPath
-    Write-Host "Das Zertifikat wurde erfolgreich zu TrustedPeople unter LocalMachine hinzugefuegt."
+    Write-Host -ForegroundColor Green "[+] Function Set-Chocolatey"
+    function Set-Chocolatey {
+    # add tcp rout to oneICT Server
+    Add-Content -Path "C:\Windows\System32\drivers\etc\hosts" -Value "195.49.62.108 chocoserver"
+    
+    Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+    [Environment]::SetEnvironmentVariable("Path", $env:Path + "$ENV:ALLUSERSPROFILE\chocolatey\bin", "Machine")
+    C:\ProgramData\chocolatey\bin\choco.exe install chocolatey-core.extension -y --no-progress --ignore-checksums
+    C:\ProgramData\chocolatey\bin\choco.exe source add --name="'oneICT'" --source="'https://chocoserver:8443/repository/ChocolateyInternal/'" --allow-self-service --user="'chocolatey'" --password="'wVGULoJGh1mxbRpChJQV'" --priority=1
+    C:\ProgramData\chocolatey\bin\choco.exe source add --name="'Chocolatey'" --source="'https://chocolatey.org/api/v2/'" --allow-self-service --priority=2
+    # C:\ProgramData\chocolatey\bin\choco.exe install chocolateygui -y --source="'oneICT'" --no-progress
+    C:\ProgramData\chocolatey\bin\choco.exe feature enable -n allowGlobalConfirmation
+    C:\ProgramData\chocolatey\bin\choco.exe feature enable -n allowEmptyChecksums
+    
+    $manufacturer = (gwmi win32_computersystem).Manufacturer
+    Write-Host "Das ist ein $manufacturer PC"
+    
+    if ($manufacturer -match "VMware") {
+    Write-Host "Installing VMware tools..."
+    C:\ProgramData\chocolatey\bin\choco.exe install vmware-tools -y --no-progress --ignore-checksums
+    }
+
 
     # Entfernen von Verzeichnissen
     # cmd /c "RD C:\OSDCloud\OS /S /Q"
