@@ -49,18 +49,6 @@ try {
         choco upgrade $_ -y --no-progress --ignore-checksums
     }
 
-    # HP Driver Updates
-    # Write-Host -ForegroundColor Gray "**Running HP Image Assistant Driver & Firmware Updates**"
-    # osdcloud-HPIAExecute
-
-    # Windows Updates
-    Write-Host -ForegroundColor Gray "**Running Microsoft Defender Updates**"
-    Update-DefenderStack
-    Write-Host -ForegroundColor Gray "**Running Microsoft Windows Updates**"
-    Start-WindowsUpdate
-    Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
-    Start-WindowsUpdateDriver
-
     # Prevent Outlook (new) and Dev Home from installing
     "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate",
     "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\OutlookUpdate",
@@ -349,6 +337,19 @@ try {
     Set-Acl -Path $parentFolder -AclObject $aclParent
     Set-Acl -Path $folder1 -AclObject $acl1
     Set-Acl -Path $folder2 -AclObject $acl2
+
+
+    # HP Driver Updates
+    # Write-Host -ForegroundColor Gray "**Running HP Image Assistant Driver & Firmware Updates**"
+    # osdcloud-HPIAExecute
+
+    # Windows Updates
+    Write-Host -ForegroundColor Gray "**Running Microsoft Defender Updates**"
+    Update-DefenderStack
+    Write-Host -ForegroundColor Gray "**Running Microsoft Windows Updates**"
+    Start-WindowsUpdate
+    Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
+    Start-WindowsUpdateDriver
 
     # Entfernen von Verzeichnissen
     # cmd /c "RD C:\OSDCloud\OS /S /Q"
