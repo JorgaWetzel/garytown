@@ -367,6 +367,19 @@ Set-Acl -Path $folder3 -AclObject $acl3
     # cmd /c "RD C:\OSDCloud\OS /S /Q"
     # cmd /c "RD C:\Drivers /S /Q"
 
+    # Zertifikat
+    $url = "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/choclatey.cer"
+    $tempPath = "$env:TEMP\choclatey.cer"
+    Invoke-WebRequest -Uri $url -OutFile $tempPath
+    # Öffnen des Zertifikatspeichers für "TrustedPeople" unter "LocalMachine"
+    $certStore = New-Object System.Security.Cryptography.X509Certificates.X509Store("TrustedPeople", "LocalMachine")
+    $certStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
+    $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($tempPath)
+    $certStore.Add($cert)
+    $certStore.Close()
+    Remove-Item -Path $tempPath
+    Write-Host "Das Zertifikat wurde erfolgreich zu TrustedPeople unter LocalMachine hinzugefuegt."
+
     # Beende das Transkript
     $null = Stop-Transcript -ErrorAction Ignore
 
