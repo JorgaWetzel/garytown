@@ -48,20 +48,6 @@ $packages | %{
 # osdcloud-UpdateDefenderStack
 # osdcloud-NetFX
 
-#HP Driver Updates
-# Write-Host -ForegroundColor Gray "**Running HP Image Assistant Driver & Firmware Upadtes**"
-# osdcloud-HPIAExecute
-
-#Windows Updates
-Write-Host -ForegroundColor Gray "**Running Microsoft Defender Updates**"
-Update-DefenderStack
-Write-Host -ForegroundColor Gray "**Running Microsoft Windows Updates**"
-Start-WindowsUpdate
-Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
-Start-WindowsUpdateDriver
-
-
-
 # Prevent Outlook (new) and Dev Home from installing
 "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate",
 "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\OutlookUpdate",
@@ -364,7 +350,17 @@ Set-Acl -Path $folder2 -AclObject $acl2
     cmd /c $_
 }
 
+#HP Driver Updates
+# Write-Host -ForegroundColor Gray "**Running HP Image Assistant Driver & Firmware Upadtes**"
+# osdcloud-HPIAExecute
 
+#Windows Updates
+Write-Host -ForegroundColor Gray "**Running Microsoft Defender Updates**"
+Update-DefenderStack
+Write-Host -ForegroundColor Gray "**Running Microsoft Windows Updates**"
+Start-WindowsUpdate
+Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
+Start-WindowsUpdateDriver
 
 REM RD C:\OSDCloud\OS /S /Q
 REM RD C:\Drivers /S /Q
