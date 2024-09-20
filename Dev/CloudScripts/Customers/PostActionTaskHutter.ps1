@@ -50,12 +50,12 @@ try {
 
     # Installation von Chocolatey-Software
     Write-Host -ForegroundColor Green "Office wird installiert"
-    choco.exe upgrade office365business --params "/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE" -y --no-progress --ignore-checksums --force
+    # choco.exe upgrade office365business --params "/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE" -y --no-progress --ignore-checksums
 
     Write-Host -ForegroundColor Green "Standard Apps werden installiert"
     $packages = "TeamViewer","googlechrome","firefox","adobereader","microsoft-teams-new-bootstrapper","7zip.install","vlc","jre8","powertoys","onedrive","Pdf24","vcredist140","zoom","notepadplusplus.install","onenote","onedrive"
     $packages | ForEach-Object {
-        choco upgrade $_ -y --no-progress --ignore-checksums
+        # choco upgrade $_ -y --no-progress --ignore-checksums
     }
 
     # Prevent Outlook (new) and Dev Home from installing
@@ -65,6 +65,8 @@ try {
     "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\DevHomeUpdate" | %{
         Remove-Item $_ -Force -ErrorAction SilentlyContinue
     }
+
+    
 
     Write-Host "**Taskbar Layout**"
     # Show packagedAppId for Windows store apps:
@@ -95,7 +97,10 @@ try {
 "@
 
     # Prepare provisioning folder
-    [System.IO.FileInfo]$provisioning = "$($env:ProgramData)\provisioning\taskbar_layout.xml"
+    #$provisioningFile = [System.IO.FileInfo]"$($env:ProgramData)\provisioning\taskbar_layout.xml"
+    $provisioning = [System.IO.FileInfo]"$($env:ProgramData)\provisioning\taskbar_layout.xml"
+
+
     if (!$provisioning.Directory.Exists) {
         $provisioning.Directory.Create()
     }
@@ -130,43 +135,47 @@ try {
         $registry.Dispose()
     }
 
-    # *** Konfigurationsskripte für Browser herunterladen und ausführen ***
-    Write-Host "*** Konfigurationsskripte für Browser herunterladen und ausführen ***"
-    $provisioning = [System.IO.DirectoryInfo]"C:\OSDCloud\Scripts"
-    $urls = @(
-        "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_brave.ps1",
-        "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_chrome.ps1",
-        "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_edge.ps1",
-        "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_firefox.ps1"
-    )
+    
 
-    # *** Sicherstellen, dass das Verzeichnis existiert ***
-    Write-Host "*** Sicherstellen, dass das Verzeichnis existiert ***"
-    if (-not (Test-Path $provisioning)) {
-        Write-Host "Erstelle Verzeichnis für Provisioning..."
-        New-Item -ItemType Directory -Path $provisioning -Force
+# *** Konfigurationsskripte für Browser herunterladen und ausführen ***
+Write-Host "*** Konfigurationsskripte für Browser herunterladen und ausführen ***"
+$provisioning = [System.IO.DirectoryInfo]"C:\OSDCloud\Scripts"
+
+$urls = @(
+    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_brave.ps1",
+    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_chrome.ps1",
+    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_edge.ps1",
+    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_firefox.ps1"
+)
+
+# *** Sicherstellen, dass das Verzeichnis existiert ***
+Write-Host "*** Sicherstellen, dass das Verzeichnis existiert ***"
+if (-not (Test-Path $provisioning)) {
+    Write-Host "Erstelle Verzeichnis für Provisioning..."
+    New-Item -ItemType Directory -Path $provisioning -Force
+} else {
+    Write-Host "Provisioning-Verzeichnis existiert bereits."
+}
+
+# *** Herunterladen und Ausführen der Konfigurationsskripte ***
+Write-Host "*** Herunterladen und Ausführen der Konfigurationsskripte ***"
+foreach ($url in $urls) {
+    $scriptName = [System.IO.Path]::GetFileName($url)
+    $currentScriptPath = Join-Path -Path $provisioning -ChildPath $scriptName
+
+    # Herunterladen, wenn das Skript noch nicht existiert
+    if (-not (Test-Path $currentScriptPath)) {
+        Write-Host "Herunterladen von $url ..."
+        Invoke-WebRequest -Uri $url -OutFile $currentScriptPath
     } else {
-        Write-Host "Provisioning-Verzeichnis existiert bereits."
+        Write-Host "$scriptName existiert bereits."
     }
 
-    # *** Herunterladen und Ausführen der Konfigurationsskripte ***
-    Write-Host "*** Herunterladen und Ausführen der Konfigurationsskripte ***"
-    foreach ($url in $urls) {
-        $scriptName = [System.IO.Path]::GetFileName($url)
-        $scriptPath = Join-Path -Path $provisioning -ChildPath $scriptName
+    # Ausführen des Skripts
+    Write-Host "Ausführen von $scriptName ..."
+    . $currentScriptPath
+}
 
-        # Herunterladen, wenn das Skript noch nicht existiert
-        if (-not (Test-Path $scriptPath)) {
-            Write-Host "Herunterladen von $url ..."
-            Invoke-WebRequest -Uri $url -OutFile $scriptPath
-        } else {
-            Write-Host "$scriptName existiert bereits."
-        }
-
-        # Ausführen des Skripts
-        Write-Host "Ausführen von $scriptName ..."
-        . $scriptPath
-    }
 
     # Set Microsoft Edge as Default Browser and other Defaults
     # DISM /Online /Export-DefaultAppAssociations:DefaultAssociations.xml
@@ -317,11 +326,12 @@ try {
         Write-Error "Error removing shortcut(s)"
     }
 
+
 # Define the folder paths
 $parentFolder = "C:\Program Files\oneICT\EndpointManager"
 $folder1 = "$parentFolder\Data"
 $folder2 = "$parentFolder\Log"
-$folder3 = "C:\service"
+$folder3 = "C:\Service"
 
 # Create the folders if they do not exist
 New-Item -Path $folder1 -ItemType Directory -Force | Out-Null
