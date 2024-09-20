@@ -39,6 +39,15 @@ try {
     } while (!$ping)
     $ProgressPreference = $ProgressPreference_bk
 
+    #region functions
+    iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
+    iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions2.ps1)
+    #endregion
+
+    # Setup oneICT Chocolatey Framework
+    Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
+    Set-Chocolatey
+
     # Installation von Chocolatey-Software
     Write-Host -ForegroundColor Green "Office wird installiert"
     choco.exe upgrade office365business --params "/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE" -y --no-progress --ignore-checksums --force
@@ -344,48 +353,27 @@ Set-Acl -Path $folder2 -AclObject $acl2
 Set-Acl -Path $folder3 -AclObject $acl3
 
 
-# HP Driver Updates
-# Write-Host -ForegroundColor Gray "**Running HP Image Assistant Driver & Firmware Updates**"
-# osdcloud-HPIAExecute
+    # HP Driver Updates
+    # Write-Host -ForegroundColor Gray "**Running HP Image Assistant Driver & Firmware Updates**"
+    # osdcloud-HPIAExecute
 
-# Windows Updates
-Write-Host -ForegroundColor Gray "**Running Microsoft Defender Updates**"
-Update-DefenderStack
-Write-Host -ForegroundColor Gray "**Running Microsoft Windows Updates**"
-Start-WindowsUpdate
-Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
-Start-WindowsUpdateDriver
+    # Windows Updates
+    Write-Host -ForegroundColor Gray "**Running Microsoft Defender Updates**"
+    Update-DefenderStack
+    Write-Host -ForegroundColor Gray "**Running Microsoft Windows Updates**"
+    Start-WindowsUpdate
+    Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
+    Start-WindowsUpdateDriver
 
-Write-Host -ForegroundColor Green "[+] Function Set-Chocolatey"
+    # Entfernen von Verzeichnissen
+    # cmd /c "RD C:\OSDCloud\OS /S /Q"
+    # cmd /c "RD C:\Drivers /S /Q"
 
-# add tcp rout to oneICT Server
-Add-Content -Path "C:\Windows\System32\drivers\etc\hosts" -Value "195.49.62.108 chocoserver"
+    # Beende das Transkript
+    $null = Stop-Transcript -ErrorAction Ignore
 
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-[Environment]::SetEnvironmentVariable("Path", $env:Path + "$ENV:ALLUSERSPROFILE\chocolatey\bin", "Machine")
-C:\ProgramData\chocolatey\bin\choco.exe install chocolatey-core.extension -y --no-progress --ignore-checksums
-C:\ProgramData\chocolatey\bin\choco.exe source add --name="'oneICT'" --source="'https://chocoserver:8443/repository/ChocolateyInternal/'" --allow-self-service --user="'chocolatey'" --password="'wVGULoJGh1mxbRpChJQV'" --priority=1
-C:\ProgramData\chocolatey\bin\choco.exe source add --name="'Chocolatey'" --source="'https://chocolatey.org/api/v2/'" --allow-self-service --priority=2
-# C:\ProgramData\chocolatey\bin\choco.exe install chocolateygui -y --source="'oneICT'" --no-progress
-C:\ProgramData\chocolatey\bin\choco.exe feature enable -n allowGlobalConfirmation
-C:\ProgramData\chocolatey\bin\choco.exe feature enable -n allowEmptyChecksums
-
-$manufacturer = (gwmi win32_computersystem).Manufacturer
-Write-Host "Das ist ein $manufacturer PC"
-
-if ($manufacturer -match "VMware") {
-Write-Host "Installing VMware tools..."
-C:\ProgramData\chocolatey\bin\choco.exe install vmware-tools -y --no-progress --ignore-checksums
-    
-# Entfernen von Verzeichnissen
-# cmd /c "RD C:\OSDCloud\OS /S /Q"
-# cmd /c "RD C:\Drivers /S /Q"
-
-# Beende das Transkript
-$null = Stop-Transcript -ErrorAction Ignore
-
-# Lösche den geplanten Task, damit das Skript nicht erneut ausgeführt wird
-Unregister-ScheduledTask -TaskName $ScheduledTaskName -Confirm:$false
+    # Lösche den geplanten Task, damit das Skript nicht erneut ausgeführt wird
+    Unregister-ScheduledTask -TaskName $ScheduledTaskName -Confirm:$false
 }
 catch {
     # Fehlerbehandlung
