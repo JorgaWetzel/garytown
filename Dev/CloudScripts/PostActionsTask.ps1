@@ -39,47 +39,40 @@ try {
     } while (!$ping)
     $ProgressPreference = $ProgressPreference_bk
 
+    #region functions
+    iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
+    iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions2.ps1)
+    #endregion
+
+    # Setup oneICT Chocolatey Framework
+    Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
+    Set-Chocolatey
+
     # Installation von Chocolatey-Software
     Write-Host -ForegroundColor Green "Office wird installiert"
-    choco.exe install office365business --params "/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE" -y --no-progress --ignore-checksums --force
+    choco.exe upgrade office365business --params "/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE" -y --no-progress --ignore-checksums
 
     Write-Host -ForegroundColor Green "Standard Apps werden installiert"
     $packages = "TeamViewer","googlechrome","firefox","adobereader","microsoft-teams-new-bootstrapper","7zip.install","vlc","jre8","powertoys","onedrive","Pdf24","vcredist140","zoom","notepadplusplus.install","onenote","onedrive"
     $packages | ForEach-Object {
-        choco install $_ -y --no-progress --ignore-checksums
+        choco upgrade $_ -y --no-progress --ignore-checksums
     }
-
-    # osdcloud-InstallPwsh
-    # Write-Host -ForegroundColor Green "[+] pwsh.osdcloud.com Complete"
-    # osdcloud-UpdateDefenderStack
-    # osdcloud-NetFX
-
-    # HP Driver Updates
-    Write-Host -ForegroundColor Gray "**Running HP Image Assistant Driver & Firmware Updates**"
-    osdcloud-HPIAExecute
-
-    # Windows Updates
-    Write-Host -ForegroundColor Gray "**Running Microsoft Defender Updates**"
-    Update-DefenderStack
-    Write-Host -ForegroundColor Gray "**Running Microsoft Windows Updates**"
-    Start-WindowsUpdate
-    Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
-    Start-WindowsUpdateDriver
 
     # Prevent Outlook (new) and Dev Home from installing
     "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate",
     "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\OutlookUpdate",
     "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\OutlookUpdate",
     "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\DevHomeUpdate" | %{
-        Remove-Item $_ -Force
+        Remove-Item $_ -Force -ErrorAction SilentlyContinue
     }
+
+    
 
     Write-Host "**Taskbar Layout**"
     # Show packagedAppId for Windows store apps:
     # Get-AppxPackage | select @{n='name';e={"$($_.PackageFamilyName)!app"}} | ?{$_.name -like "**"}
 
-    $taskbar_layout =
-    @"
+    $taskbar_layout = @"
 <?xml version="1.0" encoding="utf-8"?>
 <LayoutModificationTemplate
     xmlns="http://schemas.microsoft.com/Start/2014/LayoutModification"
@@ -92,21 +85,22 @@ try {
       <taskbar:TaskbarPinList>
         <taskbar:DesktopApp DesktopApplicationID="Microsoft.Windows.Explorer" />
         <taskbar:DesktopApp DesktopApplicationLinkPath="C:\Program Files\Microsoft Office\root\Office16\OUTLOOK.EXE" />
+        <taskbar:DesktopApp DesktopApplicationID="Microsoft.OutlookForWindows_8wekyb3d8bbwe!app" />
+        <taskbar:DesktopApp DesktopApplicationID="MSTeams_8wekyb3d8bbwe!app" />
         <taskbar:DesktopApp DesktopApplicationLinkPath="C:\Program Files\Microsoft Office\root\Office16\WINWORD.EXE" />
         <taskbar:DesktopApp DesktopApplicationLinkPath="C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE" />
-        <taskbar:DesktopApp DesktopApplicationLinkPath="C:\Program Files\Microsoft Office\root\Office16\ONENOTE.EXE" />
-        <taskbar:DesktopApp DesktopApplicationID="MSTeams_8wekyb3d8bbwe!app" />
         <taskbar:DesktopApp DesktopApplicationLinkPath="C:\Program Files\Microsoft Office\root\Office16\POWERPNT.EXE" />
-        <taskbar:DesktopApp DesktopApplicationLinkPath="C:\Program Files\Google\Chrome\Application\chrome.exe" />
-        <taskbar:DesktopApp DesktopApplicationID="Microsoft.MicrosoftEdge.Stable_8wekyb3d8bbwe!app" />
       </taskbar:TaskbarPinList>
     </defaultlayout:TaskbarLayout>
- </CustomTaskbarLayoutCollection>
+  </CustomTaskbarLayoutCollection>
 </LayoutModificationTemplate>
 "@
 
     # Prepare provisioning folder
-    [System.IO.FileInfo]$provisioning = "$($env:ProgramData)\provisioning\taskbar_layout.xml"
+    #$provisioningFile = [System.IO.FileInfo]"$($env:ProgramData)\provisioning\taskbar_layout.xml"
+    $provisioning = [System.IO.FileInfo]"$($env:ProgramData)\provisioning\taskbar_layout.xml"
+
+
     if (!$provisioning.Directory.Exists) {
         $provisioning.Directory.Create()
     }
@@ -141,43 +135,47 @@ try {
         $registry.Dispose()
     }
 
-    # *** Konfigurationsskripte für Browser herunterladen und ausführen ***
-    Write-Host "*** Konfigurationsskripte für Browser herunterladen und ausführen ***"
-    $provisioning = [System.IO.DirectoryInfo]"C:\OSDCloud\Scripts"
-    $urls = @(
-        "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_brave.ps1",
-        "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_chrome.ps1",
-        "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_edge.ps1",
-        "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_firefox.ps1"
-    )
+    
 
-    # *** Sicherstellen, dass das Verzeichnis existiert ***
-    Write-Host "*** Sicherstellen, dass das Verzeichnis existiert ***"
-    if (-not (Test-Path $provisioning)) {
-        Write-Host "Erstelle Verzeichnis für Provisioning..."
-        New-Item -ItemType Directory -Path $provisioning -Force
+# *** Konfigurationsskripte für Browser herunterladen und ausführen ***
+Write-Host "*** Konfigurationsskripte für Browser herunterladen und ausführen ***"
+$provisioning = [System.IO.DirectoryInfo]"C:\OSDCloud\Scripts"
+
+$urls = @(
+    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_brave.ps1",
+    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_chrome.ps1",
+    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_edge.ps1",
+    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_firefox.ps1"
+)
+
+# *** Sicherstellen, dass das Verzeichnis existiert ***
+Write-Host "*** Sicherstellen, dass das Verzeichnis existiert ***"
+if (-not (Test-Path $provisioning)) {
+    Write-Host "Erstelle Verzeichnis für Provisioning..."
+    New-Item -ItemType Directory -Path $provisioning -Force
+} else {
+    Write-Host "Provisioning-Verzeichnis existiert bereits."
+}
+
+# *** Herunterladen und Ausführen der Konfigurationsskripte ***
+Write-Host "*** Herunterladen und Ausführen der Konfigurationsskripte ***"
+foreach ($url in $urls) {
+    $scriptName = [System.IO.Path]::GetFileName($url)
+    $currentScriptPath = Join-Path -Path $provisioning -ChildPath $scriptName
+
+    # Herunterladen, wenn das Skript noch nicht existiert
+    if (-not (Test-Path $currentScriptPath)) {
+        Write-Host "Herunterladen von $url ..."
+        Invoke-WebRequest -Uri $url -OutFile $currentScriptPath
     } else {
-        Write-Host "Provisioning-Verzeichnis existiert bereits."
+        Write-Host "$scriptName existiert bereits."
     }
 
-    # *** Herunterladen und Ausführen der Konfigurationsskripte ***
-    Write-Host "*** Herunterladen und Ausführen der Konfigurationsskripte ***"
-    foreach ($url in $urls) {
-        $scriptName = [System.IO.Path]::GetFileName($url)
-        $scriptPath = Join-Path -Path $provisioning -ChildPath $scriptName
+    # Ausführen des Skripts
+    Write-Host "Ausführen von $scriptName ..."
+    . $currentScriptPath
+}
 
-        # Herunterladen, wenn das Skript noch nicht existiert
-        if (-not (Test-Path $scriptPath)) {
-            Write-Host "Herunterladen von $url ..."
-            Invoke-WebRequest -Uri $url -OutFile $scriptPath
-        } else {
-            Write-Host "$scriptName existiert bereits."
-        }
-
-        # Ausführen des Skripts
-        Write-Host "Ausführen von $scriptName ..."
-        . $scriptPath
-    }
 
     # Set Microsoft Edge as Default Browser and other Defaults
     # DISM /Online /Export-DefaultAppAssociations:DefaultAssociations.xml
@@ -314,13 +312,13 @@ try {
     }
 
     # Remove Desktop Shortcuts
-    $Shortcuts2Remove = "Google Chrome.lnk", "VLC media player.lnk", "Adobe Acrobat.lnk", "VLC media player.lnk", "Firefox.lnk", "PDFCreator.lnk", "TeamViewer.lnk", "Microsoft Edge.lnk", "FileMaker Pro.lnk", "Google Earth.lnk", "LayOut 2023.lnk", "LibreOffice 7.4.lnk", "PDFCreator.lnk", "PDF-XChange Editor.lnk", "PDF-XChange Editor.lnk", "SIA-Reader.lnk", "SIA-Reader.lnk", "Solibri.lnk", "SonicWall NetExtender.lnk", "Style Builder.lnk", "VLC media player.lnk", "Zoom.lnk", "Spotify.lnk", "SEH UTN Manager.lnk", "SketchUp 2023.lnk", "Easy Product Finder 2.lnk", "Google Earth Pro.lnk", "Revit 2022 (AirTop1).lnk", "liNear CAD 22 (AirTop1).lnk", "AutoCAD 2022 (AirTop1).lnk", "Abmelden (AirTop1).lnk" 
+    $Shortcuts2Remove = "Google Chrome.lnk", "VLC media player.lnk", "Adobe Acrobat.lnk", "Firefox.lnk", "PDFCreator.lnk", "TeamViewer.lnk", "Microsoft Edge.lnk", "FileMaker Pro.lnk", "Google Earth.lnk", "LayOut 2023.lnk", "LibreOffice 7.4.lnk", "PDF-XChange Editor.lnk", "SIA-Reader.lnk", "Solibri.lnk", "SonicWall NetExtender.lnk", "Style Builder.lnk", "Zoom.lnk", "Spotify.lnk", "SEH UTN Manager.lnk", "SketchUp 2023.lnk", "Easy Product Finder 2.lnk", "Google Earth Pro.lnk", "Revit 2022 (AirTop1).lnk", "liNear CAD 22 (AirTop1).lnk", "AutoCAD 2022 (AirTop1).lnk", "Abmelden (AirTop1).lnk" 
     $DesktopPaths = @("C:\Users\*\Desktop\*", "C:\Users\*\*\Desktop\*")  # Mehrere Pfade als Array
     try {
         foreach ($DesktopPath in $DesktopPaths) {
-            $ShortcutsOnClient = Get-ChildItem $DesktopPath
+            $ShortcutsOnClient = Get-ChildItem $DesktopPath -ErrorAction SilentlyContinue
             foreach ($shortcut in $Shortcuts2Remove) {
-                $($ShortcutsOnClient | Where-Object -FilterScript {$_.Name -like "$($shortcut.Split('.')[0])*"}) | Remove-Item -Force
+                $($ShortcutsOnClient | Where-Object -FilterScript {$_.Name -like "$($shortcut.Split('.')[0])*"}) | Remove-Item -Force -ErrorAction SilentlyContinue
             }
         }
         Write-Host "Unwanted shortcut(s) removed."
@@ -328,42 +326,56 @@ try {
         Write-Error "Error removing shortcut(s)"
     }
 
-    # Define the folder paths
-    $parentFolder = "C:\Program Files\oneICT\EndpointManager"
-    $folder1 = "$parentFolder\Data"
-    $folder2 = "$parentFolder\Log"
 
-    # Create the folders if they do not exist
-    New-Item -Path $folder1 -ItemType Directory -Force
-    New-Item -Path $folder2 -ItemType Directory -Force
+# Define the folder paths
+$parentFolder = "C:\Program Files\oneICT\EndpointManager"
+$folder1 = "$parentFolder\Data"
+$folder2 = "$parentFolder\Log"
+$folder3 = "C:\Service"
 
-    # Define the permission rule for Everyone
-    $aclParent = Get-Acl $parentFolder
-    $acl1 = Get-Acl $folder1
-    $acl2 = Get-Acl $folder2
+# Create the folders if they do not exist
+New-Item -Path $folder1 -ItemType Directory -Force | Out-Null
+New-Item -Path $folder2 -ItemType Directory -Force | Out-Null
+New-Item -Path $folder3 -ItemType Directory -Force | Out-Null
 
-    $everyone = [System.Security.Principal.NTAccount]"Jeder"
-    $rights = [System.Security.AccessControl.FileSystemRights]::FullControl
-    $inheritance = [System.Security.AccessControl.InheritanceFlags]::ContainerInherit, [System.Security.AccessControl.InheritanceFlags]::ObjectInherit
-    $propagation = [System.Security.AccessControl.PropagationFlags]::None
-    $accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule($everyone, $rights, $inheritance, $propagation, [System.Security.AccessControl.AccessControlType]::Allow)
+# Define the permission rule for Everyone
+$aclParent = Get-Acl $parentFolder
+$acl1 = Get-Acl $folder1
+$acl2 = Get-Acl $folder2
+$acl3 = Get-Acl $folder3
 
-    # Add the rule to the ACL of the parent folder and subfolders
-    $aclParent.AddAccessRule($accessRule)
-    $acl1.AddAccessRule($accessRule)
-    $acl2.AddAccessRule($accessRule)
+$everyone = [System.Security.Principal.NTAccount]"Jeder"
+$rights = [System.Security.AccessControl.FileSystemRights]::FullControl
+$inheritance = [System.Security.AccessControl.InheritanceFlags]::ContainerInherit, [System.Security.AccessControl.InheritanceFlags]::ObjectInherit
+$propagation = [System.Security.AccessControl.PropagationFlags]::None
+$accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule($everyone, $rights, $inheritance, $propagation, [System.Security.AccessControl.AccessControlType]::Allow)
 
-    # Apply the updated ACL to the parent folder and subfolders
-    Set-Acl -Path $parentFolder -AclObject $aclParent
-    Set-Acl -Path $folder1 -AclObject $acl1
-    Set-Acl -Path $folder2 -AclObject $acl2
+# Add the rule to the ACL of the parent folder and subfolders
+$aclParent.AddAccessRule($accessRule)
+$acl1.AddAccessRule($accessRule)
+$acl2.AddAccessRule($accessRule)
+$acl3.AddAccessRule($accessRule)
 
-    "powercfg /x -monitor-timeout-ac 0",
-    "powercfg /x -standby-timeout-ac 0",
-    "powercfg /x -hibernate-timeout-ac 0" | % {
-        cmd /c $_
-    }
+# Apply the updated ACL to the parent folder and subfolders
+Set-Acl -Path $parentFolder -AclObject $aclParent
+Set-Acl -Path $folder1 -AclObject $acl1
+Set-Acl -Path $folder2 -AclObject $acl2
+Set-Acl -Path $folder3 -AclObject $acl3
 
+
+    # HP Driver Updates
+    # Write-Host -ForegroundColor Gray "**Running HP Image Assistant Driver & Firmware Updates**"
+    # osdcloud-HPIAExecute
+
+    # Windows Updates
+    Write-Host -ForegroundColor Gray "**Running Microsoft Defender Updates**"
+    Update-DefenderStack
+    Write-Host -ForegroundColor Gray "**Running Microsoft Windows Updates**"
+    Start-WindowsUpdate
+    Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
+    Start-WindowsUpdateDriver
+
+    # Entfernen von Verzeichnissen
     # cmd /c "RD C:\OSDCloud\OS /S /Q"
     # cmd /c "RD C:\Drivers /S /Q"
 
