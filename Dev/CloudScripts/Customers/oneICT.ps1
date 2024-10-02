@@ -32,7 +32,7 @@ $Params = @{
     ZTI = $true
     Firmware = $false
 }
-Start-OSDCloud @Params
+# Start-OSDCloud @Params
 
 $Product = (Get-MyComputerProduct)
 $Model = (Get-MyComputerModel)
