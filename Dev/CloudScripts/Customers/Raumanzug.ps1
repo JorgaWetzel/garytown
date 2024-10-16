@@ -1,5 +1,5 @@
-$ScriptName = 'oneICT.ps1'
-$ScriptVersion = '08.08.2024'
+$ScriptName = 'Hutter.ps1'
+$ScriptVersion = '13.09.2024'
 iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
 
@@ -25,7 +25,7 @@ Import-Module OSD -Force
 #Used to Determine Driver Pack
 $Params = @{
     OSVersion = "Windows 11"
-    OSBuild = "23H2"
+    OSBuild = "24H2"
     OSEdition = "Pro"
     OSLanguage = "de-DE"
     OSLicense = "Retail"
@@ -87,85 +87,129 @@ if ($DriverPack){
 #write variables to console
 Write-Output $Global:MyOSDCloud
 
-#=======================================================================
-#   Unattend.xml
-#=======================================================================
-
-$UnattendXml = @'
-<?xml version="1.0" encoding="utf-8"?>
-<unattend xmlns="urn:schemas-microsoft-com:unattend">
-    <settings pass="specialize">
-        <component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <RunSynchronous>
-                <RunSynchronousCommand wcm:action="add">
-                    <Order>1</Order>
-                    <Description>OSDCloud Specialize</Description>
-                    <Path>Powershell -ExecutionPolicy Bypass -Command Invoke-OSDSpecialize -Verbose</Path>
-                </RunSynchronousCommand>
-            </RunSynchronous>
-        </component>
-    </settings>
-    <settings pass="oobeSystem">
-        <component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <Reseal>
-                <Mode>Audit</Mode>
-            </Reseal>
-        </component>
-    </settings>
-    <settings pass="auditUser">
-        <component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <RunSynchronous>
-                <RunSynchronousCommand wcm:action="add">
-                    <Order>1</Order>
-                    <Description>Set ExecutionPolicy RemoteSigned</Description>
-                    <Path>PowerShell -WindowStyle Hidden -Command "Set-ExecutionPolicy RemoteSigned -Force"</Path>
-                </RunSynchronousCommand>
-            </RunSynchronous>
-        </component>
-    </settings>
-</unattend>
-'@
-
-$PantherUnattendPath = 'C:\Windows\Panther\'
-if (-NOT (Test-Path $PantherUnattendPath)) {
-    New-Item -Path $PantherUnattendPath -ItemType Directory -Force | Out-Null
+#================================================
+#  [PostOS] OOBEDeploy Configuration
+#================================================
+Write-Host -ForegroundColor Green "Create C:\ProgramData\OSDeploy\OSDeploy.OOBEDeploy.json"
+$OOBEDeployJson = @'
+{
+    "AddNetFX3":  {
+                      "IsPresent":  true
+                  },
+    "Autopilot":  {
+                      "IsPresent":  false
+                  },
+    "RemoveAppx":  [
+                    "MicrosoftTeams",
+                    "Microsoft.BingWeather",
+                    "Microsoft.BingNews",
+                    "Microsoft.GamingApp",
+                    "Microsoft.GetHelp",
+                    "Microsoft.Getstarted",
+                    "Microsoft.Messaging",
+                    "Microsoft.MicrosoftOfficeHub",
+                    "Microsoft.MicrosoftSolitaireCollection",
+                    "Microsoft.People",
+                    "Microsoft.PowerAutomateDesktop",
+                    "Microsoft.StorePurchaseApp",
+                    "Microsoft.Todos",
+                    "microsoft.windowscommunicationsapps",
+                    "Microsoft.WindowsFeedbackHub",
+                    "Microsoft.WindowsMaps",
+                    "Microsoft.WindowsSoundRecorder",
+                    "Microsoft.Xbox.TCUI",
+                    "Microsoft.XboxGameOverlay",
+                    "Microsoft.XboxGamingOverlay",
+                    "Microsoft.XboxIdentityProvider",
+                    "Microsoft.XboxSpeechToTextOverlay",
+                    "Microsoft.ZuneMusic",
+                    "Microsoft.ZuneVideo"
+                   ],
+    "UpdateDrivers":  {
+                          "IsPresent":  true
+                      },
+    "UpdateWindows":  {
+                          "IsPresent":  true
+                      }
 }
-$AuditUnattendPath = Join-Path $PantherUnattendPath 'Invoke-OSDSpecialize.xml'
+'@
+If (!(Test-Path "C:\ProgramData\OSDeploy")) {
+    New-Item "C:\ProgramData\OSDeploy" -ItemType Directory -Force | Out-Null
+}
+$OOBEDeployJson | Out-File -FilePath "C:\ProgramData\OSDeploy\OSDeploy.OOBEDeploy.json" -Encoding ascii -Force
 
-Write-Host -ForegroundColor Cyan "Set Unattend.xml at $AuditUnattendPath"
-$UnattendXml | Out-File -FilePath $AuditUnattendPath -Encoding utf8
+#================================================
+#  [PostOS] AutopilotOOBE Configuration Staging
+#================================================
+Write-Host -ForegroundColor Green "Define Computername:"
+$Serial = Get-WmiObject Win32_bios | Select-Object -ExpandProperty SerialNumber
+$TargetComputername = $Serial.Substring(4,8)
 
-Write-Host -ForegroundColor Cyan 'Use-WindowsUnattend'
-Use-WindowsUnattend -Path 'C:\' -UnattendPath $AuditUnattendPath -Verbose
+$AssignedComputerName = "Hutter-$TargetComputername"
+Write-Host -ForegroundColor Red $AssignedComputerName
+Write-Host ""
+
+Write-Host -ForegroundColor Green "Create C:\ProgramData\OSDeploy\OSDeploy.AutopilotOOBE.json"
+$AutopilotOOBEJson = @"
+{
+    "AssignedComputerName" : "$AssignedComputerName",
+    "AddToGroup":  "DEV-WIN-Standard",
+    "Assign":  {
+                   "IsPresent":  true
+               },
+    "GroupTag":  "DEV-WIN-Standard",
+    "Hidden":  [
+                   "AddToGroup",
+                   "AssignedUser",
+                   "PostAction",
+                   "GroupTag",
+                   "Assign"
+               ],
+    "PostAction":  "Quit",
+    "Run":  "NetworkingWireless",
+    "Docs":  "https://oneict.ch/",
+    "Title":  "oneICT Autopilot Registrierung"
+}
+"@
+
+If (!(Test-Path "C:\ProgramData\OSDeploy")) {
+    New-Item "C:\ProgramData\OSDeploy" -ItemType Directory -Force | Out-Null
+}
+$AutopilotOOBEJson | Out-File -FilePath "C:\ProgramData\OSDeploy\OSDeploy.AutopilotOOBE.json" -Encoding ascii -Force
 
 #================================================
 #  [PostOS] OOBE CMD Command Line
 #================================================
 Write-Host -ForegroundColor Green "Downloading and creating script for OOBE phase"
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/Set-KeyboardLanguage.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\keyboard.ps1' -Encoding ascii -Force
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/Install-EmbeddedProductKey.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\productkey.ps1' -Encoding ascii -Force
+# Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/AP-Prereq.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\autopilotprereq.ps1' -Encoding ascii -Force
+# Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/Start-AutopilotOOBE.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\autopilotoobe.ps1' -Encoding ascii -Force
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/Customers/PostActionTaskHutter.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\PostActionTask.ps1' -Encoding ascii -Force
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/SetupComplete.ps1 | Out-File -FilePath 'C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1' -Encoding ascii -Force
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/PostActionUser.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\PostActionUser.ps1' -Encoding ascii -Force
 
-# Ensure the directories exist
+$OOBECMD = @'
+@echo off
+REM Planen der Ausführung der Skripte nach dem nächsten Neustart
+start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\keyboard.ps1
+exit
+'@
+$OOBECMD | Out-File -FilePath 'C:\Windows\Setup\Scripts\oobe.cmd' -Encoding ascii -Force
+
+#================================================
+#  [PostOS] SetupComplete CMD Command Line OSDCloud
+#================================================
+
 $osdCloudDir = 'C:\OSDCloud\Scripts\SetupComplete'
-$windowsSetupDir = 'C:\Windows\Setup\Scripts'
-
-# Download and create scripts
-# Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/SetupComplete.ps1 | Out-File -FilePath "$osdCloudDir\SetupComplete.ps1" -Encoding ascii -Force
-# Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/provisioning.ps1 | Out-File -FilePath "$windowsSetupDir\provisioning.ps1" -Encoding ascii -Force
-# Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/startlayout.xml | Out-File -FilePath "$windowsSetupDir\startlayout.xml" -Encoding ascii -Force
-
 # Create the OOBE CMD command line
 $OOBECMD = @'
 @echo off
-Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/SetupComplete.ps1
-Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Set-KeyboardLanguage.ps1
-Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/PostActionTask2.ps1
-# Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/PostActionUser.ps1
-# Start /Wait PowerShell -NoL -C Import-StartLayout -LayoutPath C:\Windows\Setup\Scripts\startlayout.xml -MountPath C:\
-New-Item -Path "C:\Service" -ItemType Directory
-
-REM start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\provisioning.ps1
-REM reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" /v "execute_provisioning" /t REG_SZ /d "cmd /c powershell.exe -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\provisioning.ps1" /f
-REM add "HKLM\SOFTWARE\Policies\Microsoft\Windows\OOBE" /v "DisablePrivacyExperience" /t REG_DWORD /d 1 /f
-REM start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1 
+start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\productkey.ps1
+# start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\autopilotprereq.ps1
+# start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\autopilotoobe.ps1
+start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1 
+call powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\PostActionTask.ps1
 exit 
 '@
 
@@ -175,6 +219,6 @@ $OOBECMD | Out-File -FilePath "$osdCloudDir\SetupComplete.cmd" -Encoding ascii -
 #=======================================================================
 #   Restart-Computer
 #=======================================================================
-Write-Host  -ForegroundColor Green "Restarting in 5 seconds!"
-Start-Sleep -Seconds 5
+Write-Host  -ForegroundColor Green "Restarting in 20 seconds!"
+Start-Sleep -Seconds 20
 wpeutil reboot
