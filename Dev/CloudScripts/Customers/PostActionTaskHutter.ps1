@@ -89,7 +89,9 @@ try {
         <taskbar:DesktopApp DesktopApplicationID="MSTeams_8wekyb3d8bbwe!app" />
         <taskbar:DesktopApp DesktopApplicationLinkPath="C:\Program Files\Microsoft Office\root\Office16\WINWORD.EXE" />
         <taskbar:DesktopApp DesktopApplicationLinkPath="C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE" />
+        <taskbar:DesktopApp DesktopApplicationLinkPath="C:\Program Files\Microsoft Office\root\Office16\ONENOTE.EXE" />
         <taskbar:DesktopApp DesktopApplicationLinkPath="C:\Program Files\Microsoft Office\root\Office16\POWERPNT.EXE" />
+        <taskbar:DesktopApp DesktopApplicationLinkPath=""C:\Program Files\Google\Chrome\Application\chrome.exe" />
       </taskbar:TaskbarPinList>
     </defaultlayout:TaskbarLayout>
   </CustomTaskbarLayoutCollection>
