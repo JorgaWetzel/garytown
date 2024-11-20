@@ -366,6 +366,18 @@ Set-Acl -Path $folder1 -AclObject $acl1
 Set-Acl -Path $folder2 -AclObject $acl2
 Set-Acl -Path $folder3 -AclObject $acl3
 
+# Remove/Uninstall Edge
+# remove from Registry
+$appxStore = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx\AppxAllUserStore'
+$pattern = "HKLM:$appxStore\InboxApplications\Microsoft.MicrosoftEdge_*_neutral__8wekyb3d8bbwe"
+$edgeAppXKey = (Get-Item -Path $pattern).PSChildName
+if (Test-Path "$pattern") { reg delete "HKLM$appxStore\InboxApplications\$edgeAppXKey" /f | Out-Null }
+
+# make the Edge AppX able to uninstall and uninstall
+New-Item -Path "HKLM:$appxStore\EndOfLife\$SID\Microsoft.MicrosoftEdge_8wekyb3d8bbwe" -Force | Out-Null
+Get-AppxPackage -Name Microsoft.MicrosoftEdge | Remove-AppxPackage | Out-Null
+Remove-Item -Path "HKLM:$appxStore\EndOfLife\$SID\Microsoft.MicrosoftEdge_8wekyb3d8bbwe" -Force | Out-Null
+
 
     # HP Driver Updates
     # Write-Host -ForegroundColor Gray "**Running HP Image Assistant Driver & Firmware Updates**"
