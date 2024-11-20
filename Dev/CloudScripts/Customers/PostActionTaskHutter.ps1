@@ -191,10 +191,12 @@ foreach ($url in $urls) {
     # XML-Datei mit den gewünschten Dateityp- und Protokollzuweisungen erstellen
     '<?xml version="1.0" encoding="UTF-8"?>
 <DefaultAssociations>
-  <Association Identifier=".htm" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
-  <Association Identifier=".html" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
-  <Association Identifier=".mht" ProgId="MSEdgeMHT" ApplicationName="Microsoft Edge" />
-  <Association Identifier=".mhtml" ProgId="MSEdgeMHT" ApplicationName="Microsoft Edge" />
+  <Association Identifier=".htm" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
+  <Association Identifier=".html" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
+  <Association Identifier="http" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
+  <Association Identifier="https" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
+  <Association Identifier=".mht" ProgId="MSEdgeMHT" ApplicationName="Google Chrome" />
+  <Association Identifier=".mhtml" ProgId="MSEdgeMHT" ApplicationName="Google Chrome" />
   <Association Identifier=".oxps" ProgId="Windows.XPSReachViewer" ApplicationName="XPS Viewer" />
   <Association Identifier=".pdf" ProgId="Acrobat.Document.DC" ApplicationName="Adobe Acrobat" />
   <Association Identifier=".svg" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
@@ -202,18 +204,18 @@ foreach ($url in $urls) {
   <Association Identifier=".tiff" ProgId="PhotoViewer.FileAssoc.Tiff" ApplicationName="Windows Photo Viewer" />
   <Association Identifier=".url" ProgId="InternetShortcut" ApplicationName="Internet Explorer" />
   <Association Identifier=".wsb" ProgId="Windows.Sandbox" ApplicationName="Windows Sandbox" />
-  <Association Identifier=".xht" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
-  <Association Identifier=".xhtml" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
+  <Association Identifier=".xht" ProgId="MSEdgeHTM" ApplicationName="Google Chrome" />
+  <Association Identifier=".xhtml" ProgId="MSEdgeHTM" ApplicationName="Google Chrome" />
   <Association Identifier=".xps" ProgId="Windows.XPSReachViewer" ApplicationName="XPS Viewer" />
   <Association Identifier=".zip" ProgId="CompressedFolder" ApplicationName="Windows Explorer" />
-  <Association Identifier="ftp" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
-  <Association Identifier="http" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
-  <Association Identifier="https" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
+  <Association Identifier="ftp" ProgId="MSEdgeHTM" ApplicationName="Google Chrome" />
+  <Association Identifier="http" ProgId="MSEdgeHTM" ApplicationName="Google Chrome" />
+  <Association Identifier="https" ProgId="MSEdgeHTM" ApplicationName="Google Chrome" />
   <Association Identifier="mailto" ProgId="Outlook.URL.mailto.15" ApplicationName="Outlook" />
-  <Association Identifier="microsoft-edge" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
-  <Association Identifier="microsoft-edge-holographic" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
-  <Association Identifier="ms-xbl-3d8b930f" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
-  <Association Identifier="read" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
+  <Association Identifier="microsoft-edge" ProgId="MSEdgeHTM" ApplicationName="Google Chrome" />
+  <Association Identifier="microsoft-edge-holographic" ProgId="MSEdgeHTM" ApplicationName="Google Chrome" />
+  <Association Identifier="ms-xbl-3d8b930f" ProgId="MSEdgeHTM" ApplicationName="Google Chrome" />
+  <Association Identifier="read" ProgId="MSEdgeHTM" ApplicationName="Google Chrome" />
 </DefaultAssociations>' | Out-File $DefaultAssociationsConfiguration.FullName -Encoding utf8 -Force
 
     # Registry-Einstellungen für die Default App Associations konfigurieren
