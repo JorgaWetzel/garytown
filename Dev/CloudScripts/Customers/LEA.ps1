@@ -188,6 +188,14 @@ Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/he
 Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/Customers/PostActionTaskLEA.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\PostActionTask.ps1' -Encoding ascii -Force
 Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/SetupComplete.ps1 | Out-File -FilePath 'C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1' -Encoding ascii -Force
 Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/PostActionUser.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\PostActionTask.ps1' -Encoding ascii -Force
+
+# Downloading and extracting Scripts.zip
+Write-Host -ForegroundColor Green "Downloading and extracting Scripts.zip"
+Invoke-WebRequest -Uri "https://github.com/JorgaWetzel/garytown/raw/refs/heads/master/Dev/CloudScripts/Scripts.zip" -OutFile "C:\Windows\Setup\Scripts\Scripts.zip"
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+[System.IO.Compression.ZipFile]::ExtractToDirectory("C:\Windows\Setup\Scripts\Scripts.zip", "C:\Windows\Setup\Scripts")
+Remove-Item -Path "C:\Windows\Setup\Scripts\Scripts.zip" -Force
+
 $OOBECMD = @'
 @echo off
 REM Planen der Ausführung der Skripte nach dem nächsten Neustart
