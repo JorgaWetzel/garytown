@@ -191,7 +191,7 @@ Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/he
 
 # Downloading and extracting Scripts.zip
 Write-Host -ForegroundColor Green "Downloading and extracting Scripts.zip"
-Invoke-WebRequest -Uri "https://github.com/JorgaWetzel/garytown/raw/refs/heads/master/Dev/CloudScripts/Scripts.zip" -OutFile "C:\Windows\Setup\Scripts\Scripts.zip"
+Invoke-WebRequest -Uri "https://github.com/JorgaWetzel/garytown/raw/refs/heads/master/Dev/CloudScripts/Scripts.zip" -OutFile "C:\Windows\Setup\Scripts\Scripts.zip" -Verbose
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 [System.IO.Compression.ZipFile]::ExtractToDirectory("C:\Windows\Setup\Scripts\Scripts.zip", "C:\Windows\Setup\Scripts")
 Remove-Item -Path "C:\Windows\Setup\Scripts\Scripts.zip" -Force
