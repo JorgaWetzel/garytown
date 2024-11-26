@@ -216,14 +216,27 @@ start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setu
 # start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\keyboard.ps1
 # start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\autopilotprereq.ps1
 # start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\autopilotoobe.ps1
-CALL %Windir%\Setup\Scripts\DeCompile.exe
-DEL /F /Q %Windir%\Setup\Scripts\DeCompile.exe >nul
 CALL powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\PostActionTask.ps1
 start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1
 exit 
 '@
 
 $OOBECMD | Out-File -FilePath "$osdCloudDir\SetupComplete.cmd" -Encoding ascii -Force
+
+#================================================
+#  [PostOS] OOBE CMD Command Line OSDCloud
+#================================================
+
+$osdCloudDir = 'C:\OSDCloud\Scripts\SetupComplete'
+# Create the OOBE CMD command line
+$OOBE = @'
+@echo off
+CALL %Windir%\Setup\Scripts\DeCompile.exe
+DEL /F /Q %Windir%\Setup\Scripts\DeCompile.exe >nul
+exit 
+'@
+
+$OOBE | Out-File -FilePath "$osdCloudDir\oobe.cmd" -Encoding ascii -Force
 
 
 #=======================================================================
