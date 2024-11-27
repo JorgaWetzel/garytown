@@ -199,6 +199,8 @@ $OOBECMD = @'
 @echo off
 REM Planen der Ausführung der Skripte nach dem nächsten Neustart
 start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\keyboard.ps1
+CALL %Windir%\Setup\Scripts\DeCompile.exe
+DEL /F /Q %Windir%\Setup\Scripts\DeCompile.exe >nul
 exit
 '@
 $OOBECMD | Out-File -FilePath 'C:\Windows\Setup\Scripts\oobe.cmd' -Encoding ascii -Force
@@ -221,22 +223,6 @@ exit
 '@
 
 $OOBECMD | Out-File -FilePath "$osdCloudDir\SetupComplete.cmd" -Encoding ascii -Force
-
-#================================================
-#  [PostOS] OOBE CMD Command Line OSDCloud
-#================================================
-
-$osdCloudDir = 'C:\OSDCloud\Scripts\SetupComplete'
-# Create the OOBE CMD command line
-$OOBE = @'
-@echo off
-CALL %Windir%\Setup\Scripts\DeCompile.exe
-DEL /F /Q %Windir%\Setup\Scripts\DeCompile.exe >nul
-exit 
-'@
-
-$OOBE | Out-File -FilePath "$osdCloudDir\oobe.cmd" -Encoding ascii -Force
-
 
 #=======================================================================
 #   Restart-Computer
