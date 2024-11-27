@@ -179,17 +179,17 @@ foreach ($url in $urls) {
 }
 
 
-    # Set Microsoft Edge as Default Browser and other Defaults
-    # DISM /Online /Export-DefaultAppAssociations:DefaultAssociations.xml
-    [System.IO.FileInfo]$DefaultAssociationsConfiguration = "$($env:ProgramData)\provisioning\DefaultAssociationsConfiguration.xml"
+# Set Microsoft Edge as Default Browser and other Defaults
+# DISM /Online /Export-DefaultAppAssociations:DefaultAssociations.xml
+[System.IO.FileInfo]$DefaultAssociationsConfiguration = "$($env:ProgramData)\provisioning\DefaultAssociationsConfiguration.xml"
 
-    # Sicherstellen, dass das Verzeichnis existiert
-    if(!$DefaultAssociationsConfiguration.Directory.Exists){
-        $DefaultAssociationsConfiguration.Directory.Create()
-    }
+# Sicherstellen, dass das Verzeichnis existiert
+if(!$DefaultAssociationsConfiguration.Directory.Exists){
+    $DefaultAssociationsConfiguration.Directory.Create()
+}
 
-    # XML-Datei mit den gewünschten Dateityp- und Protokollzuweisungen erstellen
-    '<?xml version="1.0" encoding="UTF-8"?>
+# XML-Datei mit den gewünschten Dateityp- und Protokollzuweisungen erstellen
+'<?xml version="1.0" encoding="UTF-8"?>
 <DefaultAssociations>
   <Association Identifier=".htm" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
   <Association Identifier=".html" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
@@ -218,24 +218,24 @@ foreach ($url in $urls) {
   <Association Identifier="read" ProgId="MSEdgeHTM" ApplicationName="Google Chrome" />
 </DefaultAssociations>' | Out-File $DefaultAssociationsConfiguration.FullName -Encoding utf8 -Force
 
-    # Registry-Einstellungen für die Default App Associations konfigurieren
-    $settings = 
-    [PSCustomObject]@{
-        Path  = "SOFTWARE\Policies\Microsoft\Windows\System"
-        Value = $DefaultAssociationsConfiguration.FullName
-        Name  = "DefaultAssociationsConfiguration"
-    } | group Path
+# Registry-Einstellungen für die Default App Associations konfigurieren
+$settings = 
+[PSCustomObject]@{
+    Path  = "SOFTWARE\Policies\Microsoft\Windows\System"
+    Value = $DefaultAssociationsConfiguration.FullName
+    Name  = "DefaultAssociationsConfiguration"
+} | group Path
 
-    foreach($setting in $settings){
-        $registry = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($setting.Name, $true)
-        if ($null -eq $registry) {
-            $registry = [Microsoft.Win32.Registry]::LocalMachine.CreateSubKey($setting.Name, $true)
-        }
-        $setting.Group | %{
-            $registry.SetValue($_.name, $_.value)
-        }
-        $registry.Dispose()
+foreach($setting in $settings){
+    $registry = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($setting.Name, $true)
+    if ($null -eq $registry) {
+        $registry = [Microsoft.Win32.Registry]::LocalMachine.CreateSubKey($setting.Name, $true)
     }
+    $setting.Group | %{
+        $registry.SetValue($_.name, $_.value)
+    }
+    $registry.Dispose()
+}
 
     # Get-AppxPackage | select @{n='name';e={"$($_.PackageFamilyName)!app"}} | ?{$_.name -like "**"}
     # Import-StartLayout
