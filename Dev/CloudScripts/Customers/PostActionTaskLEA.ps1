@@ -179,13 +179,11 @@ foreach ($url in $urls) {
 }
 
 
-# Set Microsoft Edge as Default Browser and other Defaults
-# DISM /Online /Export-DefaultAppAssociations:DefaultAssociations.xml
 [System.IO.FileInfo]$DefaultAssociationsConfiguration = "$($env:ProgramData)\provisioning\DefaultAssociationsConfiguration.xml"
 
 # Sicherstellen, dass das Verzeichnis existiert
-if(!$DefaultAssociationsConfiguration.Directory.Exists){
-    $DefaultAssociationsConfiguration.Directory.Create()
+if (!(Test-Path $DefaultAssociationsConfiguration.DirectoryName)) {
+    New-Item -ItemType Directory -Path $DefaultAssociationsConfiguration.DirectoryName -Force
 }
 
 # XML-Datei mit den gewünschten Dateityp- und Protokollzuweisungen erstellen
@@ -193,49 +191,23 @@ if(!$DefaultAssociationsConfiguration.Directory.Exists){
 <DefaultAssociations>
   <Association Identifier=".htm" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
   <Association Identifier=".html" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
+  <Association Identifier=".mht" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
+  <Association Identifier=".mhtml" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
+  <Association Identifier=".svg" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
+  <Association Identifier=".xht" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
+  <Association Identifier=".xhtml" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
   <Association Identifier="http" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
   <Association Identifier="https" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
-  <Association Identifier=".mht" ProgId="MSEdgeMHT" ApplicationName="Google Chrome" />
-  <Association Identifier=".mhtml" ProgId="MSEdgeMHT" ApplicationName="Google Chrome" />
-  <Association Identifier=".oxps" ProgId="Windows.XPSReachViewer" ApplicationName="XPS Viewer" />
   <Association Identifier=".pdf" ProgId="Acrobat.Document.DC" ApplicationName="Adobe Acrobat" />
-  <Association Identifier=".svg" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
-  <Association Identifier=".tif" ProgId="PhotoViewer.FileAssoc.Tiff" ApplicationName="Windows Photo Viewer" />
-  <Association Identifier=".tiff" ProgId="PhotoViewer.FileAssoc.Tiff" ApplicationName="Windows Photo Viewer" />
-  <Association Identifier=".url" ProgId="InternetShortcut" ApplicationName="Internet Explorer" />
-  <Association Identifier=".wsb" ProgId="Windows.Sandbox" ApplicationName="Windows Sandbox" />
-  <Association Identifier=".xht" ProgId="MSEdgeHTM" ApplicationName="Google Chrome" />
-  <Association Identifier=".xhtml" ProgId="MSEdgeHTM" ApplicationName="Google Chrome" />
-  <Association Identifier=".xps" ProgId="Windows.XPSReachViewer" ApplicationName="XPS Viewer" />
-  <Association Identifier=".zip" ProgId="CompressedFolder" ApplicationName="Windows Explorer" />
-  <Association Identifier="ftp" ProgId="MSEdgeHTM" ApplicationName="Google Chrome" />
-  <Association Identifier="http" ProgId="MSEdgeHTM" ApplicationName="Google Chrome" />
-  <Association Identifier="https" ProgId="MSEdgeHTM" ApplicationName="Google Chrome" />
-  <Association Identifier="mailto" ProgId="Outlook.URL.mailto.15" ApplicationName="Outlook" />
-  <Association Identifier="microsoft-edge" ProgId="MSEdgeHTM" ApplicationName="Google Chrome" />
-  <Association Identifier="microsoft-edge-holographic" ProgId="MSEdgeHTM" ApplicationName="Google Chrome" />
-  <Association Identifier="ms-xbl-3d8b930f" ProgId="MSEdgeHTM" ApplicationName="Google Chrome" />
-  <Association Identifier="read" ProgId="MSEdgeHTM" ApplicationName="Google Chrome" />
+  <Association Identifier="mailto" ProgId="Outlook.URL.mailto.15" ApplicationName="Microsoft Outlook 2016" />
 </DefaultAssociations>' | Out-File $DefaultAssociationsConfiguration.FullName -Encoding utf8 -Force
 
 # Registry-Einstellungen für die Default App Associations konfigurieren
-$settings = 
-[PSCustomObject]@{
-    Path  = "SOFTWARE\Policies\Microsoft\Windows\System"
-    Value = $DefaultAssociationsConfiguration.FullName
-    Name  = "DefaultAssociationsConfiguration"
-} | group Path
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System" -Name "DefaultAssociationsConfiguration" -Value $DefaultAssociationsConfiguration.FullName
 
-foreach($setting in $settings){
-    $registry = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($setting.Name, $true)
-    if ($null -eq $registry) {
-        $registry = [Microsoft.Win32.Registry]::LocalMachine.CreateSubKey($setting.Name, $true)
-    }
-    $setting.Group | %{
-        $registry.SetValue($_.name, $_.value)
-    }
-    $registry.Dispose()
-}
+Write-Host "Default associations configured. Restart the machine to apply changes."
+
+
 
     # Get-AppxPackage | select @{n='name';e={"$($_.PackageFamilyName)!app"}} | ?{$_.name -like "**"}
     # Import-StartLayout
