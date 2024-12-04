@@ -310,6 +310,17 @@ Write-Host "Default associations configured. Restart the machine to apply change
     ri $_ -force
 }
 
+# Systemweites Standarddateiformat für Office auf Office Open XML setzen
+$officeRegistryPath = "HKLM:\SOFTWARE\Microsoft\Office\Common"
+
+# Sicherstellen, dass der Registry-Pfad existiert
+if (-not (Test-Path $officeRegistryPath)) {
+    New-Item -Path $officeRegistryPath -Force | Out-Null
+}
+# Registry-Wert für Standarddateiformate auf "Office Open XML-Formate" setzen
+Set-ItemProperty -Path $officeRegistryPath -Name "DefaultSaveFormat" -Value "OfficeOpenXML"
+
+
 # Configure power settings
 # Disable sleep, hibernate and monitor standby on AC
 "powercfg /x -monitor-timeout-ac 0",
