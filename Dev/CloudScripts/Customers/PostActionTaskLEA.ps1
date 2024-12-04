@@ -302,6 +302,14 @@ Write-Host "Default associations configured. Restart the machine to apply change
         Write-Error "Error removing shortcut(s)"
     }
 
+# Prevent Outlook new and Dev Home from installing for new users
+
+"HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate",
+"HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\OutlookUpdate",
+"HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\OutlookUpdate",
+"HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\DevHomeUpdate" | %{
+    ri $_ -force
+}
 
 # Define the folder paths
 $parentFolder = "C:\Program Files\oneICT\EndpointManager"
