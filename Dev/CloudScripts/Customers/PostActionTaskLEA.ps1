@@ -48,6 +48,8 @@ try {
     Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
     Set-Chocolatey
 
+    $env:Path += ";C:\ProgramData\chocolatey\bin"
+
     # Installation von Chocolatey-Software
     Write-Host -ForegroundColor Green "Office wird installiert"
     choco.exe upgrade office365business --params "/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE" -y --no-progress --ignore-checksums
