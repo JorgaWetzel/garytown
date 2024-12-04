@@ -303,12 +303,19 @@ Write-Host "Default associations configured. Restart the machine to apply change
     }
 
 # Prevent Outlook new and Dev Home from installing for new users
-
 "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate",
 "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\OutlookUpdate",
 "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\OutlookUpdate",
 "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\DevHomeUpdate" | %{
     ri $_ -force
+}
+
+# Configure power settings
+# Disable sleep, hibernate and monitor standby on AC
+"powercfg /x -monitor-timeout-ac 0",
+"powercfg /x -standby-timeout-ac 0",
+"powercfg /x -hibernate-timeout-ac 0" | % {
+    cmd /c $_
 }
 
 # Define the folder paths
