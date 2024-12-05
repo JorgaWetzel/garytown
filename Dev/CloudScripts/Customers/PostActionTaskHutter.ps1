@@ -145,10 +145,11 @@ $provisioning = [System.IO.DirectoryInfo]"C:\OSDCloud\Scripts"
 
 $urls = @(
     "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_brave.ps1",
-    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_chrome.ps1",
-    "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_edge.ps1",
     "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_firefox.ps1"
 )
+
+# "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_edge.ps1",
+# "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_chrome.ps1",
 
 # *** Sicherstellen, dass das Verzeichnis existiert ***
 Write-Host "*** Sicherstellen, dass das Verzeichnis existiert ***"
