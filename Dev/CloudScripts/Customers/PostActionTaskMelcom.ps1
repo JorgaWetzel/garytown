@@ -50,7 +50,7 @@ try {
 
     $env:Path += ";C:\ProgramData\chocolatey\bin"
 
-    <#
+    
     # Installation von Chocolatey-Software
     Write-Host -ForegroundColor Green "Office wird installiert"
     choco.exe upgrade office365business --params "/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE" -y --no-progress --ignore-checksums
@@ -60,7 +60,7 @@ try {
     $packages | ForEach-Object {
         choco upgrade $_ -y --no-progress --ignore-checksums
     }
-    #>
+
 
     # Prevent Outlook (new) and Dev Home from installing
     "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate",
