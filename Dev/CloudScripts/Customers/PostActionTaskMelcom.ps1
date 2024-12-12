@@ -55,10 +55,11 @@ try {
     choco.exe upgrade office365business --params "/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE" -y --no-progress --ignore-checksums
 
     Write-Host -ForegroundColor Green "Standard Apps werden installiert"
-    $packages = "TeamViewer","googlechrome","firefox","adobereader","7zip.install","vlc","powertoys","vcredist140","notepadplusplus.install"
+    $packages = "TeamViewer","googlechrome","firefox","adobereader","7zip.install","vlc","powertoys","vcredist140","notepadplusplus.install","microsoft-teams-new-bootstrapper","onedrive","javaruntime"
     $packages | ForEach-Object {
         choco upgrade $_ -y --no-progress --ignore-checksums
     }
+
 
     # Prevent Outlook (new) and Dev Home from installing
     "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate",
