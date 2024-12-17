@@ -328,6 +328,10 @@ Set-Acl -Path $folder1 -AclObject $acl1
 Set-Acl -Path $folder2 -AclObject $acl2
 Set-Acl -Path $folder3 -AclObject $acl3
 
+# Install Microsoft XPS Document Writer 
+Enable-WindowsOptionalFeature -Online -FeatureName Printing-XPSServices-Features -NoRestart
+
+
 # Remove/Uninstall Edge
 # remove from Registry
 $appxStore = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx\AppxAllUserStore'
