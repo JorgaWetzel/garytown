@@ -300,9 +300,6 @@ Set-Acl -Path $folder3 -AclObject $acl3
 # Install Microsoft XPS Document Writer 
 Enable-WindowsOptionalFeature -Online -FeatureName Printing-XPSServices-Features -NoRestart
 
-Remove-Item -Path "HKLM:$appxStore\EndOfLife\$SID\Microsoft.MicrosoftEdge_8wekyb3d8bbwe" -Force | Out-Null
-
-
     # HP Driver Updates
     # Write-Host -ForegroundColor Gray "**Running HP Image Assistant Driver & Firmware Updates**"
     # osdcloud-HPIAExecute
