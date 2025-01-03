@@ -141,37 +141,6 @@ try {
         $registry.Dispose()
     }
 
-    
-
-[System.IO.FileInfo]$DefaultAssociationsConfiguration = "$($env:ProgramData)\provisioning\DefaultAssociationsConfiguration.xml"
-
-# Sicherstellen, dass das Verzeichnis existiert
-if (!(Test-Path $DefaultAssociationsConfiguration.DirectoryName)) {
-    New-Item -ItemType Directory -Path $DefaultAssociationsConfiguration.DirectoryName -Force
-}
-
-# XML-Datei mit den gewünschten Dateityp- und Protokollzuweisungen erstellen
-'<?xml version="1.0" encoding="UTF-8"?>
-<DefaultAssociations>
-  <Association Identifier=".htm" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
-  <Association Identifier=".html" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
-  <Association Identifier=".mht" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
-  <Association Identifier=".mhtml" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
-  <Association Identifier=".svg" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
-  <Association Identifier=".xht" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
-  <Association Identifier=".xhtml" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
-  <Association Identifier="http" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
-  <Association Identifier="https" ProgId="ChromeHTML" ApplicationName="Google Chrome" />
-  <Association Identifier=".pdf" ProgId="Acrobat.Document.DC" ApplicationName="Adobe Acrobat" />
-  <Association Identifier="mailto" ProgId="Outlook.URL.mailto.15" ApplicationName="Microsoft Outlook 2016" />
-</DefaultAssociations>' | Out-File $DefaultAssociationsConfiguration.FullName -Encoding utf8 -Force
-
-# Registry-Einstellungen für die Default App Associations konfigurieren
-Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System" -Name "DefaultAssociationsConfiguration" -Value $DefaultAssociationsConfiguration.FullName
-
-Write-Host "Default associations configured. Restart the machine to apply changes."
-
-
 
     # Get-AppxPackage | select @{n='name';e={"$($_.PackageFamilyName)!app"}} | ?{$_.name -like "**"}
     # Import-StartLayout
