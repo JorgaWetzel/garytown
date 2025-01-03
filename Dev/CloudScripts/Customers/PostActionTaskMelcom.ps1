@@ -300,17 +300,6 @@ Set-Acl -Path $folder3 -AclObject $acl3
 # Install Microsoft XPS Document Writer 
 Enable-WindowsOptionalFeature -Online -FeatureName Printing-XPSServices-Features -NoRestart
 
-
-# Remove/Uninstall Edge
-# remove from Registry
-$appxStore = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx\AppxAllUserStore'
-$pattern = "HKLM:$appxStore\InboxApplications\Microsoft.MicrosoftEdge_*_neutral__8wekyb3d8bbwe"
-$edgeAppXKey = (Get-Item -Path $pattern).PSChildName
-if (Test-Path "$pattern") { reg delete "HKLM$appxStore\InboxApplications\$edgeAppXKey" /f | Out-Null }
-
-# make the Edge AppX able to uninstall and uninstall
-New-Item -Path "HKLM:$appxStore\EndOfLife\$SID\Microsoft.MicrosoftEdge_8wekyb3d8bbwe" -Force | Out-Null
-Get-AppxPackage -Name Microsoft.MicrosoftEdge | Remove-AppxPackage | Out-Null
 Remove-Item -Path "HKLM:$appxStore\EndOfLife\$SID\Microsoft.MicrosoftEdge_8wekyb3d8bbwe" -Force | Out-Null
 
 
