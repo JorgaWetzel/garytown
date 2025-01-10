@@ -137,6 +137,9 @@ try {
         $registry.Dispose()
     }
 
+####################################################
+################ Default associations ##############
+####################################################
 
     [System.IO.FileInfo]$DefaultAssociationsConfiguration = "$($env:ProgramData)\provisioning\DefaultAssociationsConfiguration.xml"
     
@@ -163,8 +166,11 @@ try {
     
     # Registry-Einstellungen für die Default App Associations konfigurieren
     Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System" -Name "DefaultAssociationsConfiguration" -Value $DefaultAssociationsConfiguration.FullName
-    
     Write-Host "Default associations configured. Restart the machine to apply changes."
+
+####################################################
+################      Start Layout    ##############
+####################################################
 
     # Get-AppxPackage | select @{n='name';e={"$($_.PackageFamilyName)!app"}} | ?{$_.name -like "**"}
     # Import-StartLayout
@@ -244,6 +250,10 @@ try {
         $registry.Dispose()
     }
 
+####################################################
+###########   Remove Desktop Shortcuts  ############
+####################################################
+
     # Remove Desktop Shortcuts
     $Shortcuts2Remove = "Google Chrome.lnk", "VLC media player.lnk", "Adobe Acrobat.lnk", "Firefox.lnk", "PDFCreator.lnk", "TeamViewer.lnk", "Microsoft Edge.lnk", "FileMaker Pro.lnk", "Google Earth.lnk", "LayOut 2023.lnk", "LibreOffice 7.4.lnk", "PDF-XChange Editor.lnk", "SIA-Reader.lnk", "Solibri.lnk", "SonicWall NetExtender.lnk", "Style Builder.lnk", "Zoom.lnk", "Spotify.lnk", "SEH UTN Manager.lnk", "SketchUp 2023.lnk", "Easy Product Finder 2.lnk", "Google Earth Pro.lnk", "Revit 2022 (AirTop1).lnk", "liNear CAD 22 (AirTop1).lnk", "AutoCAD 2022 (AirTop1).lnk", "Abmelden (AirTop1).lnk" 
     $DesktopPaths = @("C:\Users\*\Desktop\*", "C:\Users\*\*\Desktop\*")  # Mehrere Pfade als Array
@@ -258,6 +268,10 @@ try {
     } catch {
         Write-Error "Error removing shortcut(s)"
     }
+
+####################################################
+###########   PowerSettings           ############
+####################################################
 
 # Configure power settings
 # Disable sleep, hibernate and monitor standby on AC
