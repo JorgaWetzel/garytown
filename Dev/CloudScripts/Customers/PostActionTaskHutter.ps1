@@ -259,6 +259,14 @@ try {
         Write-Error "Error removing shortcut(s)"
     }
 
+# Configure power settings
+# Disable sleep, hibernate and monitor standby on AC
+"powercfg /x -monitor-timeout-ac 0",
+"powercfg /x -standby-timeout-ac 0",
+"powercfg /x -hibernate-timeout-ac 0" | % {
+    cmd /c $_
+}
+
 
 # Define the folder paths
 $parentFolder = "C:\Program Files\oneICT\EndpointManager"
