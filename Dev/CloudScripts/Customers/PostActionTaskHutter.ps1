@@ -53,7 +53,7 @@ try {
     choco.exe upgrade office365business --params "/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE" -y --no-progress --ignore-checksums
 
     Write-Host -ForegroundColor Green "Standard Apps werden installiert"
-    $packages = "TeamViewer","googlechrome","firefox","adobereader","microsoft-teams-new-bootstrapper","7zip.install","vlc","jre8","powertoys","onedrive","Pdf24","vcredist140","zoom","notepadplusplus.install","onenote","onedrive"
+    $packages = "TeamViewer","googlechrome","firefox","adobereader","microsoft-teams-new-bootstrapper","7zip.install","vlc","jre8","powertoys","onedrive","vcredist140","zoom","notepadplusplus.install","onenote","onedrive"
     $packages | ForEach-Object {
         choco upgrade $_ -y --no-progress --ignore-checksums
     }
