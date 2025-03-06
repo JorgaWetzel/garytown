@@ -1,4 +1,9 @@
-$StagingFolder = "$env:TEMP\OSDStaging"
+[CmdletBinding()]
+param(
+    [Switch]$Check = $true
+)
+    
+$StagingFolder = "D:\OSDCloudBuild-Catalogs\Check4UpgradedMCT"
 if (!(Test-Path -Path $StagingFolder)){
     new-item -Path $StagingFolder -ItemType Directory | Out-Null
 }
@@ -19,7 +24,15 @@ $WindowsTable = @(
 @{ Version = 'Win1121H2';LocalCab = "Win1121H2.Cab"; URL = "https://download.microsoft.com/download/1/b/4/1b4e06e2-767a-4c9a-9899-230fe94ba530/products_Win11_20211115.cab"}
 @{ Version = 'Win1122H2';LocalCab = "Win1122H2.Cab"; URL = "https://download.microsoft.com/download/b/1/9/b19bd7fd-78c4-4f88-8c40-3e52aee143c2/products_win11_20230510.cab.cab"}
 @{ Version = 'Win1123H2';LocalCab = "Win1123H2.Cab"; URL = "https://download.microsoft.com/download/6/2/b/62b47bc5-1b28-4bfa-9422-e7a098d326d4/products_win11_20231208.cab"}
+@{ Version = 'Win1124H2';LocalCab = "Win1124H2.Cab"; URL = "https://download.microsoft.com/download/6/2/b/62b47bc5-1b28-4bfa-9422-e7a098d326d4/products-Win11-20241004.cab"}
 )
+
+#Previous: 
+<#
+@{ Version = 'Win1124H2';LocalCab = "Win1124H2.Cab"; URL = "https://download.microsoft.com/download/6/2/b/62b47bc5-1b28-4bfa-9422-e7a098d326d4/products_Win11_20240916.cab"}
+
+#>
+
 
 #$Win1022H2CabURL = "https://download.microsoft.com/download/7/9/c/79cbc22a-0eea-4a0d-89c0-054a1b3aa8e0/products.cab"
 #$Win1121H2CabURL = "https://download.microsoft.com/download/1/b/4/1b4e06e2-767a-4c9a-9899-230fe94ba530/products_Win11_20211115.cab"
@@ -131,21 +144,26 @@ ForEach ($Option in $WindowsTable){
 #if FWLink cab doesn't match the Static, then they released an update.
 
 #Loop through the 2 Items in the MCT Table & Get the Hash of the Cab
-ForEach ($MCT in $WindowsMCTTable){
-    New-Variable -Name "$($MCT.Version)Change" -Value $true -Force
-    Invoke-WebRequest -Uri $MCT.URL -UseBasicParsing -OutFile "$StagingFolder\$($MCT.LocalCab)" -ErrorAction SilentlyContinue
-    $MD5HashMCT = Get-FileHash -Algorithm MD5 -Path "$StagingFolder\$($MCT.LocalCab)"
-    #Compare the Hash to each of the 4 items in the CAB table, if there is a match to any, then we know there isn't a change
-    ForEach ($Option in $WindowsTable){
-        $MD5HashOption = Get-FileHash -Algorithm MD5 -Path "$StagingFolder\$($Option.LocalCab)"
-        if ($MD5HashMCT.Hash -eq $MD5HashOption.Hash){
-            Set-Variable -Name "$($MCT.Version)Change" -Value $false
-            Write-Output "$($MCT.Version) Has not changed"
+if ($Check){
+    ForEach ($MCT in $WindowsMCTTable){
+        New-Variable -Name "$($MCT.Version)Change" -Value $true -Force
+        Invoke-WebRequest -Uri $MCT.URL -UseBasicParsing -OutFile "$StagingFolder\$($MCT.LocalCab)" -ErrorAction SilentlyContinue
+        $MD5HashMCT = Get-FileHash -Algorithm MD5 -Path "$StagingFolder\$($MCT.LocalCab)"
+        #Compare the Hash to each of the 4 items in the CAB table, if there is a match to any, then we know there isn't a change
+        ForEach ($Option in $WindowsTable){
+            $MD5HashOption = Get-FileHash -Algorithm MD5 -Path "$StagingFolder\$($Option.LocalCab)"
+            if ($MD5HashMCT.Hash -eq $MD5HashOption.Hash){
+                Set-Variable -Name "$($MCT.Version)Change" -Value $false
+                Write-Output "$($MCT.Version) Has not changed"
+            }
         }
+        if ((Get-Variable -name $("$($MCT.Version)Change")).Value -eq $true){Write-Output "$($MCT.Version) has changed"}
     }
-    if ("$($MCT.Version)Change" -eq $true){Write-Output "$($MCT.Version) has changed"}
+}
+else {
+    #Clean Up Results
+    #$x64ESDInfo = $ESDInfo | Where-Object {$_.Architecture -eq "x64"}
+    #$x64ESDInfo = $x64ESDInfo | Where-Object {$_.Edition -eq "Professional" -or $_.Edition -eq "Education" -or $_.Edition -eq "Enterprise" -or $_.Edition -eq "Professional" -or $_.Edition -eq "HomePremium"}
+    #return $ESDInfo | Where-Object {$_.Architecture -eq "x64" -or $_.Architecture -eq "ARM64"}
 }
 
-#Clean Up Results
-$x64ESDInfo = $ESDInfo | Where-Object {$_.Architecture -eq "x64"}
-#$x64ESDInfo = $x64ESDInfo | Where-Object {$_.Edition -eq "Professional" -or $_.Edition -eq "Education" -or $_.Edition -eq "Enterprise" -or $_.Edition -eq "Professional" -or $_.Edition -eq "HomePremium"}

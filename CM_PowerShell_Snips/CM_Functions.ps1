@@ -244,6 +244,8 @@ Function Reset-TaskSequence {
     restart-service ccmexec -force -ErrorAction SilentlyContinue
     Start-Process -FilePath C:\windows\ccm\CcmEval.exe
     start-sleep -Seconds 15
+    if (get-process -name TSManager -ErrorAction SilentlyContinue){Get-Process -name TSManager | Stop-Process -force}
+    if (get-process -name TsProgressUI -ErrorAction SilentlyContinue){Get-Process -name TsProgressUI | Stop-Process -force}
     #Invoke Machine Policy
     Invoke-WMIMethod -Namespace root\ccm -Class SMS_CLIENT -Name TriggerSchedule "{00000000-0000-0000-0000-000000000021}" |Out-Null
     Invoke-WMIMethod -Namespace root\ccm -Class SMS_CLIENT -Name TriggerSchedule "{00000000-0000-0000-0000-000000000022}" |Out-Null
@@ -1123,9 +1125,9 @@ Function Invoke-Baseline{
 [CmdletBinding()]
     Param (
 		    [Parameter(Mandatory=$true)]
-            [ValidateSet("WaaS 20H2 Pre-Assessment","WaaS 20H2 Pre-Assessment Pre-Prod","WaaS W10 TS Self-Service Notification","WaaS 1909 Pre-Assessment Legacy","SDE Pulse Recent Connection")]
-		    $BaselineName="WaaS 20H2 Pre-Assessment"
-	    )
+            #[ValidateSet("WaaS 20H2 Pre-Assessment","WaaS 20H2 Pre-Assessment Pre-Prod","WaaS W10 TS Self-Service Notification","WaaS 1909 Pre-Assessment Legacy","SDE Pulse Recent Connection")]
+		    $BaselineName
+    )
 
 
 #Invoke Machine Policy

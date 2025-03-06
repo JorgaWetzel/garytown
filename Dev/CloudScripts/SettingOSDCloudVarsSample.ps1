@@ -73,7 +73,16 @@ if ($ImageFileItem){
 #Testing MS Update Catalog Driver Sync
 #$Global:MyOSDCloud.DriverPackName = 'Microsoft Update Catalog'
 
-#Used to Determine Driver Pack
+<# 
+Used to Determine Driver Pack - OSDCloud will natively do this, so you don't have to, but..
+I want to control exactly how drivers are being done, what I'm doing here is..
+- Search for Driver Pack, if found, populate the driver pack variable information used in OSDCloud
+- Check to see if I have driver packs already downloaded and extracted into the DISM folder on the OSDCloudUSB
+  - If I do, Check if I'm wanting to Sync the MS Update Catalog drivers to the USB (Set above), because then I assume I want it to use the MS Catalog to suppliment my own drivers
+  - If I do want to sync, set the OSDCloud driver pack variables to use the Microsoft Update Catalog
+  - if I don't, set the driver pack to none, so it will ONLY use the drivers I have extracted into my DISM folder on the OSDCloudUSB
+#>
+#Region Determine if using native driver packs, or if I want to use extracted drivers on OSDCloudUSB
 $Product = (Get-MyComputerProduct)
 $DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
 

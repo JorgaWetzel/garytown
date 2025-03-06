@@ -1,105 +1,35 @@
 $ScriptName = 'dell.garytown.com'
-$ScriptVersion = '23.06.25.01'
+$ScriptVersion = '25.2.20.3'
 
 #region Initialize
-$Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-$ScriptName.log"
-$null = Start-Transcript -Path (Join-Path "$env:SystemRoot\Temp" $Transcript) -ErrorAction Ignore
-
-
-iex (irm functions.osdcloud.com)
 
 
 $Manufacturer = (Get-CimInstance -Class:Win32_ComputerSystem).Manufacturer
 $Model = (Get-CimInstance -Class:Win32_ComputerSystem).Model
 $SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
-if ($Manufacturer -match "Dell"){
-    $Manufacturer = "Dell"
-    $DellEnterprise = Test-DCUSupport
-}
-else {
-    Write-Host -ForegroundColor Red "[!] System is not supported a Dell, exiting in 5 seconds"
-    Write-Host -ForegroundColor DarkGray " Manufacturer    = $Manufacturer"
-    Write-Host -ForegroundColor DarkGray " Model           = $Model"
-    Write-Host -ForegroundColor DarkGray " SystemSKUNumber = $SystemSKUNumber"
-    Start-Sleep -Seconds 5
-    exit
-}
-
-if ($DellEnterprise -eq $true) {
-    Write-Host -ForegroundColor Green "Dell System Supports Dell Command Update"
-    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/OSD/master/cloud/modules/devicesdell.psm1')
-}
-else {
-    Write-Host -ForegroundColor Red "[!] System is not supported by Dell Command Update, exiting in 5 seconds"
-    Write-Host -ForegroundColor DarkGray " Manufacturer    = $Manufacturer"
-    Write-Host -ForegroundColor DarkGray " Model           = $Model"
-    Write-Host -ForegroundColor DarkGray " SystemSKUNumber = $SystemSKUNumber"
-    Start-Sleep -Seconds 5
-    exit
-}
-
-
-if ($env:SystemDrive -eq 'X:') {
-    $WindowsPhase = 'WinPE'
-}
-else {
-    $ImageState = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Setup\State' -ErrorAction Ignore).ImageState
-    if ($env:UserName -eq 'defaultuser0') {$WindowsPhase = 'OOBE'}
-    elseif ($ImageState -eq 'IMAGE_STATE_SPECIALIZE_RESEAL_TO_OOBE') {$WindowsPhase = 'Specialize'}
-    elseif ($ImageState -eq 'IMAGE_STATE_SPECIALIZE_RESEAL_TO_AUDIT') {$WindowsPhase = 'AuditMode'}
-    else {$WindowsPhase = 'Windows'}
-}
 
 
 
-#region WinPE
-if ($WindowsPhase -eq 'WinPE') {
-    #Process OSDCloud startup and load Azure KeyVault dependencies
-    osdcloud-StartWinPE -OSDCloud -KeyVault
-    Write-Host -ForegroundColor Cyan "To start a new PowerShell session, type 'start powershell' and press enter"
-    Write-Host -ForegroundColor Cyan "Start-OSDCloud, Start-OSDCloudGUI, or Start-OSDCloudAzure, can be run in the new PowerShell window"
-    
-    #Stop the startup Transcript.  OSDCloud will create its own
-    $null = Stop-Transcript -ErrorAction Ignore
-}
-#endregion
+Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/hardware/Dell/CommandUpdate/EMPS/Dell-EMPS.ps1')
+Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/hardware/Dell/CommandUpdate/EMPS/Dell-EMPSWarranty.ps1')
 
-#region Specialize
-if ($WindowsPhase -eq 'Specialize') {
-    $null = Stop-Transcript -ErrorAction Ignore
-}
-#endregion
 
-#region AuditMode
-if ($WindowsPhase -eq 'AuditMode') {
-    $null = Stop-Transcript -ErrorAction Ignore
-}
-#endregion
+write-output "Manufacturer:    $Manufacturer"
+write-output "Model:           $Model"
+write-output "SystemSKUNumber: $SystemSKUNumber"
 
-#region OOBE
-if ($WindowsPhase -eq 'OOBE') {
-    #Load everything needed to run AutoPilot and Azure KeyVault
-    Write-Host -ForegroundColor Green "[+] Running in"
-    Write-Host -ForegroundColor Green "[+] Installing Dell Command Update"
-    osdcloud-InstallDCU
-    Write-Host -ForegroundColor Green "[+] Running Dell Command Update (Clean Image)"
-    osdcloud-RunDCU -UpdateType CleanImage
-    Write-Host -ForegroundColor Green "[+] Setting Dell Command Update to Auto Update"
-    osdcloud-DCUAutoUpdate
-    osdcloud-StartOOBE -Display -Language -DateTime -Autopilot -KeyVault
-    $null = Stop-Transcript -ErrorAction Ignore
-}
-#endregion
-
-#region Windows
-if ($WindowsPhase -eq 'Windows') {
-    #Load OSD and Azure stuff
-    Write-Host -ForegroundColor Green "[+] Installing Dell Command Update"
-    osdcloud-InstallDCU
-    Write-Host -ForegroundColor Green "[+] Running Dell Command Update (Clean Image)"
-    osdcloud-RunDCU -UpdateType CleanImage
-    Write-Host -ForegroundColor Green "[+] Setting Dell Command Update to Auto Update"
-    osdcloud-DCUAutoUpdate
-    $null = Stop-Transcript -ErrorAction Ignore
-}
-#endregion
+Write-Host -ForegroundColor Green "[+] Function: Get-DellDeviceDetails"
+Write-Host -ForegroundColor Green "[+] Function: Get-DellDeviceDriverPack"
+Write-Host -ForegroundColor Green "[+] Function: Get-DellSupportedModels"
+Write-Host -ForegroundColor Green "[+] Function: Get-DCUVersion"
+Write-Host -ForegroundColor Green "[+] Function: Get-DCUInstallDetails"
+Write-Host -ForegroundColor Green "[+] Function: Get-DCUExitInfo"
+Write-Host -ForegroundColor Green "[+] Function: Get-DCUAppUpdates"
+#Write-Host -ForegroundColor Green "[+] Function: Install-DCU"
+Write-Host -ForegroundColor Green "[+] Function: Set-DCUSettings"
+Write-Host -ForegroundColor Green "[+] Function: Invoke-DCU"
+Write-Host -ForegroundColor Green "[+] Function: Get-DCUUpdateList"
+#Write-Host -ForegroundColor Green "[+] Function: New-DCUCatalogFile"
+#Write-Host -ForegroundColor Green "[+] Function: New-DCUOfflineCatalog"
+Write-Host -ForegroundColor Green "[+] Function: Get-DellBIOSUpdates"
+Write-Host -ForegroundColor Green "[+] Function: Get-DellWarrantyInfo (-Cleanup)" #Temporarily Installs Dell Command Integration Suite to gather warranty info
