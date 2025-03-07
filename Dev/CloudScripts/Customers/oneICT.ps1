@@ -38,7 +38,7 @@ $Product = (Get-MyComputerProduct)
 $Model = (Get-MyComputerModel)
 $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
 $OSVersion = 'Windows 11' #Used to Determine Driver Pack
-$OSReleaseID = '23H2' #Used to Determine Driver Pack
+$OSReleaseID = '24H2' #Used to Determine Driver Pack
 $OSName = 'Windows 11 24H2 x64'
 $OSEdition = 'Pro'
 $OSActivation = 'Retail'
@@ -64,7 +64,7 @@ $Global:MyOSDCloud = [ordered]@{
 # Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
 # Start-OSDCloudGUI
 # Start-OSDCloudGUIDev
-osdcloud-UpdateModuleFilesManually -DevMode $true
+# osdcloud-UpdateModuleFilesManually -DevMode $true
 Start-OSDCloudGUIDev
 
 $DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
