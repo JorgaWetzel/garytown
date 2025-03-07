@@ -61,6 +61,7 @@ $Global:MyOSDCloud = [ordered]@{
     CheckSHA1 = [bool]$true
 }
 
+# Launch OSDCloud
 # Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
 # Start-OSDCloudGUI
 # Start-OSDCloudGUIDev
@@ -75,12 +76,13 @@ if ($DriverPack){
 
 #Enable HPIA | Update HP BIOS | Update HP TPM
  if (Test-HPIASupport){
+    Write-SectionHeader -Message "Detected HP Device, Enabling HPIA, HP BIOS and HP TPM Updates"
     #$Global:MyOSDCloud.DevMode = [bool]$True
     $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
-    if ($Product -ne '83B2' -or $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
+    if ($Product -ne '83B2' -and $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
     #{$Global:MyOSDCloud.HPIAALL = [bool]$true}
     $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
-    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true #In Test 
+    #$Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true #In Test 
     #Set HP BIOS Settings to what I want:
     iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
     Manage-HPBiosSettings -SetSettings
