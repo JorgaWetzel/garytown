@@ -22,18 +22,6 @@ Import-Module OSD -Force
 #=======================================================================
 #   [OS] Params and Start-OSDCloud
 #=======================================================================
-#Used to Determine Driver Pack
-$Params = @{
-    OSVersion = "Windows 11"
-    OSBuild = "24H2"
-    OSEdition = "Pro"
-    OSLanguage = "de-DE"
-    OSLicense = "Retail"
-    ZTI = $true
-    Firmware = $false
-}
-Start-OSDCloud @Params
-
 $Product = (Get-MyComputerProduct)
 $Model = (Get-MyComputerModel)
 $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
@@ -42,11 +30,10 @@ $OSReleaseID = '23H2' #Used to Determine Driver Pack
 $OSName = 'Windows 11 23H2 x64'
 $OSEdition = 'Pro'
 $OSActivation = 'Retail'
-$OSLanguage = 'de-de'
-$OSImageIndex =  '8'
+$OSLanguage = 'de-DE'
+$OSImageIndex = '8'
 
-# Full List https://github.com/OSDeploy/OSD/blob/06d544f0bff26b560e19676582d273e1c229cfac/Public/OSDCloud.ps1#L521
-#Set OSDCloud Vars
+# Set OSDCloud Vars
 $Global:MyOSDCloud = [ordered]@{
     Restart = [bool]$False
     RecoveryPartition = [bool]$true
@@ -54,19 +41,19 @@ $Global:MyOSDCloud = [ordered]@{
     WindowsUpdate = [bool]$true
     WindowsUpdateDrivers = [bool]$False
     WindowsDefenderUpdate = [bool]$False
-    SetTimeZone = [bool]$False
+    SetTimeZone = [bool]$True  # Zeitzone automatisch setzen
     ClearDiskConfirm = [bool]$False
     ShutdownSetupComplete = [bool]$False
     SyncMSUpCatDriverUSB = [bool]$true
     CheckSHA1 = [bool]$true
-	SkipOOBE = [bool]$true
-	SetGeoID = "211"
-	SetKeyboardLanguage = "de-CH"
+    SkipAutopilot = [bool]$true  # Autopilot überspringen, falls nicht benötigt
+    SkipOOBE = [bool]$true       # OOBE-Interaktionen überspringen
+    SetGeoID = "211"             # GeoID für die Schweiz (211 = Schweiz)
+    SetKeyboardLanguage = "de-CH" # Tastatursprache auf Deutsch (Schweiz)
 }
 
-# Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
-# Start-OSDCloudGUI
-# Start-OSDCloudGUIDev
+# Start-OSDCloud mit direkten Parametern
+Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage -ZTI -Firmware:$false
 
 $DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
 
@@ -90,6 +77,55 @@ if ($DriverPack){
 #write variables to console
 Write-Output $Global:MyOSDCloud
 
+#================================================
+#  [PreOS] Create unattended.xml for Region and Language Settings
+#================================================
+Write-Host -ForegroundColor Green "Creating unattended.xml for region and language settings"
+
+$UnattendXml = @'
+<?xml version="1.0" encoding="utf-8"?>
+<unattend xmlns="urn:schemas-microsoft-com:unattend">
+    <settings pass="oobeSystem">
+        <component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <InputLocale>0807:00000807</InputLocale>
+            <SystemLocale>de-CH</SystemLocale>
+            <UILanguage>de-DE</UILanguage>
+            <UserLocale>de-CH</UserLocale>
+        </component>
+        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <TimeZone>W. Europe Standard Time</TimeZone>
+            <OOBE>
+                <HideEULAPage>true</HideEULAPage>
+                <HideLocalAccountScreen>true</HideLocalAccountScreen>
+                <HideOnlineAccountScreen>true</HideOnlineAccountScreen>
+                <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+                <ProtectYourPC>3</ProtectYourPC>
+                <SkipMachineOOBE>true</SkipMachineOOBE>
+                <SkipUserOOBE>true</SkipUserOOBE>
+            </OOBE>
+        </component>
+    </settings>
+    <settings pass="specialize">
+        <component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <InputLocale>0807:00000807</InputLocale>
+            <SystemLocale>de-CH</SystemLocale>
+            <UILanguage>de-DE</UILanguage>
+            <UserLocale>de-CH</UserLocale>
+        </component>
+    </settings>
+</unattend>
+'@
+
+# Verzeichnis für unattended.xml erstellen
+$UnattendDir = "C:\OSDCloud\Unattend"
+if (-not (Test-Path $UnattendDir)) {
+    New-Item -Path $UnattendDir -ItemType Directory -Force
+}
+
+# unattended.xml speichern
+$UnattendPath = "$UnattendDir\unattended.xml"
+$UnattendXml | Out-File -FilePath $UnattendPath -Encoding utf8 -Force
+Write-Host -ForegroundColor Green "unattended.xml created at $UnattendPath"
 
 #================================================
 #  [PostOS] OOBE CMD Command Line
