@@ -44,6 +44,7 @@ $UnattendXml = @'
                 <ProtectYourPC>3</ProtectYourPC>
                 <SkipMachineOOBE>true</SkipMachineOOBE>
                 <SkipUserOOBE>true</SkipUserOOBE>
+                <NetworkLocation>Work</NetworkLocation>
             </OOBE>
             <UserAccounts>
                 <LocalAccounts>
@@ -65,9 +66,16 @@ $UnattendXml = @'
                     <PlainText>true</PlainText>
                 </Password>
                 <Enabled>true</Enabled>
-                <LogonCount>1</LogonCount>
+                <LogonCount>2</LogonCount>
                 <Username>ProPharma</Username>
             </AutoLogon>
+            <FirstLogonCommands>
+                <SynchronousCommand wcm:action="add">
+                    <CommandLine>cmd /c echo First logon command executed > C:\Windows\Temp\FirstLogon.txt</CommandLine>
+                    <Description>Test First Logon Command</Description>
+                    <Order>1</Order>
+                </SynchronousCommand>
+            </FirstLogonCommands>
         </component>
     </settings>
     <settings pass="specialize">
@@ -89,16 +97,40 @@ $UnattendXml = @'
 </unattend>
 '@
 
-# Verzeichnis für unattended.xml erstellen (C:\Windows\Panther)
-$PantherDir = "C:\Windows\Panther"
-if (-not (Test-Path $PantherDir)) {
-    New-Item -Path $PantherDir -ItemType Directory -Force
+# Verzeichnis für unattended.xml erstellen (C:\OSDCloud\Automate)
+$AutomateDir = "C:\OSDCloud\Automate"
+if (-not (Test-Path $AutomateDir)) {
+    New-Item -Path $AutomateDir -ItemType Directory -Force
 }
 
-# unattended.xml in C:\Windows\Panther speichern
-$UnattendPath = "$PantherDir\unattended.xml"
+# unattended.xml in C:\OSDCloud\Automate speichern
+$UnattendPath = "$AutomateDir\unattended.xml"
 $UnattendXml | Out-File -FilePath $UnattendPath -Encoding utf8 -Force
 Write-Host -ForegroundColor Green "unattended.xml created at $UnattendPath"
+if (Test-Path $UnattendPath) {
+    Write-Host -ForegroundColor Green "unattended.xml exists in $UnattendPath"
+} else {
+    Write-Host -ForegroundColor Red "unattended.xml does NOT exist in $UnattendPath"
+}
+
+# Fallback: Kopiere unattended.xml auf das Stammverzeichnis des USB-Sticks
+Write-Host -ForegroundColor Green "Attempting to copy unattended.xml to USB drive root..."
+$usbDrives = Get-Disk | Where-Object {$_.BusType -eq "USB"} | Get-Partition | Get-Volume
+foreach ($drive in $usbDrives) {
+    $driveLetter = $drive.DriveLetter
+    if ($driveLetter) {
+        $usbPath = "$($driveLetter):\unattended.xml"
+        $UnattendXml | Out-File -FilePath $usbPath -Encoding utf8 -Force
+        if (Test-Path $usbPath) {
+            Write-Host -ForegroundColor Green "unattended.xml copied to $usbPath"
+        } else {
+            Write-Host -ForegroundColor Red "Failed to copy unattended.xml to $usbPath"
+        }
+    }
+}
+
+Write-Host "Pausing to verify unattended.xml locations. Press any key to continue..."
+Pause
 
 #=======================================================================
 #   [OS] Params and Start-OSDCloud
@@ -133,6 +165,15 @@ $Global:MyOSDCloud = [ordered]@{
     SetKeyboardLanguage = "de-CH" # Tastatursprache auf Deutsch (Schweiz)
 }
 
+# OOBE-Bypass über Registry
+Write-Host -ForegroundColor Green "Setting registry key to bypass OOBE..."
+$regPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\OOBE"
+if (-not (Test-Path $regPath)) {
+    New-Item -Path $regPath -Force
+}
+Set-ItemProperty -Path $regPath -Name "BypassNRO" -Value 1 -Type DWord -Force
+Write-Host -ForegroundColor Green "Registry key set to bypass OOBE."
+
 # Netzwerkadapter deaktivieren, um Microsoft-Anmeldung zu überspringen
 Write-Host -ForegroundColor Green "Disabling network adapters to skip Microsoft account prompt..."
 Get-NetAdapter | Disable-NetAdapter -Confirm:$false
@@ -143,6 +184,13 @@ Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation
 # Netzwerkadapter wieder aktivieren
 Write-Host -ForegroundColor Green "Re-enabling network adapters..."
 Get-NetAdapter | Enable-NetAdapter -Confirm:$false
+
+# Überprüfe, ob unattended.xml noch existiert
+if (Test-Path $UnattendPath) {
+    Write-Host -ForegroundColor Green "unattended.xml still exists in $UnattendPath after Start-OSDCloud"
+} else {
+    Write-Host -ForegroundColor Red "unattended.xml does NOT exist in $UnattendPath after Start-OSDCloud"
+}
 
 $DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
 
@@ -167,6 +215,27 @@ if (Test-HPIASupport){
 Write-Output $Global:MyOSDCloud
 
 #================================================
+#  [PostOS] Create Disable-Network.ps1
+#================================================
+Write-Host -ForegroundColor Green "Creating Disable-Network.ps1 to disable network adapters"
+
+$DisableNetworkScript = @'
+# Disable-Network.ps1
+Get-NetAdapter | Disable-NetAdapter -Confirm:$false
+'@
+
+# Verzeichnis für SetupComplete-Skripte
+$SetupCompleteDir = "C:\OSDCloud\Scripts\SetupComplete"
+if (-not (Test-Path $SetupCompleteDir)) {
+    New-Item -Path $SetupCompleteDir -ItemType Directory -Force
+}
+
+# Disable-Network.ps1 speichern
+$DisableNetworkPath = "$SetupCompleteDir\Disable-Network.ps1"
+$DisableNetworkScript | Out-File -FilePath $DisableNetworkPath -Encoding ascii -Force
+Write-Host -ForegroundColor Green "Disable-Network.ps1 created at $DisableNetworkPath"
+
+#================================================
 #  [PostOS] Create Disable-Administrator.ps1
 #================================================
 Write-Host -ForegroundColor Green "Creating Disable-Administrator.ps1 to disable the Administrator account"
@@ -182,12 +251,6 @@ if ($adminAccount) {
     Write-Host "Administrator account not found."
 }
 '@
-
-# Verzeichnis für SetupComplete-Skripte
-$SetupCompleteDir = "C:\OSDCloud\Scripts\SetupComplete"
-if (-not (Test-Path $SetupCompleteDir)) {
-    New-Item -Path $SetupCompleteDir -ItemType Directory -Force
-}
 
 # Disable-Administrator.ps1 speichern
 $DisableAdminPath = "$SetupCompleteDir\Disable-Administrator.ps1"
@@ -220,6 +283,7 @@ $osdCloudDir = 'C:\OSDCloud\Scripts\SetupComplete'
 $OOBECMD = @'
 @echo off
 start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\productkey.ps1
+start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\OSDCloud\Scripts\SetupComplete\Disable-Network.ps1
 start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1
 start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\OSDCloud\Scripts\SetupComplete\Disable-Administrator.ps1
 # call powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\PostActionTask.ps1
