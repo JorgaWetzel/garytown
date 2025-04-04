@@ -89,14 +89,14 @@ $UnattendXml = @'
 </unattend>
 '@
 
-# Verzeichnis für unattended.xml erstellen
-$UnattendDir = "C:\OSDCloud\Unattend"
-if (-not (Test-Path $UnattendDir)) {
-    New-Item -Path $UnattendDir -ItemType Directory -Force
+# Verzeichnis für unattended.xml erstellen (C:\Windows\Panther)
+$PantherDir = "C:\Windows\Panther"
+if (-not (Test-Path $PantherDir)) {
+    New-Item -Path $PantherDir -ItemType Directory -Force
 }
 
-# unattended.xml speichern
-$UnattendPath = "$UnattendDir\unattended.xml"
+# unattended.xml in C:\Windows\Panther speichern
+$UnattendPath = "$PantherDir\unattended.xml"
 $UnattendXml | Out-File -FilePath $UnattendPath -Encoding utf8 -Force
 Write-Host -ForegroundColor Green "unattended.xml created at $UnattendPath"
 
@@ -133,8 +133,16 @@ $Global:MyOSDCloud = [ordered]@{
     SetKeyboardLanguage = "de-CH" # Tastatursprache auf Deutsch (Schweiz)
 }
 
-# Start-OSDCloud mit direkten Parametern und unattended.xml
-Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage -ZTI -Firmware:$false -Unattend $UnattendPath
+# Netzwerkadapter deaktivieren, um Microsoft-Anmeldung zu überspringen
+Write-Host -ForegroundColor Green "Disabling network adapters to skip Microsoft account prompt..."
+Get-NetAdapter | Disable-NetAdapter -Confirm:$false
+
+# Start-OSDCloud ohne -Unattend-Parameter
+Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage -ZTI -Firmware:$false
+
+# Netzwerkadapter wieder aktivieren
+Write-Host -ForegroundColor Green "Re-enabling network adapters..."
+Get-NetAdapter | Enable-NetAdapter -Confirm:$false
 
 $DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
 
