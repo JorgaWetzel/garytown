@@ -1,7 +1,7 @@
 $ScriptName = 'VarioTrade.ps1'
 $ScriptVersion = '04.04.2025'
 iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
-iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
+iex (irm functions.osdcloud.com) #Add custom functions from OSDCloud
 
 #================================================
 #   [PreOS] Update Module
@@ -18,64 +18,6 @@ Install-Module OSD -Force
 Write-Host  -ForegroundColor Green "Importing OSD PowerShell Module"
 Import-Module OSD -Force   
 #>
-
-#=======================================================================
-#   [OS] Params and Start-OSDCloud
-#=======================================================================
-$Product = (Get-MyComputerProduct)
-$Model = (Get-MyComputerModel)
-$Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
-$OSVersion = 'Windows 11' #Used to Determine Driver Pack
-$OSReleaseID = '23H2' #Used to Determine Driver Pack
-$OSName = 'Windows 11 23H2 x64'
-$OSEdition = 'Pro'
-$OSActivation = 'Retail'
-$OSLanguage = 'de-DE'
-$OSImageIndex = '8'
-
-# Set OSDCloud Vars
-$Global:MyOSDCloud = [ordered]@{
-    Restart = [bool]$False
-    RecoveryPartition = [bool]$true
-    OEMActivation = [bool]$True
-    WindowsUpdate = [bool]$true
-    WindowsUpdateDrivers = [bool]$False
-    WindowsDefenderUpdate = [bool]$False
-    SetTimeZone = [bool]$True  # Zeitzone automatisch setzen
-    ClearDiskConfirm = [bool]$False
-    ShutdownSetupComplete = [bool]$False
-    SyncMSUpCatDriverUSB = [bool]$true
-    CheckSHA1 = [bool]$true
-    SkipAutopilot = [bool]$true  # Autopilot überspringen, falls nicht benötigt
-    SkipOOBE = [bool]$true       # OOBE-Interaktionen überspringen
-    SetGeoID = "211"             # GeoID für die Schweiz (211 = Schweiz)
-    SetKeyboardLanguage = "de-CH" # Tastatursprache auf Deutsch (Schweiz)
-}
-
-# Start-OSDCloud mit direkten Parametern
-Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage -ZTI -Firmware:$false
-
-$DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
-
-if ($DriverPack){
-    $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
-}
-
-#Enable HPIA | Update HP BIOS | Update HP TPM
- if (Test-HPIASupport){
-    #$Global:MyOSDCloud.DevMode = [bool]$True
-    $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
-    if ($Product -ne '83B2' -or $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
-    #{$Global:MyOSDCloud.HPIAALL = [bool]$true}
-    $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
-    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true #In Test 
-    #Set HP BIOS Settings to what I want:
-    iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
-    Manage-HPBiosSettings -SetSettings
-}
-
-#write variables to console
-Write-Output $Global:MyOSDCloud
 
 #================================================
 #  [PreOS] Create unattended.xml for Region and Language Settings
@@ -127,6 +69,64 @@ $UnattendPath = "$UnattendDir\unattended.xml"
 $UnattendXml | Out-File -FilePath $UnattendPath -Encoding utf8 -Force
 Write-Host -ForegroundColor Green "unattended.xml created at $UnattendPath"
 
+#=======================================================================
+#   [OS] Params and Start-OSDCloud
+#=======================================================================
+$Product = (Get-MyComputerProduct)
+$Model = (Get-MyComputerModel)
+$Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
+$OSVersion = 'Windows 11' #Used to Determine Driver Pack
+$OSReleaseID = '23H2' #Used to Determine Driver Pack
+$OSName = 'Windows 11 23H2 x64'
+$OSEdition = 'Pro'
+$OSActivation = 'Retail'
+$OSLanguage = 'de-DE'
+$OSImageIndex = '8'
+
+# Set OSDCloud Vars
+$Global:MyOSDCloud = [ordered]@{
+    Restart = [bool]$False
+    RecoveryPartition = [bool]$true
+    OEMActivation = [bool]$True
+    WindowsUpdate = [bool]$true
+    WindowsUpdateDrivers = [bool]$False
+    WindowsDefenderUpdate = [bool]$False
+    SetTimeZone = [bool]$True  # Zeitzone automatisch setzen
+    ClearDiskConfirm = [bool]$False
+    ShutdownSetupComplete = [bool]$False
+    SyncMSUpCatDriverUSB = [bool]$true
+    CheckSHA1 = [bool]$true
+    SkipAutopilot = [bool]$true  # Autopilot überspringen, falls nicht benötigt
+    SkipOOBE = [bool]$true       # OOBE-Interaktionen überspringen
+    SetGeoID = "211"             # GeoID für die Schweiz (211 = Schweiz)
+    SetKeyboardLanguage = "de-CH" # Tastatursprache auf Deutsch (Schweiz)
+}
+
+# Start-OSDCloud mit direkten Parametern und unattended.xml
+Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage -ZTI -Firmware:$false -Unattend $UnattendPath
+
+$DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
+
+if ($DriverPack){
+    $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
+}
+
+#Enable HPIA | Update HP BIOS | Update HP TPM
+if (Test-HPIASupport){
+    #$Global:MyOSDCloud.DevMode = [bool]$True
+    $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
+    if ($Product -ne '83B2' -or $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
+    #{$Global:MyOSDCloud.HPIAALL = [bool]$true}
+    $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
+    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true #In Test 
+    #Set HP BIOS Settings to what I want:
+    iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
+    Manage-HPBiosSettings -SetSettings
+}
+
+#write variables to console
+Write-Output $Global:MyOSDCloud
+
 #================================================
 #  [PostOS] OOBE CMD Command Line
 #================================================
@@ -134,7 +134,7 @@ Write-Host -ForegroundColor Green "Downloading and creating script for OOBE phas
 Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/Set-KeyboardLanguage.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\keyboard.ps1' -Encoding ascii -Force
 Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/Install-EmbeddedProductKey.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\productkey.ps1' -Encoding ascii -Force
 # Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/Customers/PostActionTaskRaumanzug.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\PostActionTask.ps1' -Encoding ascii -Force
-Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/SetupComplete.ps1 | Out-File -FilePath 'C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1' -Encoding ascii -Force
+# Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/SetupComplete.ps1 | Out-File -FilePath 'C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1' -Encoding ascii -Force
 Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/PostActionUser.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\PostActionUser.ps1' -Encoding ascii -Force
 
 $OOBECMD = @'
@@ -153,14 +153,13 @@ $osdCloudDir = 'C:\OSDCloud\Scripts\SetupComplete'
 # Create the OOBE CMD command line
 $OOBECMD = @'
 @echo off
-start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\productkey.ps1
-start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1 
+# start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\productkey.ps1
+# start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1 
 # call powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\PostActionTask.ps1
 exit 
 '@
 
 $OOBECMD | Out-File -FilePath "$osdCloudDir\SetupComplete.cmd" -Encoding ascii -Force
-
 
 #=======================================================================
 #   Restart-Computer
