@@ -45,6 +45,29 @@ $UnattendXml = @'
                 <SkipMachineOOBE>true</SkipMachineOOBE>
                 <SkipUserOOBE>true</SkipUserOOBE>
             </OOBE>
+            <UserAccounts>
+                <LocalAccounts>
+                    <LocalAccount wcm:action="add">
+                        <Name>ProPharma</Name>
+                        <Group>Administrators</Group>
+                        <Password>
+                            <Value></Value>
+                            <PlainText>true</PlainText>
+                        </Password>
+                        <DisplayName>ProPharma</DisplayName>
+                        <Description>ProPharma Benutzer</Description>
+                    </LocalAccount>
+                </LocalAccounts>
+            </UserAccounts>
+            <AutoLogon>
+                <Password>
+                    <Value></Value>
+                    <PlainText>true</PlainText>
+                </Password>
+                <Enabled>true</Enabled>
+                <LogonCount>1</LogonCount>
+                <Username>ProPharma</Username>
+            </AutoLogon>
         </component>
     </settings>
     <settings pass="specialize">
@@ -53,6 +76,14 @@ $UnattendXml = @'
             <SystemLocale>de-CH</SystemLocale>
             <UILanguage>de-DE</UILanguage>
             <UserLocale>de-CH</UserLocale>
+        </component>
+        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <UserAccounts>
+                <AdministratorPassword>
+                    <Value></Value>
+                    <PlainText>true</PlainText>
+                </AdministratorPassword>
+            </UserAccounts>
         </component>
     </settings>
 </unattend>
@@ -128,19 +159,47 @@ if (Test-HPIASupport){
 Write-Output $Global:MyOSDCloud
 
 #================================================
+#  [PostOS] Create Disable-Administrator.ps1
+#================================================
+Write-Host -ForegroundColor Green "Creating Disable-Administrator.ps1 to disable the Administrator account"
+
+$DisableAdminScript = @'
+# Disable-Administrator.ps1
+Write-Host "Disabling Administrator account..."
+$adminAccount = Get-LocalUser -Name "Administrator"
+if ($adminAccount) {
+    Disable-LocalUser -Name "Administrator"
+    Write-Host "Administrator account has been disabled."
+} else {
+    Write-Host "Administrator account not found."
+}
+'@
+
+# Verzeichnis für SetupComplete-Skripte
+$SetupCompleteDir = "C:\OSDCloud\Scripts\SetupComplete"
+if (-not (Test-Path $SetupCompleteDir)) {
+    New-Item -Path $SetupCompleteDir -ItemType Directory -Force
+}
+
+# Disable-Administrator.ps1 speichern
+$DisableAdminPath = "$SetupCompleteDir\Disable-Administrator.ps1"
+$DisableAdminScript | Out-File -FilePath $DisableAdminPath -Encoding ascii -Force
+Write-Host -ForegroundColor Green "Disable-Administrator.ps1 created at $DisableAdminPath"
+
+#================================================
 #  [PostOS] OOBE CMD Command Line
 #================================================
 Write-Host -ForegroundColor Green "Downloading and creating script for OOBE phase"
-Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/Set-KeyboardLanguage.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\keyboard.ps1' -Encoding ascii -Force
+#Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/Set-KeyboardLanguage.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\keyboard.ps1' -Encoding ascii -Force
 Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/Install-EmbeddedProductKey.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\productkey.ps1' -Encoding ascii -Force
 # Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/Customers/PostActionTaskRaumanzug.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\PostActionTask.ps1' -Encoding ascii -Force
-# Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/SetupComplete.ps1 | Out-File -FilePath 'C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1' -Encoding ascii -Force
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/SetupComplete.ps1 | Out-File -FilePath 'C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1' -Encoding ascii -Force
 Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/PostActionUser.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\PostActionUser.ps1' -Encoding ascii -Force
 
 $OOBECMD = @'
 @echo off
 REM Planen der Ausführung der Skripte nach dem nächsten Neustart
-start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\keyboard.ps1
+#start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\keyboard.ps1
 exit
 '@
 $OOBECMD | Out-File -FilePath 'C:\Windows\Setup\Scripts\oobe.cmd' -Encoding ascii -Force
@@ -148,15 +207,15 @@ $OOBECMD | Out-File -FilePath 'C:\Windows\Setup\Scripts\oobe.cmd' -Encoding asci
 #================================================
 #  [PostOS] SetupComplete CMD Command Line OSDCloud
 #================================================
-
 $osdCloudDir = 'C:\OSDCloud\Scripts\SetupComplete'
-# Create the OOBE CMD command line
+# Create the SetupComplete CMD command line
 $OOBECMD = @'
 @echo off
-# start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\productkey.ps1
-# start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1 
+start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\productkey.ps1
+start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1
+start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\OSDCloud\Scripts\SetupComplete\Disable-Administrator.ps1
 # call powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\PostActionTask.ps1
-exit 
+exit
 '@
 
 $OOBECMD | Out-File -FilePath "$osdCloudDir\SetupComplete.cmd" -Encoding ascii -Force
