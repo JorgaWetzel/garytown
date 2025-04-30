@@ -43,6 +43,21 @@ try {
     iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
     iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions2.ps1)
     #endregion
+	
+	# --- Neuer Abschnitt: Lokaler Administrator ---
+	Try {
+		$username = 'wksadmin'
+		$securePassword = ConvertTo-SecureString 'Local.67' -AsPlainText -Force
+		if (-Not (Get-LocalUser -Name $username -ErrorAction SilentlyContinue)) {
+			New-LocalUser -Name $username -Password $securePassword -Description 'Local administrator account' -PasswordNeverExpires $true
+		}
+		Add-LocalGroupMember -Group 'Administrators' -Member $username
+		Write-Host "Lokaler Admin-Benutzer '$username' erstellt oder existierte bereits."
+	}
+	Catch {
+		Write-Error "Fehler beim Anlegen des lokalen Admins: $_"
+	}
+	# --- Ende Administrator-Sektion ---
 
     # Setup oneICT Chocolatey Framework
     Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
