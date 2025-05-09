@@ -1,84 +1,65 @@
-<#
-    VarioTradeMUI.ps1
-    WinPE-Skript fUER Zero-Touch-Deployment via OSDCloud
-    Kopiert WIM vom MDT-Share, injiziert HP-DriverPack, aktiviert optionale HP-Tools
-#>
+# 99-Deployment.ps1  –  StartNet-Hook, minimal
 
-# -----------------------------------------------------------
-# 0)   BASIS-PARAMETER  HIER ANPASSEN
-# -----------------------------------------------------------
-$SharePath = '\\192.168.2.15\DeploymentShare$'          # MDT-Freigabe
-$MountDrive = 'Z'                             # Laufwerksbuchstabe
-$UserName   = 'VARIODEPLOY\Administrator'
-$PlainPwd   = '12Monate'
+Import-Module OSD -Force
 
-$WimName    = 'Win11_24H2_MUI.wim'
-$OSVersion  = 'Windows 11'                    # ValidateSet: "Windows 11" / "Windows 10"
-$OSReleaseID= '24H2'
-$ImageIndex = 5                               
+# ======================================================================
+# Konfiguration – HIER NUR BEI BEDARF ANPASSEN
+# ======================================================================
+#$DeployShare = '\\10.10.100.100\Daten'          # UNC-Pfad zum Deployment-Share
+#$MapDrive    = 'Z'                              # gewünschter Laufwerks­buchstabe
+#$UserName    = 'Jorga'                          # Domänen- oder lokaler User
+#$PlainPwd    = 'Dont4getme'                     # Passwort (Klartext)
 
-# -----------------------------------------------------------
-# 1)   SHARE MOUNTEN
-# -----------------------------------------------------------
-if (-not (Get-PSDrive -Name $MountDrive -EA SilentlyContinue)) {
-    $Secure = ConvertTo-SecureString $PlainPwd -AsPlainText -Force
-    $Cred   = [pscredential]::new($UserName,$Secure)
+$DeployShare = '\\192.168.2.15\DeploymentShare$'     # UNC-Pfad zum Deployment-Share
+$MapDrive    = 'Z'                               # gewünschter Laufwerks­buchstabe
+$UserName    = 'VARIODEPLOY\Administrator'       # Domänen- oder lokaler User
+$PlainPwd    = '12Monate'                        # Passwort (Klartext)
 
-    New-PSDrive -Name $MountDrive -PSProvider FileSystem -Root $SharePath `
-                -Credential $Cred -EA Stop
+# ======================================================================
+# Ab hier nichts mehr ändern
+# ======================================================================
 
-    Write-Host "Share gemappt: $($MountDrive): $SharePath" -ForegroundColor Cyan 
+# Anmelde­daten vorbereiten
+$SecurePwd = ConvertTo-SecureString $PlainPwd -AsPlainText -Force
+$Cred      = New-Object System.Management.Automation.PSCredential ($UserName,$SecurePwd)
+
+# Share verbinden
+if (-not (Get-PSDrive -Name $MapDrive -ErrorAction SilentlyContinue)) {
+    New-PSDrive -Name $MapDrive `
+                -PSProvider FileSystem `
+                -Root $DeployShare `
+                -Credential $Cred `
+                -ErrorAction Stop
 }
 
-# -----------------------------------------------------------
-# 2)   WIM KOPIEREN 
-# -----------------------------------------------------------
-$Root   = "$($MountDrive):\"
-$SrcWim = Join-Path $Root "OSDCloud\OS\$WimName"
+
+# --- WIM kopieren ------------------------------------------------------
+$WimName = 'Win11_24H2_MUI.wim'
+$SrcWim  = "Z:\OSDCloud\OS\$WimName"
 $DestDir = 'C:\OSDCloud\OS'
 
-if (-not (Test-Path $SrcWim)) { throw "WIM $WimName nicht auf $SharePath gefunden." }
+if (-not (Test-Path $SrcWim)) { throw "WIM $WimName nicht auf $share gefunden." }
 if (-not (Test-Path $DestDir)) { New-Item -ItemType Directory -Path $DestDir | Out-Null }
 
 robocopy (Split-Path $SrcWim) $DestDir $WimName /njh /njs /xo /r:0 /w:0 | Out-Null
 
-# -----------------------------------------------------------
-# 3)   OSDCLOUD-HASH FAELLEN
-# -----------------------------------------------------------
-$WimFull = Join-Path $DestDir $WimName
+
+
+
+# --- OSDCloud-Variablen setzen ----------------------------------------
+$wimFull = Join-Path $DestDir $WimName
 $Global:MyOSDCloud = @{
-    ImageFileFullName = $WimFull
-    ImageFileItem     = Get-Item $WimFull
+    ImageFileFullName = $wimFull
+    ImageFileItem     = Get-Item $wimFull
     ImageFileName     = $WimName
-    OSImageIndex      = $ImageIndex
+    OSImageIndex      = 5     # ggf. anpassen
     ClearDiskConfirm  = $false
     ZTI               = $true
 }
 
-# -----------------------------------------------------------
-# 4)   HP-DRIVERPACK & FIRMWARE (optional)
-# -----------------------------------------------------------
-if ((Get-CimInstance Win32_ComputerSystem).Manufacturer -match 'HP') {
+# --- Deployment ausführen ---------------------------------------------
+Invoke-OSDCloud
 
-    # DriverPack
-    $Product = (Get-CimInstance Win32_ComputerSystemProduct).Version
-    $DP = Get-OSDCloudDriverPack -Product $Product `
-          -OSVersion $OSVersion -OSReleaseID $OSReleaseID
-    if ($DP) { $Global:MyOSDCloud.DriverPackName = $DP.Name }
-
-    # Firmware-Optionen
-    $Global:MyOSDCloud.HPTPMUpdate  = $true    # TPM-FW flashen
-    $Global:MyOSDCloud.HPBIOSUpdate = $true    # BIOS flashen
-    $Global:MyOSDCloud.HPIAALL      = $true    # HPIA voll
-}
-
-# -----------------------------------------------------------
-# 5)   DEPLOYMENT STARTEN
-# -----------------------------------------------------------
-Invoke-OSDCloud            
-
-# -----------------------------------------------------------
-# 6)   SPAETPHASE & NEUSTART
-# -----------------------------------------------------------
+# --- Spätphase + Neustart ---------------------------------------------
 Initialize-OSDCloudStartnetUpdate
 Restart-Computer -Force
