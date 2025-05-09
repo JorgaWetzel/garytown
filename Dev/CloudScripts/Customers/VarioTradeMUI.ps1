@@ -2,18 +2,36 @@
 
 Import-Module OSD -Force
 
-# --- Share verbinden ---------------------------------------------------
-#$share = '\\192.168.2.15\DeploymentShare$'
-$share = '\\10.10.100.100\Daten'
-$drive = 'Z'
-$pwd   = ConvertTo-SecureString 'Dont4getme' -AsPlainText -Force
-# $pwd   = ConvertTo-SecureString '12Monate' -AsPlainText -Force
-# $cred  = New-Object System.Management.Automation.PSCredential ('VARIODEPLOY\Administrator',$pwd)
-$cred  = New-Object System.Management.Automation.PSCredential ('Jorga',$pwd)
+# ======================================================================
+# Konfiguration – HIER NUR BEI BEDARF ANPASSEN
+# ======================================================================
+#$DeployShare = '\\10.10.100.100\Daten'          # UNC-Pfad zum Deployment-Share
+#$MapDrive    = 'Z'                              # gewünschter Laufwerks­buchstabe
+#$UserName    = 'Jorga'                          # Domänen- oder lokaler User
+#$PlainPwd    = 'Dont4getme'                     # Passwort (Klartext)
 
-if (-not (Get-PSDrive -Name $drive -ErrorAction SilentlyContinue)) {
-    New-PSDrive -Name $drive -PSProvider FileSystem -Root $share -Credential $cred -Persist
+$DeployShare = '\\SRVMDT19\DeploymentShare$'          # UNC-Pfad zum Deployment-Share
+$MapDrive    = 'Z'                              # gewünschter Laufwerks­buchstabe
+$UserName    = 'VARIODEPLOY\Administrator'                          # Domänen- oder lokaler User
+$PlainPwd    = '12Monate'                     # Passwort (Klartext)
+
+# ======================================================================
+# Ab hier nichts mehr ändern
+# ======================================================================
+
+# Anmelde­daten vorbereiten
+$SecurePwd = ConvertTo-SecureString $PlainPwd -AsPlainText -Force
+$Cred      = New-Object System.Management.Automation.PSCredential ($UserName,$SecurePwd)
+
+# Share verbinden
+if (-not (Get-PSDrive -Name $MapDrive -ErrorAction SilentlyContinue)) {
+    New-PSDrive -Name $MapDrive `
+                -PSProvider FileSystem `
+                -Root $DeployShare `
+                -Credential $Cred `
+                -ErrorAction Stop
 }
+
 
 # --- WIM kopieren ------------------------------------------------------
 $WimName = 'Win11_24H2_MUI.wim'
