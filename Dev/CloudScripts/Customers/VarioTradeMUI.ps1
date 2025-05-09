@@ -9,7 +9,7 @@ $DeployShare = '\\10.10.100.100\Daten'          # UNC-Pfad zum Deployment-Share
 $MapDrive    = 'Z'                              # gewünschter Laufwerks­buchstabe
 $UserName    = 'Jorga'                          # Domänen- oder lokaler User
 $PlainPwd    = 'Dont4getme'                     # Passwort (Klartext)
-
+$WimName 	 = 'Win11_24H2_MUI.wim'
 # $DeployShare = '\\192.168.2.15\DeploymentShare$'     # UNC-Pfad zum Deployment-Share
 # $MapDrive    = 'Z'                               # gewünschter Laufwerks­buchstabe
 # $UserName    = 'VARIODEPLOY\Administrator'       # Domänen- oder lokaler User
@@ -47,10 +47,10 @@ if (-not (Get-PSDrive -Name $MapDrive -ErrorAction SilentlyContinue)) {
 
 
 # --- OSDCloud-Variablen setzen ----------------------------------------
-$wimFull = Join-Path $DestDir $WimName
+# $wimFull = Join-Path $DestDir $WimName
 $Global:MyOSDCloud = @{
-    ImageFileFullName = Z:\OSDCloud\OS\$wimFull
-    ImageFileItem     = Get-Item $wimFull
+    ImageFileFullName = Z:\OSDCloud\OS\$WimName
+    ImageFileItem     = Get-Item $WimName
     ImageFileName     = $WimName
     OSImageIndex      = 5     # ggf. anpassen
     ClearDiskConfirm  = $false
