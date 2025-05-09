@@ -50,8 +50,8 @@ $SrcWim = "Z:\OSDCloud\OS\Win11_24H2_MUI.wim"
 # --- OSDCloud-Variablen setzen ----------------------------------------
 $Global:MyOSDCloud = @{
     ImageFileFullName = $SrcWim
-    ImageFileItem     = Get-Item $WimName
-    ImageFileName     = $WimName
+    ImageFileItem     = Get-Item $SrcWim
+    ImageFileName     = 'Win11_24H2_MUI.wim'
     OSImageIndex      = 5     # ggf. anpassen
     ClearDiskConfirm  = $false
     ZTI               = $true
