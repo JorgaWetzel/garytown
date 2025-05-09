@@ -7,7 +7,7 @@
 # -----------------------------------------------------------
 # 0)   BASIS-PARAMETER  HIER ANPASSEN
 # -----------------------------------------------------------
-$SharePath = '\\10.10.100.100\Daten'          # MDT-Freigabe
+$SharePath = '\\192.168.2.15\DeploymentShare$'          # MDT-Freigabe
 $MountDrive = 'Z'                             # Laufwerksbuchstabe
 $UserName   = 'VARIODEPLOY\Administrator'
 $PlainPwd   = '12Monate'
