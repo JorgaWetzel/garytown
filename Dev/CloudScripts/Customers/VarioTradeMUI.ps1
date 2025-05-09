@@ -5,15 +5,15 @@ Import-Module OSD -Force
 # ======================================================================
 # Konfiguration – HIER NUR BEI BEDARF ANPASSEN
 # ======================================================================
-#$DeployShare = '\\10.10.100.100\Daten'          # UNC-Pfad zum Deployment-Share
-#$MapDrive    = 'Z'                              # gewünschter Laufwerks­buchstabe
-#$UserName    = 'Jorga'                          # Domänen- oder lokaler User
-#$PlainPwd    = 'Dont4getme'                     # Passwort (Klartext)
+$DeployShare = '\\10.10.100.100\Daten'          # UNC-Pfad zum Deployment-Share
+$MapDrive    = 'Z'                              # gewünschter Laufwerks­buchstabe
+$UserName    = 'Jorga'                          # Domänen- oder lokaler User
+$PlainPwd    = 'Dont4getme'                     # Passwort (Klartext)
 
-$DeployShare = '\\192.168.2.15\DeploymentShare$'     # UNC-Pfad zum Deployment-Share
-$MapDrive    = 'Z'                               # gewünschter Laufwerks­buchstabe
-$UserName    = 'VARIODEPLOY\Administrator'       # Domänen- oder lokaler User
-$PlainPwd    = '12Monate'                        # Passwort (Klartext)
+# $DeployShare = '\\192.168.2.15\DeploymentShare$'     # UNC-Pfad zum Deployment-Share
+# $MapDrive    = 'Z'                               # gewünschter Laufwerks­buchstabe
+# $UserName    = 'VARIODEPLOY\Administrator'       # Domänen- oder lokaler User
+# $PlainPwd    = '12Monate'                        # Passwort (Klartext)
 
 # ======================================================================
 # Ab hier nichts mehr ändern
