@@ -45,41 +45,23 @@ $Global:MyOSDCloud = @{
 }
 
 # --------   HP-Spezifisches vorbereiten --------------------
-$Manufacturer = (Get-CimInstance Win32_ComputerSystem).Manufacturer
-if ($Manufacturer -match 'HP') {
+$DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
 
-    # Produkt- und Modell-Infos aus WMI
-    $Product = (Get-CimInstance Win32_ComputerSystemProduct).Version
-    $Model   = (Get-CimInstance Win32_ComputerSystem).Model
+if ($DriverPack){
+    $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
+}
 
-    # Passendes DriverPack ermitteln
-    $DriverPack = Get-OSDCloudDriverPack -Product $Product `
-                                         -OSVersion $OSVersion `
-                                         -OSReleaseID $OSReleaseID
-
-    if ($DriverPack) {
-        $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
-        # Immer das aktuellste CMSL-Paket verwenden (offline-fähig)
-        $Global:MyOSDCloud.HPCMSLDriverPackLatest = $true
-    }
-
-    # HPIA / BIOS / TPM nur wenn das Gerät es unterstützt
-    if (Test-HPIASupport) {
-        $Global:MyOSDCloud.HPTPMUpdate   = $true
-        $Global:MyOSDCloud.HPBIOSUpdate  = $true
-
-        if ($HPBiosSkipZBook -and ($Product -ne '83B2' -or $Model -notmatch 'zbook')) {
-            $Global:MyOSDCloud.HPIAALL = $true
-        }
-
-        # BIOS-Settings optional anpassen
-        try {
-            iex (irm 'https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1')
-            Manage-HPBiosSettings -SetSettings
-        } catch {
-            Write-Warning "Manage-HPBiosSettings konnte nicht ausgeführt werden: $_"
-        }
-    }
+#Enable HPIA | Update HP BIOS | Update HP TPM
+ if (Test-HPIASupport){
+    #$Global:MyOSDCloud.DevMode = [bool]$True
+    $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
+    if ($Product -ne '83B2' -or $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
+    #{$Global:MyOSDCloud.HPIAALL = [bool]$true}
+    $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
+    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true #In Test 
+    #Set HP BIOS Settings to what I want:
+    iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
+    Manage-HPBiosSettings -SetSettings
 }
 
 # --- Deployment ausführen ---------------------------------------------
