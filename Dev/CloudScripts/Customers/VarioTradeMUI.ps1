@@ -56,23 +56,28 @@ $Global:MyOSDCloud = @{
 }
 
 # --------   HP-Spezifisches vorbereiten --------------------
-$DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
+$cs  = Get-CimInstance Win32_ComputerSystem
+if ($cs.Manufacturer -match 'HP') {
 
-if ($DriverPack){
-    $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
-}
+    # Pflicht-Variablen füllen
+    $Product      = (Get-CimInstance Win32_ComputerSystemProduct).Version
+    $OSVersion    = 'Windows 11'            # oder 'Windows 10'
+    $OSReleaseID  = '24H2'                  # z. B. 22H2 / 24H2 …
 
-#Enable HPIA | Update HP BIOS | Update HP TPM 
- if (Test-HPIASupport){
-    #$Global:MyOSDCloud.DevMode = [bool]$True
-    $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
-    if ($Product -ne '83B2' -or $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
-    #{$Global:MyOSDCloud.HPIAALL = [bool]$true}
-    $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
-    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true #In Test 
-    #Set HP BIOS Settings to what I want:
-    iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
-    Manage-HPBiosSettings -SetSettings
+    # DriverPack holen
+    $DriverPack = Get-OSDCloudDriverPack `
+                    -Product      $Product `
+                    -OSVersion    $OSVersion `
+                    -OSReleaseID  $OSReleaseID
+
+    if ($DriverPack) { 
+        $Global:MyOSDCloud.DriverPackName = $DriverPack.Name 
+    }
+
+    # Firmware-Optionen
+    $Global:MyOSDCloud.HPTPMUpdate   = $true
+    $Global:MyOSDCloud.HPBIOSUpdate  = $true
+    $Global:MyOSDCloud.HPIAALL       = $true
 }
 
 # --- Deployment ausführen ---------------------------------------------
