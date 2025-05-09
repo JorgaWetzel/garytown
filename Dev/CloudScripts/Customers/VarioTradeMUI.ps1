@@ -33,7 +33,7 @@ if (-not (Get-PSDrive -Name $MountDrive -EA SilentlyContinue)) {
 # -----------------------------------------------------------
 # 2)   WIM KOPIEREN
 # -----------------------------------------------------------
-$SrcWim  = "$MountDrive:\OSDCloud\OS\$WimName"   # Passe Pfad an, falls WIM im Root liegt
+$SrcWim  = Join-Path ("$MountDrive:`\") "OSDCloud\OS\$WimName"    # Passe Pfad an, falls WIM im Root liegt
 $DestDir = 'C:\OSDCloud\OS'
 
 if (-not (Test-Path $SrcWim)) { throw "WIM $WimName nicht auf $SharePath gefunden." }
