@@ -44,12 +44,12 @@ if (-not (Get-PSDrive -Name $MapDrive -ErrorAction SilentlyContinue)) {
 #robocopy (Split-Path $SrcWim) $DestDir $WimName /njh /njs /xo /r:0 /w:0 | Out-Null
 
 
-
+# Quelle direkt auf Z:\ zeigen
+$SrcWim = "Z:\OSDCloud\OS\Win11_24H2_MUI.wim"
 
 # --- OSDCloud-Variablen setzen ----------------------------------------
-# $wimFull = Join-Path $DestDir $WimName
 $Global:MyOSDCloud = @{
-    ImageFileFullName = Z:\OSDCloud\OS\Win11_24H2_MUI.wim
+    ImageFileFullName = $SrcWim
     ImageFileItem     = Get-Item $WimName
     ImageFileName     = $WimName
     OSImageIndex      = 5     # ggf. anpassen
