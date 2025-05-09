@@ -2,6 +2,17 @@
 
 Import-Module OSD -Force
 
+iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
+iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
+
+#================================================
+#   [PreOS] Update Module
+#================================================
+if ((Get-MyComputerModel) -match 'Virtual') {
+    Write-Host  -ForegroundColor Green "Setting Display Resolution to 1600x"
+    Set-DisRes 1600
+}
+
 # ======================================================================
 # Konfiguration – HIER NUR BEI BEDARF ANPASSEN
 # ======================================================================
