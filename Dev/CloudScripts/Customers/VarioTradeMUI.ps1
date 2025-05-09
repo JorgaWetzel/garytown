@@ -34,14 +34,14 @@ if (-not (Get-PSDrive -Name $MapDrive -ErrorAction SilentlyContinue)) {
 
 
 # --- WIM kopieren ------------------------------------------------------
-$WimName = 'Win11_24H2_MUI.wim'
-$SrcWim  = "Z:\OSDCloud\OS\$WimName"
-$DestDir = 'C:\OSDCloud\OS'
+#$WimName = 'Win11_24H2_MUI.wim'
+#$SrcWim  = "Z:\OSDCloud\OS\$WimName"
+#$DestDir = 'C:\OSDCloud\OS'
 
-if (-not (Test-Path $SrcWim)) { throw "WIM $WimName nicht auf $share gefunden." }
-if (-not (Test-Path $DestDir)) { New-Item -ItemType Directory -Path $DestDir | Out-Null }
+#if (-not (Test-Path $SrcWim)) { throw "WIM $WimName nicht auf $share gefunden." }
+#if (-not (Test-Path $DestDir)) { New-Item -ItemType Directory -Path $DestDir | Out-Null }
 
-robocopy (Split-Path $SrcWim) $DestDir $WimName /njh /njs /xo /r:0 /w:0 | Out-Null
+#robocopy (Split-Path $SrcWim) $DestDir $WimName /njh /njs /xo /r:0 /w:0 | Out-Null
 
 
 
@@ -49,7 +49,7 @@ robocopy (Split-Path $SrcWim) $DestDir $WimName /njh /njs /xo /r:0 /w:0 | Out-Nu
 # --- OSDCloud-Variablen setzen ----------------------------------------
 $wimFull = Join-Path $DestDir $WimName
 $Global:MyOSDCloud = @{
-    ImageFileFullName = $wimFull
+    ImageFileFullName = Z:\OSDCloud\OS\$wimFull
     ImageFileItem     = Get-Item $wimFull
     ImageFileName     = $WimName
     OSImageIndex      = 5     # ggf. anpassen
