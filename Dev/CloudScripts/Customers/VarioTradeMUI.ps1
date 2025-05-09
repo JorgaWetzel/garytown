@@ -27,7 +27,7 @@ if (-not (Get-PSDrive -Name $MountDrive -EA SilentlyContinue)) {
     New-PSDrive -Name $MountDrive -PSProvider FileSystem -Root $SharePath `
                 -Credential $Cred -EA Stop
 
-    Write-Host "Share gemappt: $MountDrive:` → $SharePath" -ForegroundColor Cyan
+    Write-Host ("Share gemappt: {0} {1}" -f "$MountDrive:", $SharePath) -ForegroundColor Cyan
 }
 
 # -----------------------------------------------------------
