@@ -44,23 +44,43 @@ $Global:MyOSDCloud = @{
     ZTI               = $true
 }
 
-# -----------------------------------------------------------
-#    HP-DRIVERPACK & FIRMWARE (optional)
-# -----------------------------------------------------------
-if ((Get-CimInstance Win32_ComputerSystem).Manufacturer -match 'HP') {
+# --------   HP-Spezifisches vorbereiten --------------------
+$Manufacturer = (Get-CimInstance Win32_ComputerSystem).Manufacturer
+if ($Manufacturer -match 'HP') {
 
-    # DriverPack
+    # Produkt- und Modell-Infos aus WMI
     $Product = (Get-CimInstance Win32_ComputerSystemProduct).Version
-    $DP = Get-OSDCloudDriverPack -Product $Product `
-          -OSVersion $OSVersion -OSReleaseID $OSReleaseID
-    if ($DP) { $Global:MyOSDCloud.DriverPackName = $DP.Name }
+    $Model   = (Get-CimInstance Win32_ComputerSystem).Model
 
-    # Firmware-Optionen
-    $Global:MyOSDCloud.HPTPMUpdate  = $true    # TPM-FW flashen
-    $Global:MyOSDCloud.HPBIOSUpdate = $true    # BIOS flashen
-    $Global:MyOSDCloud.HPIAALL      = $true    # HPIA voll
+    # Passendes DriverPack ermitteln
+    $DriverPack = Get-OSDCloudDriverPack -Product $Product `
+                                         -OSVersion $OSVersion `
+                                         -OSReleaseID $OSReleaseID
+
+    if ($DriverPack) {
+        $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
+        # Immer das aktuellste CMSL-Paket verwenden (offline-fähig)
+        $Global:MyOSDCloud.HPCMSLDriverPackLatest = $true
+    }
+
+    # HPIA / BIOS / TPM nur wenn das Gerät es unterstützt
+    if (Test-HPIASupport) {
+        $Global:MyOSDCloud.HPTPMUpdate   = $true
+        $Global:MyOSDCloud.HPBIOSUpdate  = $true
+
+        if ($HPBiosSkipZBook -and ($Product -ne '83B2' -or $Model -notmatch 'zbook')) {
+            $Global:MyOSDCloud.HPIAALL = $true
+        }
+
+        # BIOS-Settings optional anpassen
+        try {
+            iex (irm 'https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1')
+            Manage-HPBiosSettings -SetSettings
+        } catch {
+            Write-Warning "Manage-HPBiosSettings konnte nicht ausgeführt werden: $_"
+        }
+    }
 }
-
 
 # --- Deployment ausführen ---------------------------------------------
 Invoke-OSDCloud
