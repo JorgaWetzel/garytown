@@ -10,10 +10,10 @@ Import-Module OSD -Force
 #$UserName    = 'Jorga'                          # Domänen- oder lokaler User
 #$PlainPwd    = 'Dont4getme'                     # Passwort (Klartext)
 
-$DeployShare = '\\SRVMDT19\DeploymentShare$'          # UNC-Pfad zum Deployment-Share
-$MapDrive    = 'Z'                              # gewünschter Laufwerks­buchstabe
-$UserName    = 'VARIODEPLOY\Administrator'                          # Domänen- oder lokaler User
-$PlainPwd    = '12Monate'                     # Passwort (Klartext)
+$DeployShare = '\\SRVMDT19\DeploymentShare$'     # UNC-Pfad zum Deployment-Share
+$MapDrive    = 'Z'                               # gewünschter Laufwerks­buchstabe
+$UserName    = 'VARIODEPLOY\Administrator'       # Domänen- oder lokaler User
+$PlainPwd    = '12Monate'                        # Passwort (Klartext)
 
 # ======================================================================
 # Ab hier nichts mehr ändern
