@@ -1,11 +1,11 @@
 <#
     VarioTradeMUI.ps1
-    • WinPE-Skript für Zero-Touch-Deployment via OSDCloud
-    • Kopiert WIM vom MDT-Share, injiziert HP-DriverPack, aktiviert optionale HP-Tools
+    WinPE-Skript fUER Zero-Touch-Deployment via OSDCloud
+    Kopiert WIM vom MDT-Share, injiziert HP-DriverPack, aktiviert optionale HP-Tools
 #>
 
 # -----------------------------------------------------------
-# 0)   BASIS-PARAMETER – HIER ANPASSEN
+# 0)   BASIS-PARAMETER  HIER ANPASSEN
 # -----------------------------------------------------------
 $SharePath = '\\10.10.100.100\Daten'          # MDT-Freigabe
 $MountDrive = 'Z'                             # Laufwerksbuchstabe
@@ -15,7 +15,7 @@ $PlainPwd   = '12Monate'
 $WimName    = 'Win11_24H2_MUI.wim'
 $OSVersion  = 'Windows 11'                    # ValidateSet: "Windows 11" / "Windows 10"
 $OSReleaseID= '24H2'
-$ImageIndex = 5                               # gewünschten Index eintragen
+$ImageIndex = 5                               
 
 # -----------------------------------------------------------
 # 1)   SHARE MOUNTEN
@@ -31,7 +31,7 @@ if (-not (Get-PSDrive -Name $MountDrive -EA SilentlyContinue)) {
 }
 
 # -----------------------------------------------------------
-# 2)   WIM KOPIEREN
+# 2)   WIM KOPIEREN 
 # -----------------------------------------------------------
 $Root   = "$($MountDrive):\"
 $SrcWim = Join-Path $Root "OSDCloud\OS\$WimName"
@@ -43,7 +43,7 @@ if (-not (Test-Path $DestDir)) { New-Item -ItemType Directory -Path $DestDir | O
 robocopy (Split-Path $SrcWim) $DestDir $WimName /njh /njs /xo /r:0 /w:0 | Out-Null
 
 # -----------------------------------------------------------
-# 3)   OSDCLOUD-HASH FÜLLEN
+# 3)   OSDCLOUD-HASH FAELLEN
 # -----------------------------------------------------------
 $WimFull = Join-Path $DestDir $WimName
 $Global:MyOSDCloud = @{
@@ -75,10 +75,10 @@ if ((Get-CimInstance Win32_ComputerSystem).Manufacturer -match 'HP') {
 # -----------------------------------------------------------
 # 5)   DEPLOYMENT STARTEN
 # -----------------------------------------------------------
-Invoke-OSDCloud                # führt Partitionierung + Apply WIM aus
+Invoke-OSDCloud            
 
 # -----------------------------------------------------------
-# 6)   SPÄTPHASE & NEUSTART
+# 6)   SPAETPHASE & NEUSTART
 # -----------------------------------------------------------
 Initialize-OSDCloudStartnetUpdate
 Restart-Computer -Force
