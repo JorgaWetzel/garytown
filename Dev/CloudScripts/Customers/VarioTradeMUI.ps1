@@ -51,7 +51,7 @@ if ($DriverPack){
     $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
 }
 
-#Enable HPIA | Update HP BIOS | Update HP TPM
+#Enable HPIA | Update HP BIOS | Update HP TPM 
  if (Test-HPIASupport){
     #$Global:MyOSDCloud.DevMode = [bool]$True
     $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
