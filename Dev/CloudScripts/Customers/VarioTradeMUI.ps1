@@ -3,10 +3,13 @@
 Import-Module OSD -Force
 
 # --- Share verbinden ---------------------------------------------------
-$share = '\\192.168.2.15\DeploymentShare$'
+#$share = '\\192.168.2.15\DeploymentShare$'
+$share = '\\10.10.100.100\Daten'
 $drive = 'Z'
-$pwd   = ConvertTo-SecureString '12Monate' -AsPlainText -Force
-$cred  = New-Object System.Management.Automation.PSCredential ('VARIODEPLOY\Administrator',$pwd)
+$pwd   = ConvertTo-SecureString 'Dont4getme' -AsPlainText -Force
+# $pwd   = ConvertTo-SecureString '12Monate' -AsPlainText -Force
+# $cred  = New-Object System.Management.Automation.PSCredential ('VARIODEPLOY\Administrator',$pwd)
+$cred  = New-Object System.Management.Automation.PSCredential ('Jorga',$pwd)
 
 if (-not (Get-PSDrive -Name $drive -ErrorAction SilentlyContinue)) {
     New-PSDrive -Name $drive -PSProvider FileSystem -Root $share -Credential $cred -Persist
