@@ -1,101 +1,83 @@
-# 99-Deployment.ps1  –  StartNet-Hook, minimal
+<#
+    VarioTradeMUI.ps1
+    • WinPE-Skript für Zero-Touch-Deployment via OSDCloud
+    • Kopiert WIM vom MDT-Share, injiziert HP-DriverPack, aktiviert optionale HP-Tools
+#>
 
-Import-Module OSD -Force
+# -----------------------------------------------------------
+# 0)   BASIS-PARAMETER – HIER ANPASSEN
+# -----------------------------------------------------------
+$SharePath = '\\10.10.100.100\Daten'          # MDT-Freigabe
+$MountDrive = 'Z'                             # Laufwerksbuchstabe
+$UserName   = 'VARIODEPLOY\Administrator'
+$PlainPwd   = '12Monate'
 
-# ======================================================================
-# Konfiguration – HIER NUR BEI BEDARF ANPASSEN
-# ======================================================================
-#$DeployShare = '\\10.10.100.100\Daten'          # UNC-Pfad zum Deployment-Share
-#$MapDrive    = 'Z'                              # gewünschter Laufwerks­buchstabe
-#$UserName    = 'Jorga'                          # Domänen- oder lokaler User
-#$PlainPwd    = 'Dont4getme'                     # Passwort (Klartext)
+$WimName    = 'Win11_24H2_MUI.wim'
+$OSVersion  = 'Windows 11'                    # ValidateSet: "Windows 11" / "Windows 10"
+$OSReleaseID= '24H2'
+$ImageIndex = 5                               # gewünschten Index eintragen
 
-$DeployShare = '\\SRVMDT19\DeploymentShare$'     # UNC-Pfad zum Deployment-Share
-$MapDrive    = 'Z'                               # gewünschter Laufwerks­buchstabe
-$UserName    = 'VARIODEPLOY\Administrator'       # Domänen- oder lokaler User
-$PlainPwd    = '12Monate'                        # Passwort (Klartext)
+# -----------------------------------------------------------
+# 1)   SHARE MOUNTEN
+# -----------------------------------------------------------
+if (-not (Get-PSDrive -Name $MountDrive -EA SilentlyContinue)) {
+    $Secure = ConvertTo-SecureString $PlainPwd -AsPlainText -Force
+    $Cred   = [pscredential]::new($UserName,$Secure)
 
-# ======================================================================
-# Ab hier nichts mehr ändern
-# ======================================================================
+    New-PSDrive -Name $MountDrive -PSProvider FileSystem -Root $SharePath `
+                -Credential $Cred -EA Stop
 
-# Anmelde­daten vorbereiten
-$SecurePwd = ConvertTo-SecureString $PlainPwd -AsPlainText -Force
-$Cred      = New-Object System.Management.Automation.PSCredential ($UserName,$SecurePwd)
-
-# Share verbinden
-if (-not (Get-PSDrive -Name $MapDrive -ErrorAction SilentlyContinue)) {
-    New-PSDrive -Name $MapDrive `
-                -PSProvider FileSystem `
-                -Root $DeployShare `
-                -Credential $Cred `
-                -ErrorAction Stop
+    Write-Host "Share gemappt: $MountDrive:` → $SharePath" -ForegroundColor Cyan
 }
 
-
-# --- WIM kopieren ------------------------------------------------------
-$WimName = 'Win11_24H2_MUI.wim'
-$SrcWim  = "Z:\OSDCloud\OS\$WimName"
+# -----------------------------------------------------------
+# 2)   WIM KOPIEREN
+# -----------------------------------------------------------
+$SrcWim  = "$MountDrive:\OSDCloud\OS\$WimName"   # Passe Pfad an, falls WIM im Root liegt
 $DestDir = 'C:\OSDCloud\OS'
 
-if (-not (Test-Path $SrcWim)) { throw "WIM $WimName nicht auf $share gefunden." }
+if (-not (Test-Path $SrcWim)) { throw "WIM $WimName nicht auf $SharePath gefunden." }
 if (-not (Test-Path $DestDir)) { New-Item -ItemType Directory -Path $DestDir | Out-Null }
 
 robocopy (Split-Path $SrcWim) $DestDir $WimName /njh /njs /xo /r:0 /w:0 | Out-Null
 
-# --------   HP-Spezifisches vorbereiten --------------------
-$Manufacturer = (Get-CimInstance Win32_ComputerSystem).Manufacturer
-if ($Manufacturer -match 'HP') {
-
-    # Produkt- und Modell-Infos aus WMI
-    $Product = (Get-CimInstance Win32_ComputerSystemProduct).Version
-    $Model   = (Get-CimInstance Win32_ComputerSystem).Model
-
-    # Passendes DriverPack ermitteln
-    $DriverPack = Get-OSDCloudDriverPack -Product $Product `
-                                         -OSVersion $OSVersion `
-                                         -OSReleaseID $OSReleaseID
-
-    if ($DriverPack) {
-        $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
-        # Immer das aktuellste CMSL-Paket verwenden (offline-fähig)
-        $Global:MyOSDCloud.HPCMSLDriverPackLatest = $true
-    }
-
-    # HPIA / BIOS / TPM nur wenn das Gerät es unterstützt
-    if (Test-HPIASupport) {
-        $Global:MyOSDCloud.HPTPMUpdate   = $true
-        $Global:MyOSDCloud.HPBIOSUpdate  = $true
-
-        if ($HPBiosSkipZBook -and ($Product -ne '83B2' -or $Model -notmatch 'zbook')) {
-            $Global:MyOSDCloud.HPIAALL = $true
-        }
-
-        # BIOS-Settings optional anpassen
-        try {
-            iex (irm 'https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1')
-            Manage-HPBiosSettings -SetSettings
-        } catch {
-            Write-Warning "Manage-HPBiosSettings konnte nicht ausgeführt werden: $_"
-        }
-    }
-}
-
-
-# --- OSDCloud-Variablen setzen ----------------------------------------
-$wimFull = Join-Path $DestDir $WimName
+# -----------------------------------------------------------
+# 3)   OSDCLOUD-HASH FÜLLEN
+# -----------------------------------------------------------
+$WimFull = Join-Path $DestDir $WimName
 $Global:MyOSDCloud = @{
-    ImageFileFullName = $wimFull
-    ImageFileItem     = Get-Item $wimFull
+    ImageFileFullName = $WimFull
+    ImageFileItem     = Get-Item $WimFull
     ImageFileName     = $WimName
-    OSImageIndex      = 5     # ggf. anpassen
+    OSImageIndex      = $ImageIndex
     ClearDiskConfirm  = $false
     ZTI               = $true
 }
 
-# --- Deployment ausführen ---------------------------------------------
-Invoke-OSDCloud
+# -----------------------------------------------------------
+# 4)   HP-DRIVERPACK & FIRMWARE (optional)
+# -----------------------------------------------------------
+if ((Get-CimInstance Win32_ComputerSystem).Manufacturer -match 'HP') {
 
-# --- Spätphase + Neustart ---------------------------------------------
+    # DriverPack
+    $Product = (Get-CimInstance Win32_ComputerSystemProduct).Version
+    $DP = Get-OSDCloudDriverPack -Product $Product `
+          -OSVersion $OSVersion -OSReleaseID $OSReleaseID
+    if ($DP) { $Global:MyOSDCloud.DriverPackName = $DP.Name }
+
+    # Firmware-Optionen
+    $Global:MyOSDCloud.HPTPMUpdate  = $true    # TPM-FW flashen
+    $Global:MyOSDCloud.HPBIOSUpdate = $true    # BIOS flashen
+    $Global:MyOSDCloud.HPIAALL      = $true    # HPIA voll
+}
+
+# -----------------------------------------------------------
+# 5)   DEPLOYMENT STARTEN
+# -----------------------------------------------------------
+Invoke-OSDCloud                # führt Partitionierung + Apply WIM aus
+
+# -----------------------------------------------------------
+# 6)   SPÄTPHASE & NEUSTART
+# -----------------------------------------------------------
 Initialize-OSDCloudStartnetUpdate
 Restart-Computer -Force
