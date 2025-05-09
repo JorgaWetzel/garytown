@@ -55,7 +55,7 @@ $Global:MyOSDCloud = @{
     ZTI               = $true
 }
 
-# --------   HP-Spezifisches vorbereiten --------------------
+# --------   HP-Spezifisches vorbereiten ---------------------
 $cs  = Get-CimInstance Win32_ComputerSystem
 if ($cs.Manufacturer -match 'HP') {
 
