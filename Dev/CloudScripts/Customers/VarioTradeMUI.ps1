@@ -1,116 +1,118 @@
-<#
-    99-Deployment.ps1  –  StartNet-Hook für OSDCloud (HP-Fallback + Share-WIM)
-    ? WinPE lädt eigenes WIM von Netzwerk-Share
-    ? Sucht HP-DriverPack:   OSDCloud-Katalog ? CMSL ? CAB/EXE-Fallback
-    ? Keine Windows-/MS-Treiber-Updates
+<#  99-Deployment.ps1  –  StartNet hook for OSDCloud (HP fallback + share WIM)
+
+     • Maps Z: to a deployment share
+     • Uses local WIM from share
+     • Tries OSDCloud driver pack; if none, falls back to HP CMSL
+     • No Windows Update, no Microsoft driver updates in WinPE
 #>
 
-# --------------------------------------------------------------------------------
-#  0) Basis vorbereiten  (TLS 1.2, NuGet, PSRepository, Module)
-# --------------------------------------------------------------------------------
+# -------------------------------------------------------------
+# 0) WinPE prereqs: TLS 1.2, NuGet, PSGallery
+# -------------------------------------------------------------
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-$env:HP_JAVA_DISABLE_DOWNLOAD_PROXY = 1          # Proxy-Autodetect ausschalten
-
-if (-not (Get-PackageProvider NuGet -EA 0)) {
+if (-not (Get-PackageProvider NuGet -ErrorAction 0)) {
     Install-PackageProvider NuGet -MinimumVersion 2.8.5.201 -Force
 }
-if (-not (Get-PSRepository PSGallery -EA 0)) { Register-PSRepository -Default }
+if (-not (Get-PSRepository PSGallery -ErrorAction 0)) {
+    Register-PSRepository -Default
+}
 
 Import-Module OSD -Force
-iex (irm functions.garytown.com)      # optionale Helfer-Fkt.
-iex (irm functions.osdcloud.com)
 
-# --------------------------------------------------------------------------------
-#  1) Netzwerk-Share verbinden
-# --------------------------------------------------------------------------------
+# -------------------------------------------------------------
+# 1) Map deployment share
+# -------------------------------------------------------------
 $DeployShare = '\\192.168.2.15\DeploymentShare$'
 $MapDrive    = 'Z'
 $UserName    = 'VARIODEPLOY\Administrator'
 $PlainPwd    = '12Monate'
 
-$SecurePwd = $PlainPwd | ConvertTo-SecureString -AsPlainText -Force
+$SecurePwd = ConvertTo-SecureString $PlainPwd -AsPlainText -Force
 $Cred      = [pscredential]::new($UserName,$SecurePwd)
 
-if (-not (Get-PSDrive -Name $MapDrive -EA 0)) {
-    New-PSDrive -Name $MapDrive -PSProvider FileSystem -Root $DeployShare `
-                -Credential $Cred -EA Stop | Out-Null
+if (-not (Get-PSDrive -Name $MapDrive -ErrorAction 0)) {
+    New-PSDrive -Name $MapDrive -PSProvider FileSystem `
+                -Root $DeployShare -Credential $Cred -ErrorAction Stop | Out-Null
 }
 
 $SrcWim = "$MapDrive:\OSDCloud\OS\Win11_24H2_MUI.wim"
 
-# --------------------------------------------------------------------------------
-#  2) OSDCloud-Hash setzen  (keine MS-Updates)
-# --------------------------------------------------------------------------------
+# -------------------------------------------------------------
+# 2) OSDCloud hash (no Windows / MS driver updates)
+# -------------------------------------------------------------
 $Global:MyOSDCloud = @{
     ImageFileFullName = $SrcWim
     ImageFileName     = 'Win11_24H2_MUI.wim'
-    OSImageIndex      = 5            # ggf. anpassen
+    OSImageIndex      = 5            # adjust if needed
     ClearDiskConfirm  = $false
     ZTI               = $true
-    UpdateOS          = $false       # kum. Updates AUS
-    UpdateDrivers     = $false       # MS-Treiber AUS
+    UpdateOS          = $false
+    UpdateDrivers     = $false
 }
 
-# --------------------------------------------------------------------------------
-#  3) HP-DriverPack   (OSDCloud ? CMSL ? CAB/EXE)
-# --------------------------------------------------------------------------------
-$cs   = Get-CimInstance Win32_ComputerSystem
+# -------------------------------------------------------------
+# 3) HP driver pack (OSDCloud -> CMSL -> CAB/EXE)
+# -------------------------------------------------------------
+$cs = Get-CimInstance Win32_ComputerSystem
 if ($cs.Manufacturer -match 'HP') {
 
-    # Kandidaten-IDs
+    # possible platform IDs
     $ids = @(
         (Get-CimInstance Win32_ComputerSystemProduct).Version
         $cs.SystemSKUNumber
     ) | Where-Object { $_ } | Select-Object -Unique
 
-    $osVers  = 'Windows 11','Windows 10'
-    $relVers = '24H2','23H2','22H2','21H2'
+    $osList  = 'Windows 11','Windows 10'
+    $relList = '24H2','23H2','22H2','21H2'
     $dp      = $null
 
+    # 3.1  OSDCloud catalog
     foreach ($id in $ids) {
-        foreach ($os in $osVers) {
-            foreach ($rel in $relVers) {
+        foreach ($os in $osList) {
+            foreach ($rel in $relList) {
                 $dp = Get-OSDCloudDriverPack -Product $id `
-                         -OSVersion $os -OSReleaseID $rel -EA 0
+                         -OSVersion $os -OSReleaseID $rel -ErrorAction 0
                 if ($dp) {
-                    Write-Host "Treffer Cloud: $($dp.Name)" -fg Green
+                    Write-Host "Found in Cloud: $($dp.Name)" -ForegroundColor Green
                     break 3
                 }
             }
         }
     }
 
-    # -- CMSL-Fallback -----------------------------------------------
+    # 3.2  CMSL fallback
     if (-not $dp) {
-        Write-Host 'Starte CMSL-Fallback …' -fg Cyan
+        Write-Host 'Starting CMSL fallback ...' -ForegroundColor Cyan
 
         if (-not (Get-Module -ListAvailable HPCMSL)) {
-            Install-Module HPCMSL -AcceptLicense -AllowClobber -Force -Scope CurrentUser
+            Install-Module HPCMSL -Scope CurrentUser -AcceptLicense `
+                                  -AllowClobber -Force
             Import-Module HPCMSL -Force
         }
 
         foreach ($id in $ids) {
-            $dp = Get-HPDriverPackLatest -Platform $id -EA 0
+            $dp = Get-HPDriverPackLatest -Platform $id -ErrorAction 0
             if ($dp) {
-                Write-Host "Treffer CMSL : $($dp.SoftPaqId) / $($dp.Name)" -fg Green
+                Write-Host "Found in CMSL : $($dp.SoftPaqId) / $($dp.Name)" `
+                           -ForegroundColor Green
                 break
             }
         }
     }
 
-    # -- Pack registrieren (CAB bevorzugt) ---------------------------
+    # 3.3  Attach to hash
     if ($dp) {
-        $cabUrl  = $dp.Url -replace '\.exe$', '.cab'
-        $cabName = "$($dp.SoftPaqId).cab"
-        $localCab= "$MapDrive:\OSDCloud\DriverPack\$cabName"
+        $cabUrl   = $dp.Url -replace '\.exe$','.cab'
+        $cabName  = "$($dp.SoftPaqId).cab"
+        $localCab = "$MapDrive:\OSDCloud\DriverPack\$cabName"
 
         try {
-            Invoke-WebRequest $cabUrl -OutFile $localCab -UseBasicParsing -EA Stop
-            Write-Host "CAB gespeichert: $cabName"
+            Invoke-WebRequest $cabUrl -OutFile $localCab -UseBasicParsing -ErrorAction Stop
+            Write-Host "CAB saved: $cabName"
             $Global:MyOSDCloud.DriverPackName = $cabName
         }
         catch {
-            Write-Warning 'CAB nicht erreichbar – verwende EXE'
+            Write-Warning 'CAB not reachable, using EXE'
             $Global:MyOSDCloud.DriverPackName = "$($dp.SoftPaqId).exe"
         }
 
@@ -119,16 +121,16 @@ if ($cs.Manufacturer -match 'HP') {
         $Global:MyOSDCloud.HPIAALL      = $true
     }
     else {
-        Write-Warning '>> Kein HP-DriverPack verfügbar! <<'
+        Write-Warning 'No HP driver pack found.'
     }
 }
 else {
-    Write-Host 'Kein HP-Gerät – DriverPack-Suche übersprungen.' -fg Yellow
+    Write-Host 'Non-HP device – driver pack search skipped.' -ForegroundColor Yellow
 }
 
-# --------------------------------------------------------------------------------
-#  4) Deployment starten  +  Spätphase
-# --------------------------------------------------------------------------------
+# -------------------------------------------------------------
+# 4) Run deployment
+# -------------------------------------------------------------
 Invoke-OSDCloud
 Initialize-OSDCloudStartnetUpdate
 Restart-Computer -Force
