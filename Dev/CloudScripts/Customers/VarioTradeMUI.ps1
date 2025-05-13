@@ -58,94 +58,50 @@ $Global:MyOSDCloud = @{
 }
 
 
-# =====================================================================
-#  HP-DRIVERPACK – Troubleshooting + Log 
-# =====================================================================
-
-# Alles loggen:
+# -----------------------------------------------------------
+# HP-DriverPack  (SKU-Fallback + 22H2-Fallback)
+# -----------------------------------------------------------
 $cs = Get-CimInstance Win32_ComputerSystem
-if ($cs.Manufacturer -notmatch 'HP') {
-    Write-Warning 'Kein HP-Gerät erkannt – DriverPack-Suche übersprungen.'
-}
-else {
-    # Basiswerte sammeln
-    $Product     = (Get-CimInstance Win32_ComputerSystemProduct).Version
-    if (-not $Product) {                     # Fallback: SKU-Nummer
+if ($cs.Manufacturer -match 'HP') {
+
+    $Product = (Get-CimInstance Win32_ComputerSystemProduct).Version
+    if (-not $Product) {
         $Product = $cs.SystemSKUNumber
-        Write-Warning "Version leer, benutze SKU: $Product"
+        Write-Host "Version leer – nehme SKU: $Product" -ForegroundColor Yellow
     }
 
-    $OSVersion   = 'Windows 11'
+    $OSVersion = 'Windows 11'
     $OSReleaseID = '24H2'
 
-    Write-Host  "Product     : $Product"
-    Write-Host  "OSVersion   : $OSVersion"
-    Write-Host  "OSReleaseID : $OSReleaseID"
+    function Find-Pack {
+        param($Prod,$Rel)
+        Get-OSDCloudDriverPack -Product $Prod -OSVersion $OSVersion -OSReleaseID $Rel `
+                               -ErrorAction SilentlyContinue
+    }
 
-    # DriverPack suchen
-    $dp = Get-OSDCloudDriverPack -Product $Product `
-                                 -OSVersion $OSVersion `
-                                 -OSReleaseID $OSReleaseID `
-                                 -ErrorAction SilentlyContinue
+    $dp = Find-Pack $Product $OSReleaseID
+    if (-not $dp) {
+        Write-Host "Kein Pack für 24H2, versuche 22H2 ..." -ForegroundColor DarkYellow
+        $dp = Find-Pack $Product '22H2'
+    }
 
     if ($dp) {
-        Write-Host "Gefunden   : $($dp.Name)" -ForegroundColor Green
+        Write-Host "Gefunden: $($dp.Name)" -ForegroundColor Green
         $Global:MyOSDCloud.DriverPackName = $dp.Name
     }
     else {
-        Write-Warning 'Kein passendes HP-DriverPack gefunden!'
-        # optionaler Fallback auf 22H2
-        # $dp22 = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID '22H2'
-    }
-}
-
-# Log einschalten ------------------------------------------------------
-$LogPath = 'C:\OSDCloud\Logs\DriverPack.log'
-Start-Transcript -Path $LogPath -Force
-
-Write-Host "=== HP DriverPack-Ermittlung =========================" -ForegroundColor Cyan
-
-$cs = Get-CimInstance Win32_ComputerSystem
-if ($cs.Manufacturer -notmatch 'HP') {
-    Write-Warning "Kein HP-Gerät erkannt ? DriverPack-Routine wird übersprungen."
-    Stop-Transcript
-}
-else {
-    # Basiswerte bestimmen --------------------------------------------
-    $Product     = (Get-CimInstance Win32_ComputerSystemProduct).Version
-    $OSVersion   = 'Windows 11'         # ValidateSet: Windows 11 oder Windows 10
-    $OSReleaseID = '24H2'               # z. B. 22H2 / 24H2
-
-    Write-Host  ("Product:      {0}" -f $Product)
-    Write-Host  ("OSVersion:    {0}" -f $OSVersion)
-    Write-Host  ("OSReleaseID:  {0}" -f $OSReleaseID)
-
-    # DriverPack abrufen ----------------------------------------------
-    try {
-        $DriverPack = Get-OSDCloudDriverPack `
-                        -Product     $Product `
-                        -OSVersion   $OSVersion `
-                        -OSReleaseID $OSReleaseID 
-						
-        if ($null -eq $DriverPack) {
-            Write-Warning "Kein DriverPack gefunden."
-        }
-        else {
-            Write-Host  ("Gefunden:     {0}" -f $DriverPack.Name) -ForegroundColor Green
-            $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
-        }
-    }
-    catch {
-        Write-Error "Get-OSDCloudDriverPack Fehler: $_"
+        Write-Warning '>> HP-DriverPack weiterhin nicht gefunden! <<'
     }
 
-    # HP-Firmware / BIOS optional aktivieren --------------------------
+    # Firmware-Optionen
     $Global:MyOSDCloud.HPTPMUpdate  = $true
     $Global:MyOSDCloud.HPBIOSUpdate = $true
     $Global:MyOSDCloud.HPIAALL      = $true
 }
+else {
+    Write-Host "Kein HP-Gerät – DriverPack-Suche übersprungen."
+}
 
-Stop-Transcript
 
 # --- Deployment ausfÃ¼hren ---------------------------------------------
 Invoke-OSDCloud
