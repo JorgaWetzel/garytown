@@ -88,8 +88,8 @@ else {
         $DriverPack = Get-OSDCloudDriverPack `
                         -Product     $Product `
                         -OSVersion   $OSVersion `
-                        -OSReleaseID $OSReleaseID `
-                        -SkipCatalogFirmware          # MS-Firmware-Katalog überspringen
+                        -OSReleaseID $OSReleaseID 
+						
         if ($null -eq $DriverPack) {
             Write-Warning "Kein DriverPack gefunden."
         }
