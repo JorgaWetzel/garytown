@@ -61,57 +61,45 @@ $Global:MyOSDCloud = @{
 # =====================================================================
 # HP-DriverPack  Universeller Fallback-Algorithmus (reine Console)
 # =====================================================================
-$cs = Get-CimInstance Win32_ComputerSystem
-if ($cs.Manufacturer -notmatch 'HP') {
-    Write-Warning 'Kein HP-Gerät – DriverPack-Suche übersprungen.'
-    return
-}
+# ---------- 1) mögliche IDs sammeln ---------------------------
+$ids = @(
+    (Get-CimInstance Win32_ComputerSystemProduct).Version,
+    (Get-CimInstance Win32_ComputerSystem).SystemSKUNumber,
+    (Get-CimInstance Win32_BaseBoard).Product
+) | Where-Object { $_ } | Select-Object -Unique
 
-# ---------- 1) Geräte-Kennung ermitteln --------------------------------
-$Product = (Get-CimInstance Win32_ComputerSystemProduct).Version
-if (-not $Product) {
-    $Product = $cs.SystemSKUNumber
-    Write-Host ("Version leer – benutze SKU  : {0}" -f $Product) -ForegroundColor Yellow
-} else {
-    Write-Host ("Product-Version gefunden     : {0}" -f $Product)
-}
+Write-Host "Prüfe IDs: $($ids -join ', ')" -ForegroundColor Cyan
 
-# ---------- 2) Suchmatrix anlegen --------------------------------------
-$osList   = @('Windows 11','Windows 10')     # Reihenfolge wichtig!
-$relList  = @('24H2','23H2','22H2','21H2')   # fallbackt bis 21H2 zurück
-$found    = $null
+# ---------- 2) Fallback-Schleife ------------------------------
+$osVers  = 'Windows 11','Windows 10'
+$relVers = '24H2','23H2','22H2','21H2'
+$found   = $null
 
-# ---------- 3) DriverPack-Schleife -------------------------------------
-foreach ($os in $osList) {
-    foreach ($rel in $relList) {
-
-        $dp = Get-OSDCloudDriverPack -Product $Product `
-                                      -OSVersion   $os `
-                                      -OSReleaseID $rel `
-                                      -ErrorAction SilentlyContinue
-
-        if ($dp) {
-            $found = $dp
-            Write-Host ("Treffer => {0}  |  {1}  {2}" -f $dp.Name,$os,$rel) -ForegroundColor Green
-            break
-        } else {
-            Write-Host ("Kein Pack für {0}  {1}" -f $os,$rel) -ForegroundColor DarkGray
+foreach ($id in $ids) {
+    foreach ($os in $osVers) {
+        foreach ($rel in $relVers) {
+            $dp = Get-OSDCloudDriverPack -Product $id `
+                     -OSVersion $os -OSReleaseID $rel `
+                     -EA SilentlyContinue
+            if ($dp) {
+                $found = $dp
+                Write-Host ("Treffer: {0}  |  ID={1}  |  {2}  {3}" -f $dp.Name,$id,$os,$rel) -fg Green
+                break 3      # aus allen Schleifen aussteigen
+            } else {
+                Write-Host ("kein Pack  ID={0}  {1} {2}" -f $id,$os,$rel) -fg DarkGray
+            }
         }
     }
-    if ($found) { break }
 }
 
-# ---------- 4) Ergebnis verarbeiten ------------------------------------
 if ($found) {
     $Global:MyOSDCloud.DriverPackName = $found.Name
-    # Firmware/BIOS optional aktivieren
     $Global:MyOSDCloud.HPTPMUpdate  = $true
     $Global:MyOSDCloud.HPBIOSUpdate = $true
     $Global:MyOSDCloud.HPIAALL      = $true
 } else {
     Write-Warning '>> Endgültig kein HP-DriverPack gefunden! <<'
 }
-
 
 # --- Deployment ausfÃ¼hren ---------------------------------------------
 Invoke-OSDCloud
