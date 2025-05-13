@@ -59,7 +59,7 @@ $Global:MyOSDCloud = @{
 
 
 # =====================================================================
-#  HP-DRIVERPACK – Troubleshooting + Log
+#  HP-DRIVERPACK – Troubleshooting + Log 
 # =====================================================================
 
 # Alles loggen:
