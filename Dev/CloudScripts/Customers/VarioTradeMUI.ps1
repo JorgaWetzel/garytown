@@ -53,6 +53,8 @@ $Global:MyOSDCloud = @{
     OSImageIndex      = 5     # ggf. anpassen
     ClearDiskConfirm  = $false
     ZTI               = $true
+    UpdateOS          = $false      # Keine kumulativen Windows-Updates
+    UpdateDrivers     = $false      # Microsoft-Treiber­updates AUS
 }
 
 
