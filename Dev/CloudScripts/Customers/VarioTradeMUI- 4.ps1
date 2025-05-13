@@ -55,58 +55,30 @@ $Global:MyOSDCloud = @{
     ZTI               = $true
 }
 
+# --------   HP-Spezifisches vorbereiten ---------------------
+$cs  = Get-CimInstance Win32_ComputerSystem
+if ($cs.Manufacturer -match 'HP') {
 
-# =====================================================================
-#  HP-DRIVERPACK – Troubleshooting + Log
-# =====================================================================
+    # Pflicht-Variablen fÃ¼llen
+    $Product      = (Get-CimInstance Win32_ComputerSystemProduct).Version
+    $OSVersion    = 'Windows 11'            # oder 'Windows 10'
+    $OSReleaseID  = '24H2'                  # z. B. 22H2 / 24H2 â€¦
 
-# Log einschalten ------------------------------------------------------
-$LogPath = 'C:\OSDCloud\Logs\DriverPack.log'
-Start-Transcript -Path $LogPath -Force
+    # DriverPack holen
+    $DriverPack = Get-OSDCloudDriverPack `
+                    -Product      $Product `
+                    -OSVersion    $OSVersion `
+                    -OSReleaseID  $OSReleaseID
 
-Write-Host "=== HP DriverPack-Ermittlung =========================" -ForegroundColor Cyan
-
-$cs = Get-CimInstance Win32_ComputerSystem
-if ($cs.Manufacturer -notmatch 'HP') {
-    Write-Warning "Kein HP-Gerät erkannt ? DriverPack-Routine wird übersprungen."
-    Stop-Transcript
-}
-else {
-    # Basiswerte bestimmen --------------------------------------------
-    $Product     = (Get-CimInstance Win32_ComputerSystemProduct).Version
-    $OSVersion   = 'Windows 11'         # ValidateSet: Windows 11 oder Windows 10
-    $OSReleaseID = '24H2'               # z. B. 22H2 / 24H2
-
-    Write-Host  ("Product:      {0}" -f $Product)
-    Write-Host  ("OSVersion:    {0}" -f $OSVersion)
-    Write-Host  ("OSReleaseID:  {0}" -f $OSReleaseID)
-
-    # DriverPack abrufen ----------------------------------------------
-    try {
-        $DriverPack = Get-OSDCloudDriverPack `
-                        -Product     $Product `
-                        -OSVersion   $OSVersion `
-                        -OSReleaseID $OSReleaseID `
-                        -SkipCatalogFirmware          # MS-Firmware-Katalog überspringen
-        if ($null -eq $DriverPack) {
-            Write-Warning "Kein DriverPack gefunden."
-        }
-        else {
-            Write-Host  ("Gefunden:     {0}" -f $DriverPack.Name) -ForegroundColor Green
-            $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
-        }
-    }
-    catch {
-        Write-Error "Get-OSDCloudDriverPack Fehler: $_"
+    if ($DriverPack) { 
+        $Global:MyOSDCloud.DriverPackName = $DriverPack.Name 
     }
 
-    # HP-Firmware / BIOS optional aktivieren --------------------------
-    $Global:MyOSDCloud.HPTPMUpdate  = $true
-    $Global:MyOSDCloud.HPBIOSUpdate = $true
-    $Global:MyOSDCloud.HPIAALL      = $true
+    # Firmware-Optionen
+    $Global:MyOSDCloud.HPTPMUpdate   = $true
+    $Global:MyOSDCloud.HPBIOSUpdate  = $true
+    $Global:MyOSDCloud.HPIAALL       = $true
 }
-
-Stop-Transcript
 
 # --- Deployment ausfÃ¼hren ---------------------------------------------
 Invoke-OSDCloud
