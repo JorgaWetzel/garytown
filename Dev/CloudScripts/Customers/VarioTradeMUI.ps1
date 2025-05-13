@@ -99,7 +99,18 @@ else {
         Write-Host 'Starte CMSL-Fallback …' -fg Cyan
 
         # Modul sicherstellen
-        if (-not (Get-Module HPCMSL)) { Install-Module HPCMSL -Force -Scope CurrentUser }
+        if (-not (Get-Module -ListAvailable -Name HPCMSL)) {
+			try {
+				Install-Module HPCMSL -Scope CurrentUser `
+									  -AcceptLicense `
+									  -AllowClobber `
+									  -Force
+				Import-Module HPCMSL -Force
+			}
+			catch {
+				Write-Warning "HPCMSL konnte nicht installiert werden: $_"
+			}
+		}
 
         foreach ($id in $ids) {
             $dp = Get-HPDriverPackLatest -Platform $id -ErrorAction SilentlyContinue
