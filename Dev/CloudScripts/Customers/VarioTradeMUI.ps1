@@ -1,93 +1,134 @@
-# 99-Deployment.ps1  â€“  StartNet-Hook, minimal
+<#
+    99-Deployment.ps1  –  StartNet-Hook für OSDCloud (HP-Fallback + Share-WIM)
+    ? WinPE lädt eigenes WIM von Netzwerk-Share
+    ? Sucht HP-DriverPack:   OSDCloud-Katalog ? CMSL ? CAB/EXE-Fallback
+    ? Keine Windows-/MS-Treiber-Updates
+#>
+
+# --------------------------------------------------------------------------------
+#  0) Basis vorbereiten  (TLS 1.2, NuGet, PSRepository, Module)
+# --------------------------------------------------------------------------------
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+$env:HP_JAVA_DISABLE_DOWNLOAD_PROXY = 1          # Proxy-Autodetect ausschalten
+
+if (-not (Get-PackageProvider NuGet -EA 0)) {
+    Install-PackageProvider NuGet -MinimumVersion 2.8.5.201 -Force
+}
+if (-not (Get-PSRepository PSGallery -EA 0)) { Register-PSRepository -Default }
 
 Import-Module OSD -Force
+iex (irm functions.garytown.com)      # optionale Helfer-Fkt.
+iex (irm functions.osdcloud.com)
 
-iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
-iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
+# --------------------------------------------------------------------------------
+#  1) Netzwerk-Share verbinden
+# --------------------------------------------------------------------------------
+$DeployShare = '\\192.168.2.15\DeploymentShare$'
+$MapDrive    = 'Z'
+$UserName    = 'VARIODEPLOY\Administrator'
+$PlainPwd    = '12Monate'
 
-#================================================
-#   [PreOS] Update Module
-#================================================
-if ((Get-MyComputerModel) -match 'Virtual') {
-    Write-Host  -ForegroundColor Green "Setting Display Resolution to 1600x"
-    Set-DisRes 1600
+$SecurePwd = $PlainPwd | ConvertTo-SecureString -AsPlainText -Force
+$Cred      = [pscredential]::new($UserName,$SecurePwd)
+
+if (-not (Get-PSDrive -Name $MapDrive -EA 0)) {
+    New-PSDrive -Name $MapDrive -PSProvider FileSystem -Root $DeployShare `
+                -Credential $Cred -EA Stop | Out-Null
 }
 
-# ======================================================================
-# Konfiguration â€“ HIER NUR BEI BEDARF ANPASSEN
-# ======================================================================
-# $DeployShare = '\\10.10.100.100\Daten'          # UNC-Pfad zum Deployment-Share
-# $MapDrive    = 'Z'                              # gewÃ¼nschter LaufwerksÂ­buchstabe
-# $UserName    = 'Jorga'                          # DomÃ¤nen- oder lokaler User
-# $PlainPwd    = 'Dont4getme'                     # Passwort (Klartext)
+$SrcWim = "$MapDrive:\OSDCloud\OS\Win11_24H2_MUI.wim"
 
-
-$DeployShare = '\\192.168.2.15\DeploymentShare$' # UNC-Pfad zum Deployment-Share
-$MapDrive    = 'Z'                               # gewÃ¼nschter LaufwerksÂ­buchstabe
-$UserName    = 'VARIODEPLOY\Administrator'       # DomÃ¤nen- oder lokaler User
-$PlainPwd    = '12Monate'                        # Passwort (Klartext)
-$SrcWim 	 = 'Z:\OSDCloud\OS\Win11_24H2_MUI.wim'
-# ======================================================================
-# Ab hier nichts mehr Ã¤ndern
-# ======================================================================
-
-# AnmeldeÂ­daten vorbereiten
-$SecurePwd = ConvertTo-SecureString $PlainPwd -AsPlainText -Force
-$Cred      = New-Object System.Management.Automation.PSCredential ($UserName,$SecurePwd)
-
-# Share verbinden
-if (-not (Get-PSDrive -Name $MapDrive -ErrorAction SilentlyContinue)) {
-    New-PSDrive -Name $MapDrive `
-                -PSProvider FileSystem `
-                -Root $DeployShare `
-                -Credential $Cred `
-                -ErrorAction Stop
-}
-
-
-# --- OSDCloud-Variablen setzen ----------------------------------------
+# --------------------------------------------------------------------------------
+#  2) OSDCloud-Hash setzen  (keine MS-Updates)
+# --------------------------------------------------------------------------------
 $Global:MyOSDCloud = @{
     ImageFileFullName = $SrcWim
-    ImageFileItem     = Get-Item $SrcWim
     ImageFileName     = 'Win11_24H2_MUI.wim'
-    OSImageIndex      = 5     # ggf. anpassen
+    OSImageIndex      = 5            # ggf. anpassen
     ClearDiskConfirm  = $false
     ZTI               = $true
-    UpdateOS          = $false      # Keine kumulativen Windows-Updates
-    UpdateDrivers     = $false      # Microsoft-Treiber­updates AUS
+    UpdateOS          = $false       # kum. Updates AUS
+    UpdateDrivers     = $false       # MS-Treiber AUS
 }
 
+# --------------------------------------------------------------------------------
+#  3) HP-DriverPack   (OSDCloud ? CMSL ? CAB/EXE)
+# --------------------------------------------------------------------------------
+$cs   = Get-CimInstance Win32_ComputerSystem
+if ($cs.Manufacturer -match 'HP') {
 
-# =====================================================================
-# HP-DriverPack  Universeller Fallback-Algorithmus (reine Console)
-# =====================================================================
-$LatestDriverPack = Get-HPDriverPackLatest
-$LatestDriverPack | Select-Object -Property ID,Name,URL,SupportedOS,DateReleased
+    # Kandidaten-IDs
+    $ids = @(
+        (Get-CimInstance Win32_ComputerSystemProduct).Version
+        $cs.SystemSKUNumber
+    ) | Where-Object { $_ } | Select-Object -Unique
 
-if ($DriverPack){
-    $Global:MyOSDCloud.DriverPackName = $LatestDriverPack.Name
+    $osVers  = 'Windows 11','Windows 10'
+    $relVers = '24H2','23H2','22H2','21H2'
+    $dp      = $null
+
+    foreach ($id in $ids) {
+        foreach ($os in $osVers) {
+            foreach ($rel in $relVers) {
+                $dp = Get-OSDCloudDriverPack -Product $id `
+                         -OSVersion $os -OSReleaseID $rel -EA 0
+                if ($dp) {
+                    Write-Host "Treffer Cloud: $($dp.Name)" -fg Green
+                    break 3
+                }
+            }
+        }
+    }
+
+    # -- CMSL-Fallback -----------------------------------------------
+    if (-not $dp) {
+        Write-Host 'Starte CMSL-Fallback …' -fg Cyan
+
+        if (-not (Get-Module -ListAvailable HPCMSL)) {
+            Install-Module HPCMSL -AcceptLicense -AllowClobber -Force -Scope CurrentUser
+            Import-Module HPCMSL -Force
+        }
+
+        foreach ($id in $ids) {
+            $dp = Get-HPDriverPackLatest -Platform $id -EA 0
+            if ($dp) {
+                Write-Host "Treffer CMSL : $($dp.SoftPaqId) / $($dp.Name)" -fg Green
+                break
+            }
+        }
+    }
+
+    # -- Pack registrieren (CAB bevorzugt) ---------------------------
+    if ($dp) {
+        $cabUrl  = $dp.Url -replace '\.exe$', '.cab'
+        $cabName = "$($dp.SoftPaqId).cab"
+        $localCab= "$MapDrive:\OSDCloud\DriverPack\$cabName"
+
+        try {
+            Invoke-WebRequest $cabUrl -OutFile $localCab -UseBasicParsing -EA Stop
+            Write-Host "CAB gespeichert: $cabName"
+            $Global:MyOSDCloud.DriverPackName = $cabName
+        }
+        catch {
+            Write-Warning 'CAB nicht erreichbar – verwende EXE'
+            $Global:MyOSDCloud.DriverPackName = "$($dp.SoftPaqId).exe"
+        }
+
+        $Global:MyOSDCloud.HPTPMUpdate  = $true
+        $Global:MyOSDCloud.HPBIOSUpdate = $true
+        $Global:MyOSDCloud.HPIAALL      = $true
+    }
+    else {
+        Write-Warning '>> Kein HP-DriverPack verfügbar! <<'
+    }
+}
+else {
+    Write-Host 'Kein HP-Gerät – DriverPack-Suche übersprungen.' -fg Yellow
 }
 
-#Enable HPIA | Update HP BIOS | Update HP TPM
- if (Test-HPIASupport){
-    #$Global:MyOSDCloud.DevMode = [bool]$True
-    $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
-    if ($Product -ne '83B2' -or $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
-    #{$Global:MyOSDCloud.HPIAALL = [bool]$true}
-    $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
-    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true #In Test 
-    #Set HP BIOS Settings to what I want:
-    iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
-    Manage-HPBiosSettings -SetSettings
-}
-
-#write variables to console
-Write-Output $Global:MyOSDCloud
-
-
-# --- Deployment ausfÃ¼hren ---------------------------------------------
+# --------------------------------------------------------------------------------
+#  4) Deployment starten  +  Spätphase
+# --------------------------------------------------------------------------------
 Invoke-OSDCloud
-
-# --- SpÃ¤tphase + Neustart ---------------------------------------------
 Initialize-OSDCloudStartnetUpdate
 Restart-Computer -Force
