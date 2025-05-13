@@ -51,7 +51,7 @@ $Global:MyOSDCloud = @{
 }
 
 # -------------------------------------------------------------
-# 3) HP driver pack (OSDCloud -> CMSL -> CAB/EXE)
+# 3) HP driver pack (OSDCloud -> CMSL -> CAB/EXE )
 # -------------------------------------------------------------
 $cs = Get-CimInstance Win32_ComputerSystem
 if ($cs.Manufacturer -match 'HP') {
@@ -121,7 +121,7 @@ if ($cs.Manufacturer -match 'HP') {
         $Global:MyOSDCloud.HPIAALL      = $true
     }
     else {
-        Write-Warning 'No HP driver pack found.'
+        Write-Warning 'No HP driver pack found.' 
     }
 }
 else {
