@@ -61,77 +61,28 @@ $Global:MyOSDCloud = @{
 # =====================================================================
 # HP-DriverPack  Universeller Fallback-Algorithmus (reine Console)
 # =====================================================================
-# -----------------------------------------------------------------
-#  HP-DriverPack  –  zuerst OSDCloud, dann CMSL-Fallback
-# -----------------------------------------------------------------
-$cs = Get-CimInstance Win32_ComputerSystem
-if ($cs.Manufacturer -notmatch 'HP') {
-    Write-Host 'Kein HP-Gerät – DriverPack-Suche übersprungen.' -fg Yellow
+$LatestDriverPack = Get-HPDriverPackLatest
+$LatestDriverPack | Select-Object -Property ID,Name,URL,SupportedOS,DateReleased
+
+if ($DriverPack){
+    $Global:MyOSDCloud.DriverPackName = $LatestDriverPack.Name
 }
-else {
-    # --- mögliche IDs --------------------------------------------
-    $ids = @(
-        (Get-CimInstance Win32_ComputerSystemProduct).Version
-        (Get-CimInstance Win32_ComputerSystem).SystemSKUNumber
-    ) | Where-Object { $_ } | Select-Object -Unique
 
-    $osV  = 'Windows 11','Windows 10'
-    $relV = '24H2','23H2','22H2','21H2'
-    $dp   = $null
-
-    # --- 1) Cloud-Katalog testen ---------------------------------
-    foreach ($id in $ids) {
-        foreach ($os in $osV) {
-            foreach ($rel in $relV) {
-                $dp = Get-OSDCloudDriverPack -Product $id `
-                        -OSVersion $os -OSReleaseID $rel `
-                        -EA SilentlyContinue
-                if ($dp) {
-                    Write-Host "Treffer Cloud: $($dp.Name)" -fg Green
-                    break 3
-                }
-            }
-        }
-    }
-
-    # --- 2) CMSL-Fallback, wenn noch nichts gefunden -------------
-    if (-not $dp) {
-        Write-Host 'Starte CMSL-Fallback …' -fg Cyan
-
-        # Modul sicherstellen
-        if (-not (Get-Module -ListAvailable -Name HPCMSL)) {
-			try {
-				Install-Module HPCMSL -Scope CurrentUser `
-									  -AcceptLicense `
-									  -AllowClobber `
-									  -Force
-				Import-Module HPCMSL -Force
-			}
-			catch {
-				Write-Warning "HPCMSL konnte nicht installiert werden: $_"
-			}
-		}
-
-        foreach ($id in $ids) {
-            $dp = Get-HPDriverPackLatest -Platform $id -ErrorAction SilentlyContinue
-            if ($dp) {
-                Write-Host "Treffer CMSL : $($dp.SoftPaqID)  $($dp.Name)" -fg Green
-                break
-            }
-        }
-    }
-
-    # --- 3) Ergebnis zum OSD-Hash --------------------------------
-    if ($dp) {
-        $Global:MyOSDCloud.DriverPackName = $dp.Name  # oder $dp.SoftPaqID+'.cab'
-        $Global:MyOSDCloud.HPTPMUpdate  = $true
-        $Global:MyOSDCloud.HPBIOSUpdate = $true
-        $Global:MyOSDCloud.HPIAALL      = $true
-    }
-    else {
-        Write-Warning '>> Auch CMSL fand kein DriverPack! <<'
-    }
+#Enable HPIA | Update HP BIOS | Update HP TPM
+ if (Test-HPIASupport){
+    #$Global:MyOSDCloud.DevMode = [bool]$True
+    $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
+    if ($Product -ne '83B2' -or $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
+    #{$Global:MyOSDCloud.HPIAALL = [bool]$true}
+    $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
+    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true #In Test 
+    #Set HP BIOS Settings to what I want:
+    iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
+    Manage-HPBiosSettings -SetSettings
 }
+
+#write variables to console
+Write-Output $Global:MyOSDCloud
 
 
 # --- Deployment ausfÃ¼hren ---------------------------------------------
