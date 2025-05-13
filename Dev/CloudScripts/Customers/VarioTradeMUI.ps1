@@ -63,25 +63,40 @@ $Global:MyOSDCloud = @{
 # =====================================================================
 
 # Alles loggen:
-$log = 'C:\OSDCloud\Logs\DPdebug.txt'
-$product = (Get-CimInstance Win32_ComputerSystemProduct).Version
-$sku     = (Get-CimInstance Win32_ComputerSystem).SystemSKUNumber
-$ver     = 'Windows 11'; $rel = '24H2'
-
-"Product  = $product" | Out-File $log
-"SKU      = $sku"     | Out-File $log -Append
-
-# erst mit Version, dann Fallback SKU + 22H2 testen
-$dp = Get-OSDCloudDriverPack -Product $product -OSVersion $ver -OSReleaseID $rel -ErrorAction SilentlyContinue
-if (-not $dp) {
-    $dp = Get-OSDCloudDriverPack -Product $sku -OSVersion $ver -OSReleaseID '22H2' -ErrorAction SilentlyContinue
+$cs = Get-CimInstance Win32_ComputerSystem
+if ($cs.Manufacturer -notmatch 'HP') {
+    Write-Warning 'Kein HP-Gerät erkannt – DriverPack-Suche übersprungen.'
 }
+else {
+    # Basiswerte sammeln
+    $Product     = (Get-CimInstance Win32_ComputerSystemProduct).Version
+    if (-not $Product) {                     # Fallback: SKU-Nummer
+        $Product = $cs.SystemSKUNumber
+        Write-Warning "Version leer, benutze SKU: $Product"
+    }
 
-if ($dp) {
-    "Treffer: $($dp.Name)" | Tee-Object -FilePath $log -Append
-    $Global:MyOSDCloud.DriverPackName = $dp.Name
-} else {
-    "Immer noch kein Pack gefunden." | Out-File $log -Append
+    $OSVersion   = 'Windows 11'
+    $OSReleaseID = '24H2'
+
+    Write-Host  "Product     : $Product"
+    Write-Host  "OSVersion   : $OSVersion"
+    Write-Host  "OSReleaseID : $OSReleaseID"
+
+    # DriverPack suchen
+    $dp = Get-OSDCloudDriverPack -Product $Product `
+                                 -OSVersion $OSVersion `
+                                 -OSReleaseID $OSReleaseID `
+                                 -ErrorAction SilentlyContinue
+
+    if ($dp) {
+        Write-Host "Gefunden   : $($dp.Name)" -ForegroundColor Green
+        $Global:MyOSDCloud.DriverPackName = $dp.Name
+    }
+    else {
+        Write-Warning 'Kein passendes HP-DriverPack gefunden!'
+        # optionaler Fallback auf 22H2
+        # $dp22 = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID '22H2'
+    }
 }
 
 # Log einschalten ------------------------------------------------------
