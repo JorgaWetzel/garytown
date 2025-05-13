@@ -59,39 +59,38 @@ $Global:MyOSDCloud = @{
     OSImageIndex      = 5   
     ClearDiskConfirm  = $false
     ZTI               = $true
-	Firmware          = $true
+	Firmware          = $false
     UpdateOS          = $false     
     UpdateDrivers     = $false      
 }
-$Global:OSDCloud.HPCMSLDriverPackLatest -eq $true
 
-# ----------------------------------
-# HP section – simplify
-# ----------------------------------
+
+# -------------------------------------------------
+# HP section – one compact block
+# -------------------------------------------------
 if ($cs.Manufacturer -match 'HP') {
-    $Global:MyOSDCloud.HPCMSLDriverPackLatest = $true
-    $Global:MyOSDCloud.HPTPMUpdate  = $true
-    $Global:MyOSDCloud.HPBIOSUpdate = $true
-    $Global:MyOSDCloud.HPIAALL      = $true
-    Write-Host 'HPCMSL auto-driver-pack enabled (latest).' -fg Green
+
+    # --- OSDCloud flags ---------------------------------
+    $Global:MyOSDCloud.HPCMSLDriverPackLatest = $true  # auto-download SoftPaq
+    $Global:MyOSDCloud.HPTPMUpdate            = $true  # TPM firmware update
+    $Global:MyOSDCloud.HPBIOSUpdate           = $true  # BIOS update
+    $Global:MyOSDCloud.HPIAALL                = $true  # run HPIA –ALL
+
+    Write-Host 'HP CMSL auto driver pack (latest) enabled.' -fg Green
+
+    # --- optional BIOS setting script -------------------
+    try {
+        Invoke-WebRequest `
+            -Uri 'https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1' `
+            -UseBasicParsing -OutFile "$env:TEMP\Manage-HPBiosSettings.ps1"
+        . "$env:TEMP\Manage-HPBiosSettings.ps1"
+        Manage-HPBiosSettings -SetSettings
+        Write-Host 'HP BIOS settings applied.' -fg Green
+    }
+    catch {
+        Write-Warning "Manage-HPBiosSettings could not run: $_"
+    }
 }
-
-# ----------------------------------
-#Enable HPIA | Update HP BIOS | Update HP TPM
-# ----------------------------------
-
- if (Test-HPIASupport){
-    #$Global:MyOSDCloud.DevMode = [bool]$True
-    $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
-    if ($Product -ne '83B2' -or $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
-    #{$Global:MyOSDCloud.HPIAALL = [bool]$true}
-    $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
-    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true #In Test 
-    #Set HP BIOS Settings to what I want:
-    iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
-    Manage-HPBiosSettings -SetSettings
-}
-
 #write variables to console
 Write-Output $Global:MyOSDCloud
 
@@ -99,6 +98,43 @@ Write-Output $Global:MyOSDCloud
 # --- Deployment ausführen ---------------------------------------------
 Invoke-OSDCloud
 
-# --- Spätphase + Neustart ---------------------------------------------
+
+#region OOBE Tasks
+#================================================
+Write-SectionHeader "[PostOS] OOBE CMD Command Line"
+#================================================
+Write-DarkGrayHost "Downloading Scripts for OOBE and specialize phase"
+
+#Invoke-RestMethod http://autopilot.osdcloud.ch | Out-File -FilePath 'C:\Windows\Setup\scripts\autopilot.ps1' -Encoding ascii -Force
+Invoke-RestMethod http://oobe.osdcloud.ch | Out-File -FilePath 'C:\Windows\Setup\scripts\oobe.ps1' -Encoding ascii -Force
+Invoke-RestMethod http://cleanup.osdcloud.ch | Out-File -FilePath 'C:\Windows\Setup\scripts\cleanup.ps1' -Encoding ascii -Force
+#Invoke-RestMethod http://osdgather.osdcloud.ch | Out-File -FilePath 'C:\Windows\Setup\scripts\osdgather.ps1' -Encoding ascii -Force
+
+$OOBEcmdTasks = @'
+@echo off
+
+REM Wait for Network 10 seconds
+REM ping 127.0.0.1 -n 10 -w 1  >NUL 2>&1
+
+REM Execute OOBE Tasks
+start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\oobe.ps1
+
+REM Execute OSD Gather Script
+REM start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\osdgather.ps1
+
+REM Execute Cleanup Script
+start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\cleanup.ps1
+
+REM Below a PS session for debug and testing in system context, # when not needed 
+REM start /wait powershell.exe -NoL -ExecutionPolicy Bypass
+
+exit 
+'@
+$OOBEcmdTasks | Out-File -FilePath 'C:\Windows\Setup\scripts\oobe.cmd' -Encoding ascii -Force
+
+Write-DarkGrayHost "Copying PFX file"
+Copy-Item X:\OSDCloud\Config\Scripts C:\OSDCloud\ -Recurse -Force
+#endregion
+
 Initialize-OSDCloudStartnetUpdate
 Restart-Computer -Force
