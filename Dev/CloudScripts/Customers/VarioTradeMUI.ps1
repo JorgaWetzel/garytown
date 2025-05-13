@@ -19,46 +19,23 @@ if (-not (Get-PSRepository PSGallery -ErrorAction 0)) {
 
 Import-Module OSD -Force
 
+# -------------------------------------------------------------
+# 1) Map deployment share
+# -------------------------------------------------------------
+$DeployShare = '\\192.168.2.15\DeploymentShare$'
+$MapDrive    = 'Z'
+$UserName    = 'VARIODEPLOY\Administrator'
+$PlainPwd    = '12Monate'
 
-#================================================
-#   [PreOS] Update Module
-#================================================
-if ((Get-MyComputerModel) -match 'Virtual') {
-    Write-Host  -ForegroundColor Green "Setting Display Resolution to 1600x"
-    Set-DisRes 1600
-}
-
-# ======================================================================
-# Konfiguration – HIER NUR BEI BEDARF ANPASSEN
-# ======================================================================
-# $DeployShare = '\\10.10.100.100\Daten'          # UNC-Pfad zum Deployment-Share
-# $MapDrive    = 'Z'                              # gewünschter Laufwerks­buchstabe
-# $UserName    = 'Jorga'                          # Domänen- oder lokaler User
-# $PlainPwd    = 'Dont4getme'                     # Passwort (Klartext)
-
-
-$DeployShare = '\\192.168.2.15\DeploymentShare$' # UNC-Pfad zum Deployment-Share
-$MapDrive    = 'Z'                               # gewünschter Laufwerks­buchstabe
-$UserName    = 'VARIODEPLOY\Administrator'       # Domänen- oder lokaler User
-$PlainPwd    = '12Monate'                        # Passwort (Klartext)
-$SrcWim 	 = 'Z:\OSDCloud\OS\Win11_24H2_MUI.wim'
-# ======================================================================
-# Ab hier nichts mehr ändern
-# ======================================================================
-
-# Anmelde­daten vorbereiten
 $SecurePwd = ConvertTo-SecureString $PlainPwd -AsPlainText -Force
-$Cred      = New-Object System.Management.Automation.PSCredential ($UserName,$SecurePwd)
+$Cred      = [pscredential]::new($UserName,$SecurePwd)
 
-# Share verbinden
-if (-not (Get-PSDrive -Name $MapDrive -ErrorAction SilentlyContinue)) {
-    New-PSDrive -Name $MapDrive `
-                -PSProvider FileSystem `
-                -Root $DeployShare `
-                -Credential $Cred `
-                -ErrorAction Stop
+if (-not (Get-PSDrive -Name $MapDrive -ErrorAction 0)) {
+    New-PSDrive -Name $MapDrive -PSProvider FileSystem `
+                -Root $DeployShare -Credential $Cred -ErrorAction Stop | Out-Null
 }
 
+$SrcWim   = "${MapDrive}:\OSDCloud\OS\Win11_24H2_MUI.wim"
 
 # -------------------------------------------------------------
 # 2) OSDCloud hash (no Windows / MS driver updates)
@@ -127,7 +104,7 @@ if ($cs.Manufacturer -match 'HP') {
     if ($dp) {
         $cabUrl   = $dp.Url -replace '\.exe$','.cab'
         $cabName  = "$($dp.SoftPaqId).cab"
-        $localCab = "$MapDrive:\OSDCloud\DriverPack\$cabName"
+        $localCab = "${MapDrive}:\OSDCloud\DriverPack\${cabName}"
 
         try {
             Invoke-WebRequest $cabUrl -OutFile $localCab -UseBasicParsing -ErrorAction Stop
