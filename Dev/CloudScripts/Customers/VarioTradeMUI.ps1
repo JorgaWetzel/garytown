@@ -62,6 +62,28 @@ $Global:MyOSDCloud = @{
 #  HP-DRIVERPACK – Troubleshooting + Log
 # =====================================================================
 
+# Alles loggen:
+$log = 'C:\OSDCloud\Logs\DPdebug.txt'
+$product = (Get-CimInstance Win32_ComputerSystemProduct).Version
+$sku     = (Get-CimInstance Win32_ComputerSystem).SystemSKUNumber
+$ver     = 'Windows 11'; $rel = '24H2'
+
+"Product  = $product" | Out-File $log
+"SKU      = $sku"     | Out-File $log -Append
+
+# erst mit Version, dann Fallback SKU + 22H2 testen
+$dp = Get-OSDCloudDriverPack -Product $product -OSVersion $ver -OSReleaseID $rel -ErrorAction SilentlyContinue
+if (-not $dp) {
+    $dp = Get-OSDCloudDriverPack -Product $sku -OSVersion $ver -OSReleaseID '22H2' -ErrorAction SilentlyContinue
+}
+
+if ($dp) {
+    "Treffer: $($dp.Name)" | Tee-Object -FilePath $log -Append
+    $Global:MyOSDCloud.DriverPackName = $dp.Name
+} else {
+    "Immer noch kein Pack gefunden." | Out-File $log -Append
+}
+
 # Log einschalten ------------------------------------------------------
 $LogPath = 'C:\OSDCloud\Logs\DriverPack.log'
 Start-Transcript -Path $LogPath -Force
