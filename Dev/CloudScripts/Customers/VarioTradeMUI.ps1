@@ -17,7 +17,7 @@ $MapDrive    = 'Z'
 $UserName    = 'Jorga'
 $PlainPwd    = 'Dont4getme'
 
-# ---------- Netzwerk initialisieren (WinPE braucht das manchmal) ----
+# ---------- Netzwerk initialisieren (WinPE braucht  das manchmal) ----
 wpeutil InitializeNetwork              # stellt sicher, dass die NICs geladen sind
 
 function New-PSDriveRetry {
