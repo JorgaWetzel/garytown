@@ -99,7 +99,7 @@ Write-Output $Global:MyOSDCloud
 # --- Deployment ---------------------------------------------
 Invoke-OSDCloud
 
-Set-OSDCloudUnattendAuditMode
+# Set-OSDCloudUnattendAuditMode
 
-Initialize-OSDCloudStartnetUpdate
+# Initialize-OSDCloudStartnetUpdate
 Restart-Computer -Force
