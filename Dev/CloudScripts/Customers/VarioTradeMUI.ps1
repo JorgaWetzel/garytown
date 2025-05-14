@@ -9,57 +9,34 @@
 
 Import-Module OSD -Force
 
-# -------------------------------------------------------------------
-# 1.  Netzshare einbinden (bleibt wie bei dir)
-# -------------------------------------------------------------------
-$DeployShare = '\\10.10.100.100\Daten'
-$MapDrive    = 'Z'
-$UserName    = 'Jorga'
-$PlainPwd    = 'Dont4getme'
+# ======================================================================
+# Konfiguration – HIER NUR BEI BEDARF ANPASSEN
+# ======================================================================
+$DeployShare = '\\10.10.100.100\Daten'          # UNC-Pfad zum Deployment-Share
+$MapDrive    = 'Z'                              # gewünschter Laufwerks­buchstabe
+$UserName    = 'Jorga'                          # Domänen- oder lokaler User
+$PlainPwd    = 'Dont4getme'                     # Passwort (Klartext)
 
-# ---------- Netzwerk initialisieren (WinPE braucht  das manchmal) ----
-wpeutil InitializeNetwork              # stellt sicher, dass die NICs geladen sind
 
-function New-PSDriveRetry {
-    param(
-        [string]       $Name,
-        [string]       $Path,
-        [pscredential] $Credential,
-        [int]          $Retries      = 5,   # max. Versuche
-        [int]          $DelaySeconds = 5    # Pause zwischen den Versuchen
-    )
-		for ($i = 1; $i -le $Retries; $i++) {
-			try {
-				if (-not (Get-PSDrive -Name $Name -ErrorAction SilentlyContinue)) {
-					New-PSDrive -Name $Name `
-								-PSProvider FileSystem `
-								-Root $Path `
-								-Credential $Credential `
-								-ErrorAction Stop | Out-Null
-				}
-				Write-Host ("[{0}/{1}] Netzlaufwerk {2}: erfolgreich gemappt." -f $i,$Retries,$Name) -fg Green
-				return $true
-			}
-			catch {
-				Write-Warning ("[{0}/{1}] Mapping fehlgeschlagen: {2}" -f $i,$Retries,$_ )
-				if ($i -lt $Retries) { Start-Sleep -Seconds $DelaySeconds }
-			}
-		}
-		throw ("Mapping von {0} nach {1}: nach {2} Versuchen aufgegeben." -f $Path,$Name,$Retries)
+#$DeployShare = '\\192.168.2.15\DeploymentShare$' # UNC-Pfad zum Deployment-Share
+#$MapDrive    = 'Z'                               # gewünschter Laufwerks­buchstabe
+#$UserName    = 'VARIODEPLOY\Administrator'       # Domänen- oder lokaler User
+#$PlainPwd    = '12Monate'                        # Passwort (Klartext)
 
+$SrcWim 	 = 'Z:\OSDCloud\OS\Win11_24H2_MUI.wim'
+
+# Anmelde­daten vorbereiten
+$SecurePwd = ConvertTo-SecureString $PlainPwd -AsPlainText -Force
+$Cred      = New-Object System.Management.Automation.PSCredential ($UserName,$SecurePwd)
+
+# Share verbinden
+if (-not (Get-PSDrive -Name $MapDrive -ErrorAction SilentlyContinue)) {
+    New-PSDrive -Name $MapDrive `
+                -PSProvider FileSystem `
+                -Root $DeployShare `
+                -Credential $Cred `
+                -ErrorAction Stop
 }
-
-# ---------- Share verbinden  ----------------------------------------
-$Cred = [pscredential]::new(
-        $UserName,
-        (ConvertTo-SecureString $PlainPwd -AsPlainText -Force)
-)
-
-New-PSDriveRetry -Name $MapDrive `
-                 -Path $DeployShare `
-                 -Credential $Cred `
-                 -Retries 5 `
-                 -DelaySeconds 5
 
 # -------------------------------------------------------------------
 # 2.  OSDCloud-Konfiguration                       *** WICHTIG ***
