@@ -28,24 +28,25 @@ function New-PSDriveRetry {
         [int]          $Retries      = 5,   # max. Versuche
         [int]          $DelaySeconds = 5    # Pause zwischen den Versuchen
     )
-    for ($i = 1; $i -le $Retries; $i++) {
-        try {
-            if (-not (Get-PSDrive -Name $Name -ErrorAction SilentlyContinue)) {
-                New-PSDrive -Name $Name `
-                            -PSProvider FileSystem `
-                            -Root $Path `
-                            -Credential $Credential `
-                            -ErrorAction Stop | Out-Null
-            }
-            Write-Host "[$i/$Retries] Netzlaufwerk $Name: erfolgreich gemappt." -fg Green
-            return $true                         # fertig
-        }
-        catch {
-            Write-Warning "[$i/$Retries] Mapping fehlgeschlagen: $_"
-            if ($i -lt $Retries) { Start-Sleep -Seconds $DelaySeconds }
-        }
-    }
-    throw "Mapping von $Path nach $Name: nach $Retries Versuchen aufgegeben."
+		for ($i = 1; $i -le $Retries; $i++) {
+			try {
+				if (-not (Get-PSDrive -Name $Name -ErrorAction SilentlyContinue)) {
+					New-PSDrive -Name $Name `
+								-PSProvider FileSystem `
+								-Root $Path `
+								-Credential $Credential `
+								-ErrorAction Stop | Out-Null
+				}
+				Write-Host ("[{0}/{1}] Netzlaufwerk {2}: erfolgreich gemappt." -f $i,$Retries,$Name) -fg Green
+				return $true
+			}
+			catch {
+				Write-Warning ("[{0}/{1}] Mapping fehlgeschlagen: {2}" -f $i,$Retries,$_ )
+				if ($i -lt $Retries) { Start-Sleep -Seconds $DelaySeconds }
+			}
+		}
+		throw ("Mapping von {0} nach {1}: nach {2} Versuchen aufgegeben." -f $Path,$Name,$Retries)
+
 }
 
 # ---------- Share verbinden  ----------------------------------------
