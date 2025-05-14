@@ -1,13 +1,26 @@
-<#
-    99-Deployment.ps1 – StartNet-Hook (WinPE)
-    =====================================================
-    • Installiert ein Multi-Lang-Image mit OSDCloud
-    • Erzwingt danach Audit-Mode
-    • Legt oobe.cmd an, um in Audit alles zu tun
-    =====================================================
-#>
+# 99-Deployment.ps1  –  StartNet-Hook, minimal
 
 Import-Module OSD -Force
+
+Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) " -NoNewline
+Write-Host -ForegroundColor Green "PSCloudScript at functions.osdcloud.com"
+Invoke-Expression (Invoke-RestMethod -Uri functions.osdcloud.com)
+
+iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
+iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
+
+#Transport Layer Security (TLS) 1.2
+Write-Host -ForegroundColor Green "Transport Layer Security (TLS) 1.2"
+[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+#[System.Net.WebRequest]::DefaultWebProxy.Credentials = [System.Net.CredentialCache]::DefaultCredentials
+
+#================================================
+#   [PreOS] Update Module
+#================================================
+if ((Get-MyComputerModel) -match 'Virtual') {
+    Write-Host  -ForegroundColor Green "Setting Display Resolution to 1600x"
+    Set-DisRes 1600
+}
 
 # ======================================================================
 # Konfiguration – HIER NUR BEI BEDARF ANPASSEN
@@ -38,75 +51,55 @@ if (-not (Get-PSDrive -Name $MapDrive -ErrorAction SilentlyContinue)) {
                 -ErrorAction Stop
 }
 
-# -------------------------------------------------------------------
-# 2.  OSDCloud-Konfiguration                       *** WICHTIG ***
-# -------------------------------------------------------------------
-# →  OSImageIndex NICHT mehr fest auf Deutsch stellen!
-# →  Nimm den Index, der als Basis EN-US (oder neutral) enthält
-# →  oder lass ihn weg und OSDCloud wählt interaktiv.
-$SrcWim = 'Z:\OSDCloud\OS\Win11_24H2_MUI.wim'
 
+# --- OSDCloud-Variablen setzen ----------------------------------------
 $Global:MyOSDCloud = @{
     ImageFileFullName = $SrcWim
     ImageFileItem     = Get-Item $SrcWim
     ImageFileName     = 'Win11_24H2_MUI.wim'
-    OSImageIndex      = 5           
+    OSImageIndex      = 5   
     ClearDiskConfirm  = $false
     ZTI               = $true
-    Firmware          = $false
-    UpdateOS          = $false
-    UpdateDrivers     = $false
+	Firmware          = $false
+    UpdateOS          = $false     
+    UpdateDrivers     = $false      
 }
 
-# -------------------------------------------------------------------
-# 3.  Windows installieren
-# -------------------------------------------------------------------
-Invoke-OSDCloud          # formatiert, wendet WIM Index 1 an, kopiert Boot-Files
 
-# -------------------------------------------------------------------
-# 4.  Offline-Windows-Laufwerk ermitteln
-#     (OSDCloud nennt es meist "$env:OSDCloudOSDrive")
-# -------------------------------------------------------------------
-$OSDrive = $env:OSDCloudOSDrive
-if (-not $OSDrive) {  $OSDrive = 'C:' }   # Fallback – meist korrekt
+# -------------------------------------------------
+# HP section one compact block
+# -------------------------------------------------
+if ($cs.Manufacturer -match 'HP') {
 
-# -------------------------------------------------------------------
-# 5.  Audit-Mode-Unattend erst JETZT ablegen, damit sie die frische
-#     Installation erreicht (Set-OSDCloudUnattendAuditMode schreibt
-#     standardmäßig in <Windows>\Panther)
-# -------------------------------------------------------------------
-Set-OSDCloudUnattendAuditMode -WindowsDirectory "$OSDrive\Windows"
+    # --- OSDCloud flags ---------------------------------
+    $Global:MyOSDCloud.HPCMSLDriverPackLatest = $true  # auto-download SoftPaq
+    $Global:MyOSDCloud.HPTPMUpdate            = $true  # TPM firmware update
+    $Global:MyOSDCloud.HPBIOSUpdate           = $true  # BIOS update
+    $Global:MyOSDCloud.HPIAALL                = $true  # run HPIA –ALL
 
-# -------------------------------------------------------------------
-# 6.  oobe.cmd anlegen (wird in Audit ausgeführt)
-# -------------------------------------------------------------------
-$oobe = @'
-@echo off
-REM ========= HP Treiber & Firmware im Audit-Mode =========
+    Write-Host 'HP CMSL auto driver pack (latest) enabled.' -fg Green
 
-REM PowerShell einmal ohne Profil starten
-powershell.exe -NoLogo -ExecutionPolicy Bypass -Command ^
-    "Install-Module HP.ClientManagement -Force -Scope AllUsers"
+    # --- optional BIOS setting script -------------------
+    try {
+        Invoke-WebRequest `
+            -Uri 'https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1' `
+            -UseBasicParsing -OutFile "$env:TEMP\Manage-HPBiosSettings.ps1"
+        . "$env:TEMP\Manage-HPBiosSettings.ps1"
+        Manage-HPBiosSettings -SetSettings
+        Write-Host 'HP BIOS settings applied.' -fg Green
+    }
+    catch {
+        Write-Warning "Manage-HPBiosSettings could not run: $_"
+    }
+}
+#write variables to console
+Write-Output $Global:MyOSDCloud
 
-powershell.exe -NoLogo -ExecutionPolicy Bypass -Command ^
-    "Import-Module HP.ClientManagement; `n` +
-     New-HPDriverPack -Os Win11 -OSVer 24H2 -Path C:\Drivers"
 
-powershell.exe -NoLogo -ExecutionPolicy Bypass -Command ^
-    "Start-Process -FilePath C:\Drivers\Install.cmd -Wait"
+# --- Deployment ---------------------------------------------
+Invoke-OSDCloud
 
-powershell.exe -NoLogo -ExecutionPolicy Bypass -Command ^
-    "Get-HPBIOSUpdates -Flash -BitLocker Ignore -Force"
+Set-OSDCloudUnattendAuditMode
 
-REM ========= System wieder versiegeln =========
-%WINDIR%\System32\Sysprep\Sysprep.exe /generalize /oobe /shutdown
-'@
-
-$dest = "$OSDrive\Windows\Setup\Scripts"
-New-Item -ItemType Directory -Path $dest -Force | Out-Null
-$oobe | Set-Content -Path (Join-Path $dest 'oobe.cmd') -Encoding ASCII
-
-# -------------------------------------------------------------------
-# 7.  Neustart – danach läuft Audit-Mode & dein oobe.cmd
-# -------------------------------------------------------------------
+Initialize-OSDCloudStartnetUpdate
 Restart-Computer -Force
