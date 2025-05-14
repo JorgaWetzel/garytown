@@ -12,19 +12,53 @@ Import-Module OSD -Force
 # -------------------------------------------------------------------
 # 1.  Netzshare einbinden (bleibt wie bei dir)
 # -------------------------------------------------------------------
-$DeployShare = '\\192.168.2.15\DeploymentShare$'
+$DeployShare = '\\10.10.100.100\Daten'
 $MapDrive    = 'Z'
-$UserName    = 'VARIODEPLOY\Administrator'
-$PlainPwd    = '12Monate'
+$UserName    = 'Jorga'
+$PlainPwd    = 'Dont4getme'
 
-if (-not (Get-PSDrive -Name $MapDrive -ErrorAction SilentlyContinue)) {
-    $Cred = [pscredential]::new(
+# ---------- Netzwerk initialisieren (WinPE braucht das manchmal) ----
+wpeutil InitializeNetwork              # stellt sicher, dass die NICs geladen sind
+
+function New-PSDriveRetry {
+    param(
+        [string]       $Name,
+        [string]       $Path,
+        [pscredential] $Credential,
+        [int]          $Retries      = 5,   # max. Versuche
+        [int]          $DelaySeconds = 5    # Pause zwischen den Versuchen
+    )
+    for ($i = 1; $i -le $Retries; $i++) {
+        try {
+            if (-not (Get-PSDrive -Name $Name -ErrorAction SilentlyContinue)) {
+                New-PSDrive -Name $Name `
+                            -PSProvider FileSystem `
+                            -Root $Path `
+                            -Credential $Credential `
+                            -ErrorAction Stop | Out-Null
+            }
+            Write-Host "[$i/$Retries] Netzlaufwerk $Name: erfolgreich gemappt." -fg Green
+            return $true                         # fertig
+        }
+        catch {
+            Write-Warning "[$i/$Retries] Mapping fehlgeschlagen: $_"
+            if ($i -lt $Retries) { Start-Sleep -Seconds $DelaySeconds }
+        }
+    }
+    throw "Mapping von $Path nach $Name: nach $Retries Versuchen aufgegeben."
+}
+
+# ---------- Share verbinden  ----------------------------------------
+$Cred = [pscredential]::new(
         $UserName,
         (ConvertTo-SecureString $PlainPwd -AsPlainText -Force)
-    )
-    New-PSDrive -Name $MapDrive -PSProvider FileSystem -Root $DeployShare `
-                -Credential $Cred -ErrorAction Stop
-}
+)
+
+New-PSDriveRetry -Name $MapDrive `
+                 -Path $DeployShare `
+                 -Credential $Cred `
+                 -Retries 5 `
+                 -DelaySeconds 5
 
 # -------------------------------------------------------------------
 # 2.  OSDCloud-Konfiguration                       *** WICHTIG ***
