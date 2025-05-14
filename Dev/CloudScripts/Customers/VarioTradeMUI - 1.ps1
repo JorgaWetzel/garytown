@@ -96,6 +96,18 @@ $Global:MyOSDCloud = @{
 # --- Deployment ausführen ---------------------------------------------
 Invoke-OSDCloud
 
+
+Set-OSDCloudUnattendAuditMode -WindowsDirectory "$OSDrive\Windows"
+# -------------------------------------------------------------------
+# 6.  oobe.cmd anlegen (wird in Audit ausgeführt)
+# -------------------------------------------------------------------
+$oobe = @'
+@echo off
+
+REM ========= System wieder versiegeln =========
+%WINDIR%\System32\Sysprep\Sysprep.exe /generalize /oobe /shutdown
+'@
+
 # --- Spätphase + Neustart ---------------------------------------------
 Initialize-OSDCloudStartnetUpdate
 Restart-Computer -Force
