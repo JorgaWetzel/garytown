@@ -43,20 +43,39 @@ try {
     iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
     iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions2.ps1)
     #endregion
+	
+	# --- Neuer Abschnitt: Lokaler Administrator ---
+	Try {
+		$username = 'wksadmin'
+		$securePassword = ConvertTo-SecureString 'Local.67' -AsPlainText -Force
+		if (-Not (Get-LocalUser -Name $username -ErrorAction SilentlyContinue)) {
+			New-LocalUser -Name $username -Password $securePassword -Description 'Local administrator account' -PasswordNeverExpires $true
+		}
+		Add-LocalGroupMember -Group 'Administrators' -Member $username
+		Write-Host "Lokaler Admin-Benutzer '$username' erstellt oder existierte bereits."
+	}
+	Catch {
+		Write-Error "Fehler beim Anlegen des lokalen Admins: $_"
+	}
+	# --- Ende Administrator-Sektion ---
 
     # Setup oneICT Chocolatey Framework
     Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
     Set-Chocolatey
 
+    $env:Path += ";C:\ProgramData\chocolatey\bin"
+
+    
     # Installation von Chocolatey-Software
     Write-Host -ForegroundColor Green "Office wird installiert"
     choco.exe upgrade office365business --params "/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE" -y --no-progress --ignore-checksums
 
     Write-Host -ForegroundColor Green "Standard Apps werden installiert"
-    $packages = "TeamViewer","googlechrome","firefox","adobereader","microsoft-teams-new-bootstrapper","7zip.install","vlc","jre8","powertoys","onedrive","Pdf24","vcredist140","zoom","notepadplusplus.install","onenote","onedrive"
+    $packages = "TeamViewer","googlechrome","firefox","adobereader","7zip.install","vlc","powertoys","vcredist140","notepadplusplus.install","microsoft-teams-new-bootstrapper","onedrive","javaruntime"
     $packages | ForEach-Object {
         choco upgrade $_ -y --no-progress --ignore-checksums
     }
+
 
     # Prevent Outlook (new) and Dev Home from installing
     "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate",
@@ -66,7 +85,9 @@ try {
         Remove-Item $_ -Force -ErrorAction SilentlyContinue
     }
 
-    
+    # Disable Windows Hello
+    reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\PassportForWork" /v Enabled /t REG_DWORD /d 0 /f
+    reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\PassportForWork" /v DisablePostLogonProvisioning /t REG_DWORD /d 0 /f  
 
     Write-Host "**Taskbar Layout**"
     # Show packagedAppId for Windows store apps:
@@ -85,8 +106,6 @@ try {
       <taskbar:TaskbarPinList>
         <taskbar:DesktopApp DesktopApplicationID="Microsoft.Windows.Explorer" />
         <taskbar:DesktopApp DesktopApplicationLinkPath="C:\Program Files\Microsoft Office\root\Office16\OUTLOOK.EXE" />
-        <taskbar:DesktopApp DesktopApplicationID="Microsoft.OutlookForWindows_8wekyb3d8bbwe!app" />
-        <taskbar:DesktopApp DesktopApplicationID="MSTeams_8wekyb3d8bbwe!app" />
         <taskbar:DesktopApp DesktopApplicationLinkPath="C:\Program Files\Microsoft Office\root\Office16\WINWORD.EXE" />
         <taskbar:DesktopApp DesktopApplicationLinkPath="C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE" />
         <taskbar:DesktopApp DesktopApplicationLinkPath="C:\Program Files\Microsoft Office\root\Office16\ONENOTE.EXE" />
@@ -137,9 +156,6 @@ try {
         $registry.Dispose()
     }
 
-####################################################
-################      Start Layout    ##############
-####################################################
 
     # Get-AppxPackage | select @{n='name';e={"$($_.PackageFamilyName)!app"}} | ?{$_.name -like "**"}
     # Import-StartLayout
@@ -219,10 +235,6 @@ try {
         $registry.Dispose()
     }
 
-####################################################
-###########   Remove Desktop Shortcuts  ############
-####################################################
-
     # Remove Desktop Shortcuts
     $Shortcuts2Remove = "Google Chrome.lnk", "VLC media player.lnk", "Adobe Acrobat.lnk", "Firefox.lnk", "PDFCreator.lnk", "TeamViewer.lnk", "Microsoft Edge.lnk", "FileMaker Pro.lnk", "Google Earth.lnk", "LayOut 2023.lnk", "LibreOffice 7.4.lnk", "PDF-XChange Editor.lnk", "SIA-Reader.lnk", "Solibri.lnk", "SonicWall NetExtender.lnk", "Style Builder.lnk", "Zoom.lnk", "Spotify.lnk", "SEH UTN Manager.lnk", "SketchUp 2023.lnk", "Easy Product Finder 2.lnk", "Google Earth Pro.lnk", "Revit 2022 (AirTop1).lnk", "liNear CAD 22 (AirTop1).lnk", "AutoCAD 2022 (AirTop1).lnk", "Abmelden (AirTop1).lnk" 
     $DesktopPaths = @("C:\Users\*\Desktop\*", "C:\Users\*\*\Desktop\*")  # Mehrere Pfade als Array
@@ -238,9 +250,24 @@ try {
         Write-Error "Error removing shortcut(s)"
     }
 
-####################################################
-###########   PowerSettings           ############
-####################################################
+# Prevent Outlook new and Dev Home from installing for new users
+"HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate",
+"HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\OutlookUpdate",
+"HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\OutlookUpdate",
+"HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\DevHomeUpdate" | %{
+    ri $_ -force
+}
+
+# Systemweites Standarddateiformat für Office auf Office Open XML setzen
+$officeRegistryPath = "HKLM:\SOFTWARE\Microsoft\Office\Common"
+
+# Sicherstellen, dass der Registry-Pfad existiert
+if (-not (Test-Path $officeRegistryPath)) {
+    New-Item -Path $officeRegistryPath -Force | Out-Null
+}
+# Registry-Wert für Standarddateiformate auf "Office Open XML-Formate" setzen
+Set-ItemProperty -Path $officeRegistryPath -Name "DefaultSaveFormat" -Value "OfficeOpenXML"
+
 
 # Configure power settings
 # Disable sleep, hibernate and monitor standby on AC
@@ -249,7 +276,6 @@ try {
 "powercfg /x -hibernate-timeout-ac 0" | % {
     cmd /c $_
 }
-
 
 # Define the folder paths
 $parentFolder = "C:\Program Files\oneICT\EndpointManager"
@@ -286,18 +312,8 @@ Set-Acl -Path $folder1 -AclObject $acl1
 Set-Acl -Path $folder2 -AclObject $acl2
 Set-Acl -Path $folder3 -AclObject $acl3
 
-# Remove/Uninstall Edge
-# remove from Registry
-$appxStore = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx\AppxAllUserStore'
-$pattern = "HKLM:$appxStore\InboxApplications\Microsoft.MicrosoftEdge_*_neutral__8wekyb3d8bbwe"
-$edgeAppXKey = (Get-Item -Path $pattern).PSChildName
-if (Test-Path "$pattern") { reg delete "HKLM$appxStore\InboxApplications\$edgeAppXKey" /f | Out-Null }
-
-# make the Edge AppX able to uninstall and uninstall
-New-Item -Path "HKLM:$appxStore\EndOfLife\$SID\Microsoft.MicrosoftEdge_8wekyb3d8bbwe" -Force | Out-Null
-Get-AppxPackage -Name Microsoft.MicrosoftEdge | Remove-AppxPackage | Out-Null
-Remove-Item -Path "HKLM:$appxStore\EndOfLife\$SID\Microsoft.MicrosoftEdge_8wekyb3d8bbwe" -Force | Out-Null
-
+# Install Microsoft XPS Document Writer 
+Enable-WindowsOptionalFeature -Online -FeatureName Printing-XPSServices-Features -NoRestart
 
     # HP Driver Updates
     # Write-Host -ForegroundColor Gray "**Running HP Image Assistant Driver & Firmware Updates**"
@@ -328,7 +344,7 @@ catch {
 }
 '@
 
-$PostActionScript | Out-File -FilePath $ScriptPath -Force -Encoding UTF8
+Set-Content -Path $ScriptPath -Value $PostActionScript -Force -Encoding UTF8
 
 # Führe das Skript sofort aus
-& $ScriptPath
+$PostActionScript | Out-File -FilePath $ScriptPath -Force -Encoding UTF8
