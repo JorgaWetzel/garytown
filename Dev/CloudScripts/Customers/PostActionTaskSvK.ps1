@@ -347,4 +347,4 @@ catch {
 Set-Content -Path $ScriptPath -Value $PostActionScript -Force -Encoding UTF8
 
 # Führe das Skript sofort aus
-& $ScriptPath
+$PostActionScript | Out-File -FilePath $ScriptPath -Force -Encoding UTF8
