@@ -22,15 +22,21 @@ function Build-ComputerName {
         [switch]$Apply
     )
 
-    $ComputerSystem = Get-Ciminstance -ClassName Win32_ComputerSystem
+    $ComputerSystem = Get-CimInstance -ClassName Win32_ComputerSystem
+    $ComputerSystemProduct = Get-CimInstance -ClassName Win32_ComputerSystemProduct
     $Manufacturer = $ComputerSystem.Manufacturer
     $Model = $ComputerSystem.Model
     $CompanyName = "GARYTOWN"
-    $Serial = (Get-WmiObject -class:win32_bios).SerialNumber
+    $Serial = (Get-CimInstance -ClassName win32_bios).SerialNumber
     
     if ($Manufacturer -match "Lenovo"){
-        $Model = ((Get-CimInstance -ClassName Win32_ComputerSystemProduct).Version).split(" ")[1]
-        $ComputerName = "$($Manufacturer)-$($Model)"
+        $Model = (($ComputerSystemProduct).Version).split(" ")[1]
+        
+        $MachineType =  $ComputerSystemProduct.Name.Substring(0, 4)
+        $ComputerName = "L$($Model)-$($MachineType)-$($Serial)"
+        if ($ComputerName.Length -ge 15){
+            $ComputerName = $ComputerName.Substring(0,15)
+        }
     }
     elseif (($Manufacturer -match "HP") -or ($Manufacturer -match "Hew")){
         $Manufacturer = "HP"
@@ -41,6 +47,7 @@ function Build-ComputerName {
         if ($Model-match " Desktop PC"){$Model = $Model.replace(" Desktop PC","")}
         if ($Model-match " Notebook PC"){$Model = $Model.replace(" Notebook PC","")}
         if ($Model-match " Desktop Mini PC"){$Model = $Model.replace(" Desktop Mini PC","")}
+        if ($Model-match " Desktop Mini"){$Model = $Model.replace(" Desktop Mini","")}
         if ($Model-match "EliteDesk"){$Model = $Model.replace("EliteDesk","ED")}
         elseif($Model-match "EliteBook"){$Model = $Model.replace("EliteBook","EB")}
         elseif($Model-match "Elite Mini"){$Model = $Model.replace("Elite Mini","EM")}

@@ -1,4 +1,5 @@
-#to Run, boot OSDCloudUSB, at the PS Prompt: iex (irm win11.oneict.ch)
+#to Run, boot OSDCloudUSB, at the PS Prompt: iex (irm win11.garytown.com)
+
 #region Initialization
 function Write-DarkGrayDate {
     [CmdletBinding()]
@@ -50,7 +51,8 @@ function Write-SectionSuccess {
     Write-Host -ForegroundColor Green $Message
 }
 #endregion
-$ScriptName = 'oneICT'
+
+$ScriptName = 'win11.garytown.com'
 $ScriptVersion = '25.01.22.1'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
 #iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
@@ -89,7 +91,7 @@ $Global:MyOSDCloud = [ordered]@{
     WindowsDefenderUpdate = [bool]$False
     SetTimeZone = [bool]$False
     ClearDiskConfirm = [bool]$False
-    ShutdownSetupComplete = [bool]$False
+    ShutdownSetupComplete = [bool]$false
     SyncMSUpCatDriverUSB = [bool]$true
     CheckSHA1 = [bool]$true
 }
@@ -164,13 +166,15 @@ Start-OSDCloudGUI
 
 Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
 
+Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
 
 
-#Used in Testing "Beta Gary Modules which I've updated on the USB Stick"
-#$OfflineModulePath = (Get-ChildItem -Path "C:\Program Files\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
-#write-output "Updating $OfflineModulePath using $ModulePath"
-#copy-item "$ModulePath\*" "$OfflineModulePath"  -Force -Recurse
 
+<#Used in Testing "Beta Gary Modules which I've updated on the USB Stick"
+$OfflineModulePath = (Get-ChildItem -Path "C:\Program Files\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | Select-Object -Last 1).fullname
+write-host -ForegroundColor Yellow "Updating $OfflineModulePath using $ModulePath - For Dev Purposes Only"
+copy-item "$ModulePath\*" "$OfflineModulePath"  -Force -Recurse
+#>
 #Copy CMTrace Local:
 if (Test-path -path "x:\windows\system32\cmtrace.exe"){
     copy-item "x:\windows\system32\cmtrace.exe" -Destination "C:\Windows\System\cmtrace.exe" -verbose

@@ -14,7 +14,7 @@ Write-Host -ForegroundColor Green "[+] Function Install-HPIA"
 Write-Host -ForegroundColor Green "[+] Function Invoke-HPIA"
 Write-Host -ForegroundColor Green "[+] Function Get-HPIAXMLResult"
 Write-Host -ForegroundColor Green "[+] Function Get-HPIAJSONResult"
-iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Invoke-HPIA.ps1)
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/HPIA/HPIA-Functions.ps1)
 
 Write-Host -ForegroundColor Cyan " ** HP TPM Functions [TPM 1.2 -> 2.0] **"
 Write-Host -ForegroundColor Green "[+] Function Get-HPTPMDetermine"
@@ -36,3 +36,9 @@ iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/EM
 Write-Host -ForegroundColor Green "[+] Function Invoke-HPAnalyzer"
 Write-Host -ForegroundColor Green "[+] Function Invoke-HPDriverUpdate"
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/EMPS/Invoke-HPDriverUpdate.ps1)
+
+#Demo for MMS:
+Write-Host -ForegroundColor Green "[+] Function Invoke-MMSDemo2025"
+function Invoke-MMSDemo2025 {
+    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/hardware/HP/EMPS/HP-MMSDemo.ps1')
+}

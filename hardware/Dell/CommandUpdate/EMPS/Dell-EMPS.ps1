@@ -37,21 +37,25 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
 #    - Supports settings like advancedDriverRestore, autoSuspendBitLocker, installationDeferral, systemRestartDeferral, scheduleAction, and scheduleAuto.
 #    - Writes logs for each configuration change.
 
-# 7. Invoke-DCU:
+# 7. Get-DCUSettings:
+#    - Lists the Settings that are already set by looking at Registry
+#    - has parameter -Reset to clear all settings
+
+# 8. Invoke-DCU:
 #    - Invokes Dell Command Update (DCU) actions like scanning for updates or applying updates.
 #    - Supports parameters for updateSeverity, updateType, updateDeviceCategory, autoSuspendBitLocker, reboot, forceupdate, scan, and applyUpdates.
 #    - Builds the argument list based on the selected parameters and executes the DCU action.
 
-# 8. Get-DCUUpdateList:
+# 9. Get-DCUUpdateList:
 #    - Retrieves a list of available updates from Dell Command Update (DCU) for the system.
 #    - Supports filtering by updateType, and updateDeviceCategory.
 #    - Returns an array of objects containing update details like severity, type, category, name, and release date.
 
-# 9. Get-DellDeviceDetails:
+# 10. Get-DellDeviceDetails:
 #    - Retrieves details of the Dell device like model, systemID.
 #    - Supports filtering by systemID and model name
 
-# 10. New-DCUCatalogFile #BETA - Not working yet
+# 11. New-DCUCatalogFile #BETA - Not working yet
 #    - Downloads the Dell Command Update (DCU) catalog file for the system model.
 #    - Supports filtering by systemID
 #    - Returns the path of the downloaded catalog file.
@@ -59,7 +63,7 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
 #    - By default, this will have the updates pull from downloads.dell.com 
 #    - This function is leveraged by the New-DCUOfflineCatalog function to create a catalog file that pulls from a local repository
 
-# 11. New-DCUOfflineCatalog: #BETA - Not working yet
+# 12. New-DCUOfflineCatalog: #BETA - Not working yet
 #    - Downloads the Dell Command Update (DCU) catalog file for the system model.
 #    - Supports filtering by systemID
 #    - Currently it will limit the catalog to the latest version of the drivers available for the system
@@ -71,9 +75,11 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
 
 24.9.9.1 - Modified logic in Get-DellDeviceDetails to allow it to work on non-dell devices when you provide a SKU or Model Name
 25.2.11.1 - Changed the Logic on Get-DellBIOSUpdates -Check, some folks reported that it wasn't working with the -Latest switch.
+25.4.30.1 - Added Get-DCUSettings Function
+25.4.30.2 - Added Logic for Set-DCUSettings | if $scheduleAction -ne 'DownloadInstallAndNotify', then you can't set deferals... because there is nothing to defer. Breaks logic.
 
 #>
-$ScriptVersion = '25.2.20.4'
+$ScriptVersion = '25.4.30.13.37'
 Write-Output "Dell Command Update Functions Loaded - Version $ScriptVersion"
 function Get-DellSupportedModels {
     [CmdletBinding()]
@@ -266,7 +272,9 @@ Function Get-DUPExitInfo {
 }
 Function Install-DCU {
     [CmdletBinding()]
-    param()
+    param(
+        [Switch]$UseWebRequest
+    )
     $temproot = "$env:windir\temp"
     
     $LogFilePath = "$env:ProgramData\EMPS\Logs"
@@ -335,7 +343,13 @@ Function Install-DCU {
                 #Build Required Info to Download and Update CM Package
                 $TargetFilePathName = "$($DellCabExtractPath)\$($TargetFileName)"
                 #Invoke-WebRequest -Uri $TargetLink -OutFile $TargetFilePathName -UseBasicParsing -Verbose
-                Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -DisplayName $TargetFileName -Description "Downloading Dell Command Update" -Priority Low -ErrorVariable err -ErrorAction SilentlyContinue
+                if ($UseWebRequest){
+                    Write-Output "Using WebRequest to download the file"
+                    Invoke-WebRequest -Uri $TargetLink -OutFile $TargetFilePathName -UseBasicParsing -Verbose
+                }
+                else{
+                    Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -DisplayName $TargetFileName -Description "Downloading Dell Command Update" -Priority Low -ErrorVariable err -ErrorAction SilentlyContinue
+                }
                 if (!(Test-Path $TargetFilePathName)){
                     Invoke-WebRequest -Uri $TargetLink -OutFile $TargetFilePathName -UseBasicParsing -Verbose
                 }
@@ -369,7 +383,8 @@ Function Get-DCUAppUpdates {
         [ValidateLength(4,4)]    
         [string]$SystemSKUNumber,
         [switch]$Latest,
-        [switch]$Install
+        [switch]$Install,
+        [switch]$UseWebRequest
     )
     
     $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
@@ -377,6 +392,8 @@ Function Get-DCUAppUpdates {
         if ($Manufacturer -notmatch "Dell"){return "This Function is only for Dell Systems"}
         $SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
     }
+    $temproot = "$env:windir\temp"
+    $DellCabExtractPath = "$temproot\DellCabDownloads\DellCabExtract"
     
     $Apps = Get-DCUUpdateList -SystemSKUNumber $SystemSKUNumber -updateType application | Select-Object -Property PackageID, Name, ReleaseDate, DellVersion, VendorVersion, Path
     $CommandUpdateApps = $Apps | Where-Object {$_.Name -like "*Command | Update*"} | Sort-Object -Property VendorVersion
@@ -396,8 +413,15 @@ Function Get-DCUAppUpdates {
                 $TargetFileName = ($CommandUpdateAppsLatest.path).Split("/") | Select-Object -Last 1
                 $TargetLink = $CommandUpdateAppsLatest.path
                 $TargetFilePathName = "$($DellCabDownloadsPath)\$($TargetFileName)"
-
-                Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -DisplayName $TargetFileName -Description "Downloading Dell Command Update" -Priority Low -ErrorVariable err -ErrorAction SilentlyContinue
+                if ($UseWebRequest){
+                    Write-Output "Using WebRequest to download the file"
+                    Invoke-WebRequest -Uri $TargetLink -OutFile $TargetFilePathName -UseBasicParsing -Verbose
+                }
+                else{
+                    Write-Output "Using BITS to download the file"
+                    Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -DisplayName $TargetFileName -Description "Downloading Dell Command Update" -ErrorAction SilentlyContinue
+                }
+                
                 if (!(Test-Path $TargetFilePathName)){
                     Invoke-WebRequest -Uri $TargetLink -OutFile $TargetFilePathName -UseBasicParsing -Verbose
                 }
@@ -524,81 +548,93 @@ function Set-DCUSettings {
     }
     #Installation Deferral
     if ($installationDeferral){
-        if ($installationDeferral -eq 'Enable'){
-            $installationDeferralVar = "-installationDeferral=$installationDeferral"
-            if ($deferralInstallInterval){
-                [string]$deferralInstallIntervalVar = "-deferralInstallInterval=$deferralInstallInterval"
-            }
-            else {
-                [string]$deferralInstallIntervalVar = "-deferralInstallInterval=5"
-            }
-            if ($deferralInstallCount){
-                [string]$deferralInstallCountVar = "-deferralInstallCount=$deferralInstallCount"
-            }
-            else {
-                [string]$deferralInstallCountVar = "-deferralInstallCount=5"
-            }
-            $ArgList = "/configure $installationDeferralVar $deferralInstallIntervalVar $deferralInstallCountVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-installationDeferral.log`""
-            Write-Verbose $ArgList
-            $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
-            if ($DCUConfig.ExitCode -ne 0){
-                $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
-                Write-Verbose "Exit: $($DCUConfig.ExitCode)"
-                Write-Verbose "Description: $($ExitInfo.Description)"
-                Write-Verbose "Resolution: $($ExitInfo.Resolution)"
-            }
+        if ($scheduleAction -ne 'DownloadInstallAndNotify'){
+            Write-Verbose "Schedule Action must be set to DownloadInstallAndNotify to use Installation Deferral"
             
         }
         else {
-            [string]$installationDeferralVar = "-installationDeferral=$installationDeferral"
-            $ArgList = "/configure $installationDeferralVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-installationDeferral.log`""
-            Write-Verbose $ArgList
-            $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
-            if ($DCUConfig.ExitCode -ne 0){
-                $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
-                Write-Verbose "Exit: $($DCUConfig.ExitCode)"
-                Write-Verbose "Description: $($ExitInfo.Description)"
-                Write-Verbose "Resolution: $($ExitInfo.Resolution)"
+            if ($installationDeferral -eq 'Enable'){
+                $installationDeferralVar = "-installationDeferral=$installationDeferral"
+                if ($deferralInstallInterval){
+                    [string]$deferralInstallIntervalVar = "-deferralInstallInterval=$deferralInstallInterval"
+                }
+                else {
+                    [string]$deferralInstallIntervalVar = "-deferralInstallInterval=5"
+                }
+                if ($deferralInstallCount){
+                    [string]$deferralInstallCountVar = "-deferralInstallCount=$deferralInstallCount"
+                }
+                else {
+                    [string]$deferralInstallCountVar = "-deferralInstallCount=5"
+                }
+                $ArgList = "/configure $installationDeferralVar $deferralInstallIntervalVar $deferralInstallCountVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-installationDeferral.log`""
+                Write-Verbose $ArgList
+                $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
+                if ($DCUConfig.ExitCode -ne 0){
+                    $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
+                    Write-Verbose "Exit: $($DCUConfig.ExitCode)"
+                    Write-Verbose "Description: $($ExitInfo.Description)"
+                    Write-Verbose "Resolution: $($ExitInfo.Resolution)"
+                }
+                
+            }
+            else {
+                [string]$installationDeferralVar = "-installationDeferral=$installationDeferral"
+                $ArgList = "/configure $installationDeferralVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-installationDeferral.log`""
+                Write-Verbose $ArgList
+                $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
+                if ($DCUConfig.ExitCode -ne 0){
+                    $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
+                    Write-Verbose "Exit: $($DCUConfig.ExitCode)"
+                    Write-Verbose "Description: $($ExitInfo.Description)"
+                    Write-Verbose "Resolution: $($ExitInfo.Resolution)"
+                }
             }
         }
     }
     #System Reboot Deferral
     if ($systemRestartDeferral){
-        if ($systemRestartDeferral -eq 'Enable'){
-            $systemRestartDeferralVar = "-systemRestartDeferral=$systemRestartDeferral"
-            if ($deferralRestartInterval){
-                [string]$deferralRestartIntervalVar = "-deferralRestartInterval=$deferralRestartInterval"
-            }
-            else {
-                [string]$deferralRestartIntervalVar = "-deferralRestartInterval=5"
-            }
-            if ($deferralRestartCount){
-                [string]$deferralRestartCountVar = "-deferralRestartCount=$deferralRestartCount"
-            }
-            else {
-                [string]$deferralRestartCountVar = "-deferralRestartCount=5"
-            }
-            $ArgList = "/configure $systemRestartDeferralVar $deferralRestartIntervalVar $deferralRestartCountVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-RestartDeferral.log`""
-            Write-Verbose $ArgList
-            $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
-            if ($DCUConfig.ExitCode -ne 0){
-                $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
-                Write-Verbose "Exit: $($DCUConfig.ExitCode)"
-                Write-Verbose "Description: $($ExitInfo.Description)"
-                Write-Verbose "Resolution: $($ExitInfo.Resolution)"
-            }
+        if ($scheduleAction -ne 'DownloadInstallAndNotify'){
+            Write-Verbose "Schedule Action must be set to DownloadInstallAndNotify to use Installation Deferral"
             
         }
         else {
-            [string]$systemRestartDeferralVar = "-systemRestartDeferral=$systemRestartDeferral"
-            $ArgList = "/configure $systemRestartDeferralVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-RestartDeferral.log`""
-            Write-Verbose $ArgList
-            $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
-            if ($DCUConfig.ExitCode -ne 0){
-                $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
-                Write-Verbose "Exit: $($DCUConfig.ExitCode)"
-                Write-Verbose "Description: $($ExitInfo.Description)"
-                Write-Verbose "Resolution: $($ExitInfo.Resolution)"
+            if ($systemRestartDeferral -eq 'Enable'){
+                $systemRestartDeferralVar = "-systemRestartDeferral=$systemRestartDeferral"
+                if ($deferralRestartInterval){
+                    [string]$deferralRestartIntervalVar = "-deferralRestartInterval=$deferralRestartInterval"
+                }
+                else {
+                    [string]$deferralRestartIntervalVar = "-deferralRestartInterval=5"
+                }
+                if ($deferralRestartCount){
+                    [string]$deferralRestartCountVar = "-deferralRestartCount=$deferralRestartCount"
+                }
+                else {
+                    [string]$deferralRestartCountVar = "-deferralRestartCount=5"
+                }
+                $ArgList = "/configure $systemRestartDeferralVar $deferralRestartIntervalVar $deferralRestartCountVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-RestartDeferral.log`""
+                Write-Verbose $ArgList
+                $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
+                if ($DCUConfig.ExitCode -ne 0){
+                    $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
+                    Write-Verbose "Exit: $($DCUConfig.ExitCode)"
+                    Write-Verbose "Description: $($ExitInfo.Description)"
+                    Write-Verbose "Resolution: $($ExitInfo.Resolution)"
+                }
+                
+            }
+            else {
+                [string]$systemRestartDeferralVar = "-systemRestartDeferral=$systemRestartDeferral"
+                $ArgList = "/configure $systemRestartDeferralVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-RestartDeferral.log`""
+                Write-Verbose $ArgList
+                $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
+                if ($DCUConfig.ExitCode -ne 0){
+                    $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
+                    Write-Verbose "Exit: $($DCUConfig.ExitCode)"
+                    Write-Verbose "Description: $($ExitInfo.Description)"
+                    Write-Verbose "Resolution: $($ExitInfo.Resolution)"
+                }
             }
         }
     }
@@ -615,7 +651,30 @@ function Set-DCUSettings {
         }
     }
 }
+function Get-DCUSettings {
+    [CmdletBinding()]
+    param (
+        [switch]$ResetSettings
+    )
+    write-host "Note: Info is in Registry here:" -ForegroundColor Cyan
+    write-Host "HKEY_LOCAL_MACHINE\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\Settings" -ForegroundColor Yellow
+    $RegPath = "HKLM:\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\Settings"
+    if (!(Test-Path $RegPath)){
+        Write-Output "No DCU Settings Found"
+        return
+    }
 
+    $Keys = Get-ChildItem -Path $RegPath 
+    Write-output $Keys
+    if ($ResetSettings){
+        $Items = Get-ChildItem -Path $RegPath | Get-ItemProperty
+        foreach ($Item in $Items){
+            $ItemName = $Item.PSChildName
+            Write-Output "Deleting $ItemName"
+            Remove-Item -Path $Item.PSPath -Force
+        }
+    }
+}
 function Invoke-DCU {
     [CmdletBinding()]
     
@@ -1158,6 +1217,26 @@ Function Get-DellBIOSUpdates {
         $Updates = Get-DCUUpdateList -SystemSKUNumber $SystemSKUNumber -updateType BIOS
     }
     return $Updates |Select-Object -Property "PackageID","Name","ReleaseDate","DellVersion" | Sort-Object -Property ReleaseDate -Descending
+}
+
+Function Invoke-DellIntuneAppPublishScript {
+
+    write-host Write-Host -ForegroundColor Green "[+] Function: Invoke-PublishDellIntuneApp"
+    $Description = "
+    This Functions when invoked will do the below tasks
+        1. show the UI to user to select required application
+        2. Download the application that is posted for admin portal production to customer system
+        3. Extract the contents and read the CreateAPPConfig.json file
+        4. create win32_Lob App in intune
+        5. Get APP file version
+        6. Upload and commit intunewin file to Azure Storage Blob
+        7. Update the file version in the Intune application
+        "
+    Write-Output $Description
+
+    function Invoke-PublishDellIntuneApp{
+        iex (irm https://raw.githubusercontent.com/dell/Endpoint-Management-Script-Library/refs/heads/main/Intune%20Scripts/EnterpriseAppDeployment/Dell_Intune_App_Publish_1.0.ps1 -help)
+    }
 }
 
 <# Placeholders for future functions

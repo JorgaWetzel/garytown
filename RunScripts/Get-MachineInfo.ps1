@@ -113,13 +113,15 @@ Function Test-PendingReboot {
             #Write-Output $test
 	    }
     }
-
-    if (Get-Service -Name CcmExec){
-        if ((Invoke-WmiMethod -Namespace 'root\ccm\ClientSDK' -Class CCM_ClientUtilities -Name DetermineIfRebootPending).RebootPending -eq "true" ){
-        $CMPendingReboot = "ConfigMgr"
-        #Write-Output "CM Pending Reboot $true"
+    try {
+        if (Get-Service -Name CcmExec -ErrorAction SilentlyContinue){
+            if ((Invoke-WmiMethod -Namespace 'root\ccm\ClientSDK' -Class CCM_ClientUtilities -Name DetermineIfRebootPending).RebootPending -eq "true" ){
+            $CMPendingReboot = "ConfigMgr"
+            #Write-Output "CM Pending Reboot $true"
+            }
         }
     }
+    catch {}
     if ($CMPendingReboot -or $WindowsPendingReboot){
         if ($CMPendingReboot){
             $CMPendingReboot
