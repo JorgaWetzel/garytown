@@ -49,11 +49,11 @@ Foreach ($VM in $VMs)#{}
             Get-VM -Name $VM.Name | Stop-VM -Force
             ForEach ($VHDXPath in $VHDXPaths)
                 {
-                $SizeBefore = (Get-Item -Path $VHDXPath).length
+                $SizeBefore = (Get-Item -Path $VHDXPath -Force).length
                 Write-Host " Size of $((Get-Item -Path $VHDXPath).Name) = $($SizeBefore/1GB) GB" -ForegroundColor Green
                 Write-Host " Optimzing VHD $VHDXPath on $($VM.Name)" -ForegroundColor Green
                 Optimize-VHD -Path $VHDXPath -Mode Full
-                $SizeAfter = (Get-Item -Path $VHDXPath).length
+                $SizeAfter = (Get-Item -Path $VHDXPath -Force).length
                 $Diff = $SizeBefore - $SizeAfter
                 Write-Host " Size After: $($SizeAfter/1GB) GB | Saving $($Diff /1GB) GB" -ForegroundColor Green
                 }
