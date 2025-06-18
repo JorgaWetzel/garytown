@@ -46,11 +46,16 @@ try {
 	
 	# --- Neuer Abschnitt: Lokaler Administrator ---
 	Try {
-		$username = 'wksadmin'
-		$securePassword = ConvertTo-SecureString 'Local.67' -AsPlainText -Force
-		if (-Not (Get-LocalUser -Name $username -ErrorAction SilentlyContinue)) {
-			New-LocalUser -Name $username -Password $securePassword -Description 'Local administrator account' -PasswordNeverExpires $true
+		$username       = 'wksadmin'
+		$securePassword = ConvertTo-SecureString 'Local.9' -AsPlainText -Force
+
+		if (-not (Get-LocalUser -Name $username -ErrorAction SilentlyContinue)) {
+			New-LocalUser -Name $username `
+						  -Password $securePassword `
+						  -Description 'Local administrator account' `
+						  -PasswordNeverExpires 
 		}
+
 		Add-LocalGroupMember -Group 'Administrators' -Member $username
 		Write-Host "Lokaler Admin-Benutzer '$username' erstellt oder existierte bereits."
 	}
