@@ -349,7 +349,8 @@ catch {
 }
 '@
 
+# Datei schreiben
 Set-Content -Path $ScriptPath -Value $PostActionScript -Force -Encoding UTF8
 
-# Führe das Skript sofort aus
-$PostActionScript | Out-File -FilePath $ScriptPath -Force -Encoding UTF8
+# Skript jetzt sofort ausführen
+& $ScriptPath   # oder:  Start-Process powershell.exe -ArgumentList "-ExecutionPolicy Bypass -File `"$ScriptPath`"" -WindowStyle Hidden -Wait
