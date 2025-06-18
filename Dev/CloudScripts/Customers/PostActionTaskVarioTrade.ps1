@@ -56,12 +56,15 @@ try {
 						  -PasswordNeverExpires 
 		}
 
-		Add-LocalGroupMember -Group 'Administrators' -Member $username
+		$AdminSID   = 'S-1-5-32-544'            # Built-In Administrators
+		$AdminGroup = (Get-CimInstance Win32_Group -Filter "SID='$AdminSID'").Name
+		Add-LocalGroupMember -Group $AdminGroup -Member $Username -ErrorAction Stop
 		Write-Host "Lokaler Admin-Benutzer '$username' erstellt oder existierte bereits."
 	}
 	Catch {
 		Write-Error "Fehler beim Anlegen des lokalen Admins: $_"
 	}
+	
 	# --- Ende Administrator-Sektion ---
 
     # Setup oneICT Chocolatey Framework
@@ -83,12 +86,14 @@ try {
 
 
     # Prevent Outlook (new) and Dev Home from installing
-    "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate",
-    "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\OutlookUpdate",
-    "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\OutlookUpdate",
-    "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\DevHomeUpdate" | %{
-        Remove-Item $_ -Force -ErrorAction SilentlyContinue
-    }
+	$Keys = @(
+	  'HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate',
+	  'HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\OutlookUpdate',
+	  'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\*Update'
+	)
+	foreach ($k in $Keys) {
+		if (Test-Path $k) { Remove-Item $k -Recurse -Force }
+	}
 
     # Disable Windows Hello
     reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\PassportForWork" /v Enabled /t REG_DWORD /d 0 /f
