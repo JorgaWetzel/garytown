@@ -52,7 +52,7 @@ try {
 		if (-not (Get-LocalUser -Name $username -ErrorAction SilentlyContinue)) {
 			New-LocalUser -Name $username `
 						  -Password $securePassword `
-						  -Description 'Local administrator account' `
+						  -Description 'Local administratoren account' `
 						  -PasswordNeverExpires 
 		}
 
