@@ -49,3 +49,34 @@ New-HPSureRecoverImageConfigurationPayload `
    -SigningKeyFile  .\sk.pfx `
    -SigningKeyPassword "<PW>" `
    -OutputFile      C:\SureRecover\Win11\OSPayload.bin
+
+
+
+
+
+# 1) Pfade & Passwort
+$SKPfx    = 'H:\JJ\sk.pfx'           # dein Signing-Key-PFX
+$SKPass   = 'Just4OSDCloud.'         # mit PUNKT am Ende
+$AgentPem = 'H:\JJ\AgentPubKey.pem'
+
+# 2) Zertifikat laden (inkl. privatem Schlüssel)
+$cert  = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
+$flags = [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable
+$cert.Import($SKPfx, $SKPass, $flags)
+
+# 3) PEM schreiben
+$b64 = [Convert]::ToBase64String($cert.RawData, 'InsertLineBreaks')
+"-----BEGIN CERTIFICATE-----`n$b64`n-----END CERTIFICATE-----" |
+    Set-Content -Path $AgentPem -Encoding ascii
+
+
+ openssl x509 -in $AgentPem -noout -text   # darf keinen Fehler anzeigen
+
+
+$env:OPENSSL_MODULES = 'C:\Program Files\OpenSSL-Win64\lib\ossl-modules'
+Test-Path "$env:OPENSSL_MODULES\legacy.dll"   #  → True
+
+cd "C:\Program Files\OpenSSL-Win64\bin"
+
+.\openssl genrsa -out ek.key 4096; .\openssl req -x509 -key ek.key -out ek.crt -days 3650 -subj "/C=CH/O=Variotrade AG/OU=Deployment/CN=Secure Platform - Endorsement Key"; .\openssl pkcs12 -export -legacy -inkey ek.key -in ek.crt -name "Secure Platform - Endorsement Key" -out ek_legacy.pfx -passout pass:Just4OSDCloud.
+

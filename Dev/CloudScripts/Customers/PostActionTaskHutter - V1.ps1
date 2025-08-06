@@ -39,16 +39,24 @@ try {
     } while (!$ping)
     $ProgressPreference = $ProgressPreference_bk
 
+    #region functions
+    iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
+    iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions2.ps1)
+    #endregion
+
+    # Setup oneICT Chocolatey Framework
+    Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
+    Set-Chocolatey
+
     # Installation von Chocolatey-Software
     Write-Host -ForegroundColor Green "Office wird installiert"
-    choco.exe install office365business --params "/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE" -y --no-progress --ignore-checksums --force
+    choco.exe upgrade office365business --params "/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE" -y --no-progress --ignore-checksums
 
     Write-Host -ForegroundColor Green "Standard Apps werden installiert"
-    $packages = "TeamViewer","googlechrome","firefox","adobereader","microsoft-teams-new-bootstrapper","7zip.install","vlc","jre8","powertoys","onedrive","Pdf24","vcredist140","zoom","notepadplusplus.install","onenote","onedrive"
+    $packages = "TeamViewer","googlechrome","firefox","adobereader","microsoft-teams-new-bootstrapper","7zip.install","vlc","jre8","powertoys","onedrive","vcredist140","zoom","notepadplusplus.install","onenote","onedrive"
     $packages | ForEach-Object {
-        choco install $_ -y --no-progress --ignore-checksums
+        choco upgrade $_ -y --no-progress --ignore-checksums
     }
-
 
     # Prevent Outlook (new) and Dev Home from installing
     "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate",
@@ -57,6 +65,8 @@ try {
     "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\DevHomeUpdate" | %{
         Remove-Item $_ -Force -ErrorAction SilentlyContinue
     }
+
+    
 
     Write-Host "**Taskbar Layout**"
     # Show packagedAppId for Windows store apps:
@@ -79,7 +89,9 @@ try {
         <taskbar:DesktopApp DesktopApplicationID="MSTeams_8wekyb3d8bbwe!app" />
         <taskbar:DesktopApp DesktopApplicationLinkPath="C:\Program Files\Microsoft Office\root\Office16\WINWORD.EXE" />
         <taskbar:DesktopApp DesktopApplicationLinkPath="C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE" />
+        <taskbar:DesktopApp DesktopApplicationLinkPath="C:\Program Files\Microsoft Office\root\Office16\ONENOTE.EXE" />
         <taskbar:DesktopApp DesktopApplicationLinkPath="C:\Program Files\Microsoft Office\root\Office16\POWERPNT.EXE" />
+        <taskbar:DesktopApp DesktopApplicationLinkPath="C:\Program Files\Google\Chrome\Application\chrome.exe" />
       </taskbar:TaskbarPinList>
     </defaultlayout:TaskbarLayout>
   </CustomTaskbarLayoutCollection>
@@ -87,7 +99,10 @@ try {
 "@
 
     # Prepare provisioning folder
-    [System.IO.FileInfo]$provisioning = "$($env:ProgramData)\provisioning\taskbar_layout.xml"
+    #$provisioningFile = [System.IO.FileInfo]"$($env:ProgramData)\provisioning\taskbar_layout.xml"
+    $provisioning = [System.IO.FileInfo]"$($env:ProgramData)\provisioning\taskbar_layout.xml"
+
+
     if (!$provisioning.Directory.Exists) {
         $provisioning.Directory.Create()
     }
@@ -122,99 +137,9 @@ try {
         $registry.Dispose()
     }
 
-    # *** Konfigurationsskripte für Browser herunterladen und ausführen ***
-    Write-Host "*** Konfigurationsskripte für Browser herunterladen und ausführen ***"
-    $provisioning = [System.IO.DirectoryInfo]"C:\OSDCloud\Scripts"
-    $urls = @(
-        "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_brave.ps1",
-        "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_chrome.ps1",
-        "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_edge.ps1",
-        "https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/configure_firefox.ps1"
-    )
-
-    # *** Sicherstellen, dass das Verzeichnis existiert ***
-    Write-Host "*** Sicherstellen, dass das Verzeichnis existiert ***"
-    if (-not (Test-Path $provisioning)) {
-        Write-Host "Erstelle Verzeichnis für Provisioning..."
-        New-Item -ItemType Directory -Path $provisioning -Force
-    } else {
-        Write-Host "Provisioning-Verzeichnis existiert bereits."
-    }
-
-    # *** Herunterladen und Ausführen der Konfigurationsskripte ***
-    Write-Host "*** Herunterladen und Ausführen der Konfigurationsskripte ***"
-    foreach ($url in $urls) {
-        $scriptName = [System.IO.Path]::GetFileName($url)
-        $scriptPath = Join-Path -Path $provisioning -ChildPath $scriptName
-
-        # Herunterladen, wenn das Skript noch nicht existiert
-        if (-not (Test-Path $scriptPath)) {
-            Write-Host "Herunterladen von $url ..."
-            Invoke-WebRequest -Uri $url -OutFile $scriptPath
-        } else {
-            Write-Host "$scriptName existiert bereits."
-        }
-
-        # Ausführen des Skripts
-        Write-Host "Ausführen von $scriptName ..."
-        . $scriptPath
-    }
-
-    # Set Microsoft Edge as Default Browser and other Defaults
-    # DISM /Online /Export-DefaultAppAssociations:DefaultAssociations.xml
-    [System.IO.FileInfo]$DefaultAssociationsConfiguration = "$($env:ProgramData)\provisioning\DefaultAssociationsConfiguration.xml"
-
-    # Sicherstellen, dass das Verzeichnis existiert
-    if(!$DefaultAssociationsConfiguration.Directory.Exists){
-        $DefaultAssociationsConfiguration.Directory.Create()
-    }
-
-    # XML-Datei mit den gewünschten Dateityp- und Protokollzuweisungen erstellen
-    '<?xml version="1.0" encoding="UTF-8"?>
-<DefaultAssociations>
-  <Association Identifier=".htm" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
-  <Association Identifier=".html" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
-  <Association Identifier=".mht" ProgId="MSEdgeMHT" ApplicationName="Microsoft Edge" />
-  <Association Identifier=".mhtml" ProgId="MSEdgeMHT" ApplicationName="Microsoft Edge" />
-  <Association Identifier=".oxps" ProgId="Windows.XPSReachViewer" ApplicationName="XPS Viewer" />
-  <Association Identifier=".pdf" ProgId="Acrobat.Document.DC" ApplicationName="Adobe Acrobat" />
-  <Association Identifier=".svg" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
-  <Association Identifier=".tif" ProgId="PhotoViewer.FileAssoc.Tiff" ApplicationName="Windows Photo Viewer" />
-  <Association Identifier=".tiff" ProgId="PhotoViewer.FileAssoc.Tiff" ApplicationName="Windows Photo Viewer" />
-  <Association Identifier=".url" ProgId="InternetShortcut" ApplicationName="Internet Explorer" />
-  <Association Identifier=".wsb" ProgId="Windows.Sandbox" ApplicationName="Windows Sandbox" />
-  <Association Identifier=".xht" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
-  <Association Identifier=".xhtml" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
-  <Association Identifier=".xps" ProgId="Windows.XPSReachViewer" ApplicationName="XPS Viewer" />
-  <Association Identifier=".zip" ProgId="CompressedFolder" ApplicationName="Windows Explorer" />
-  <Association Identifier="ftp" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
-  <Association Identifier="http" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
-  <Association Identifier="https" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
-  <Association Identifier="mailto" ProgId="Outlook.URL.mailto.15" ApplicationName="Outlook" />
-  <Association Identifier="microsoft-edge" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
-  <Association Identifier="microsoft-edge-holographic" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
-  <Association Identifier="ms-xbl-3d8b930f" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
-  <Association Identifier="read" ProgId="MSEdgeHTM" ApplicationName="Microsoft Edge" />
-</DefaultAssociations>' | Out-File $DefaultAssociationsConfiguration.FullName -Encoding utf8 -Force
-
-    # Registry-Einstellungen für die Default App Associations konfigurieren
-    $settings = 
-    [PSCustomObject]@{
-        Path  = "SOFTWARE\Policies\Microsoft\Windows\System"
-        Value = $DefaultAssociationsConfiguration.FullName
-        Name  = "DefaultAssociationsConfiguration"
-    } | group Path
-
-    foreach($setting in $settings){
-        $registry = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($setting.Name, $true)
-        if ($null -eq $registry) {
-            $registry = [Microsoft.Win32.Registry]::LocalMachine.CreateSubKey($setting.Name, $true)
-        }
-        $setting.Group | %{
-            $registry.SetValue($_.name, $_.value)
-        }
-        $registry.Dispose()
-    }
+####################################################
+################      Start Layout    ##############
+####################################################
 
     # Get-AppxPackage | select @{n='name';e={"$($_.PackageFamilyName)!app"}} | ?{$_.name -like "**"}
     # Import-StartLayout
@@ -294,6 +219,10 @@ try {
         $registry.Dispose()
     }
 
+####################################################
+###########   Remove Desktop Shortcuts  ############
+####################################################
+
     # Remove Desktop Shortcuts
     $Shortcuts2Remove = "Google Chrome.lnk", "VLC media player.lnk", "Adobe Acrobat.lnk", "Firefox.lnk", "PDFCreator.lnk", "TeamViewer.lnk", "Microsoft Edge.lnk", "FileMaker Pro.lnk", "Google Earth.lnk", "LayOut 2023.lnk", "LibreOffice 7.4.lnk", "PDF-XChange Editor.lnk", "SIA-Reader.lnk", "Solibri.lnk", "SonicWall NetExtender.lnk", "Style Builder.lnk", "Zoom.lnk", "Spotify.lnk", "SEH UTN Manager.lnk", "SketchUp 2023.lnk", "Easy Product Finder 2.lnk", "Google Earth Pro.lnk", "Revit 2022 (AirTop1).lnk", "liNear CAD 22 (AirTop1).lnk", "AutoCAD 2022 (AirTop1).lnk", "Abmelden (AirTop1).lnk" 
     $DesktopPaths = @("C:\Users\*\Desktop\*", "C:\Users\*\*\Desktop\*")  # Mehrere Pfade als Array
@@ -309,11 +238,24 @@ try {
         Write-Error "Error removing shortcut(s)"
     }
 
+####################################################
+###########   PowerSettings           ############
+####################################################
+
+# Configure power settings
+# Disable sleep, hibernate and monitor standby on AC
+"powercfg /x -monitor-timeout-ac 0",
+"powercfg /x -standby-timeout-ac 0",
+"powercfg /x -hibernate-timeout-ac 0" | % {
+    cmd /c $_
+}
+
+
 # Define the folder paths
 $parentFolder = "C:\Program Files\oneICT\EndpointManager"
 $folder1 = "$parentFolder\Data"
 $folder2 = "$parentFolder\Log"
-$folder3 = "C:\service"
+$folder3 = "C:\Service"
 
 # Create the folders if they do not exist
 New-Item -Path $folder1 -ItemType Directory -Force | Out-Null
@@ -344,56 +286,41 @@ Set-Acl -Path $folder1 -AclObject $acl1
 Set-Acl -Path $folder2 -AclObject $acl2
 Set-Acl -Path $folder3 -AclObject $acl3
 
+# Remove/Uninstall Edge
+# remove from Registry
+$appxStore = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx\AppxAllUserStore'
+$pattern = "HKLM:$appxStore\InboxApplications\Microsoft.MicrosoftEdge_*_neutral__8wekyb3d8bbwe"
+$edgeAppXKey = (Get-Item -Path $pattern).PSChildName
+if (Test-Path "$pattern") { reg delete "HKLM$appxStore\InboxApplications\$edgeAppXKey" /f | Out-Null }
 
-"powercfg /x -monitor-timeout-ac 0",
-"powercfg /x -standby-timeout-ac 0",
-"powercfg /x -hibernate-timeout-ac 0" | % {
-    cmd /c $_
+# make the Edge AppX able to uninstall and uninstall
+New-Item -Path "HKLM:$appxStore\EndOfLife\$SID\Microsoft.MicrosoftEdge_8wekyb3d8bbwe" -Force | Out-Null
+Get-AppxPackage -Name Microsoft.MicrosoftEdge | Remove-AppxPackage | Out-Null
+Remove-Item -Path "HKLM:$appxStore\EndOfLife\$SID\Microsoft.MicrosoftEdge_8wekyb3d8bbwe" -Force | Out-Null
+
+
+    # HP Driver Updates
+    # Write-Host -ForegroundColor Gray "**Running HP Image Assistant Driver & Firmware Updates**"
+    # osdcloud-HPIAExecute
+
+    # Windows Updates
+    Write-Host -ForegroundColor Gray "**Running Microsoft Defender Updates**"
+    Update-DefenderStack
+    Write-Host -ForegroundColor Gray "**Running Microsoft Windows Updates**"
+    Start-WindowsUpdate
+    Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
+    Start-WindowsUpdateDriver
+
+    # Entfernen von Verzeichnissen
+    # cmd /c "RD C:\OSDCloud\OS /S /Q"
+    # cmd /c "RD C:\Drivers /S /Q"
+
+    # Beende das Transkript
+    $null = Stop-Transcript -ErrorAction Ignore
+
+    # Lösche den geplanten Task, damit das Skript nicht erneut ausgeführt wird
+    Unregister-ScheduledTask -TaskName $ScheduledTaskName -Confirm:$false
 }
-
-# HP Driver Updates
-# Write-Host -ForegroundColor Gray "**Running HP Image Assistant Driver & Firmware Updates**"
-# osdcloud-HPIAExecute
-
-# Windows Updates
-Write-Host -ForegroundColor Gray "**Running Microsoft Defender Updates**"
-Update-DefenderStack
-Write-Host -ForegroundColor Gray "**Running Microsoft Windows Updates**"
-Start-WindowsUpdate
-Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
-Start-WindowsUpdateDriver
-
-# Entfernen von Verzeichnissen
-# cmd /c "RD C:\OSDCloud\OS /S /Q"
-# cmd /c "RD C:\Drivers /S /Q"
-
-Write-Host -ForegroundColor Green "[+] Function Set-Chocolatey"
-# add tcp rout to oneICT Server
-Add-Content -Path "C:\Windows\System32\drivers\etc\hosts" -Value "195.49.62.108 chocoserver"
-
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-[Environment]::SetEnvironmentVariable("Path", $env:Path + "$ENV:ALLUSERSPROFILE\chocolatey\bin", "Machine")
-C:\ProgramData\chocolatey\bin\choco.exe install chocolatey-core.extension -y --no-progress --ignore-checksums
-C:\ProgramData\chocolatey\bin\choco.exe source add --name="'oneICT'" --source="'https://chocoserver:8443/repository/ChocolateyInternal/'" --allow-self-service --user="'chocolatey'" --password="'wVGULoJGh1mxbRpChJQV'" --priority=1
-C:\ProgramData\chocolatey\bin\choco.exe source add --name="'Chocolatey'" --source="'https://chocolatey.org/api/v2/'" --allow-self-service --priority=2
-# C:\ProgramData\chocolatey\bin\choco.exe install chocolateygui -y --source="'oneICT'" --no-progress
-C:\ProgramData\chocolatey\bin\choco.exe feature enable -n allowGlobalConfirmation
-C:\ProgramData\chocolatey\bin\choco.exe feature enable -n allowEmptyChecksums
-
-$manufacturer = (gwmi win32_computersystem).Manufacturer
-Write-Host "Das ist ein $manufacturer PC"
-
-if ($manufacturer -match "VMware") {
-Write-Host "Installing VMware tools..."
-C:\ProgramData\chocolatey\bin\choco.exe install vmware-tools -y --no-progress --ignore-checksums
-}
-
-# Beende das Transkript
-$null = Stop-Transcript -ErrorAction Ignore
-
-# Lösche den geplanten Task, damit das Skript nicht erneut ausgeführt wird
-Unregister-ScheduledTask -TaskName $ScheduledTaskName -Confirm:$false
-
 catch {
     # Fehlerbehandlung
     Write-Error $_
