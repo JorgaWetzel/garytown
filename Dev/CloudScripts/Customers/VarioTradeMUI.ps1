@@ -76,8 +76,8 @@ if ($Manufacturer -match 'HP') {
 
     # Passendes DriverPack ermitteln
     $DriverPack = Get-OSDCloudDriverPack -Product $Product `
-                                         -OSVersion "Windows 11" `
-                                         -OSReleaseID $OSReleaseID
+                                         -OSVersion 'Windows 11' `
+                                         -OSReleaseID '24H2'
 
     if ($DriverPack) {
         $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
