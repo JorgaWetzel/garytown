@@ -46,11 +46,16 @@ $Cred      = New-Object System.Management.Automation.PSCredential ($UserName,$Se
 if (-not (Test-Path -Path $MapDrive)){
 	net use $MapDrive $DeployShare /user:$UserName $PlainPwd /persistent:no
 }
-if (-not (Test-Path -Path $MapDrive)){Write-Host "Failed to Map Drive" -ForegroundColor Red;return}
-else{Write-Host "Mapped Drive $MapDrive to $DeployShare" -ForegroundColor Green}
+if (-not (Test-Path -Path $MapDrive)) {
+    Write-Host "Failed to Map Drive" -ForegroundColor Red
+    return
+} else {
+    Write-Host "Mapped Drive $MapDrive to $DeployShare" -ForegroundColor Green
+}
 
-
-# --- OSDCloud-Variablen setzen ----------------------------------------
+# ================================================================
+#   OSDCloud-Variablen setzen
+# ================================================================
 $Global:MyOSDCloud = @{
     ImageFileFullName = $SrcWim
     ImageFileItem     = Get-Item $SrcWim
@@ -63,6 +68,17 @@ $Global:MyOSDCloud = @{
     UpdateDrivers     = $false      
 }
 
+# ================================================================
+#   HP-Treiberpaket vorbereiten (mit lokalem Cache)
+# ================================================================
+$Product        = Get-MyComputerProduct
+$OSVersion      = 'Windows 11'
+$OSReleaseID    = '24H2'
+$DriverPackName = "$Product-$OSVersion-$OSReleaseID.exe"
+$DriverSearchPaths = @(
+    "Z:\OSDCloud\DriverPacks\DISM\HP\$Product",
+    "Z:\OSDCloud\DriverPacks\HP\$DriverPackName"
+)
 
 # --------   HP-Spezifisches vorbereiten --------------------
 $OSVersion = 'Windows 11' #Used to Determine Driver Pack
