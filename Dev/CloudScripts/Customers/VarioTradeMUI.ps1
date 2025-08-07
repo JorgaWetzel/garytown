@@ -70,15 +70,13 @@ $Global:MyOSDCloud = @{
 $Manufacturer = (Get-CimInstance Win32_ComputerSystem).Manufacturer
 if ($Manufacturer -match 'HP') {
 	
-	OSVersion = "Windows 11"
-
     # Produkt- und Modell-Infos aus WMI
     $Product = (Get-CimInstance Win32_ComputerSystemProduct).Version
     $Model   = (Get-CimInstance Win32_ComputerSystem).Model
 
     # Passendes DriverPack ermitteln
     $DriverPack = Get-OSDCloudDriverPack -Product $Product `
-                                         -OSVersion $OSVersion `
+                                         -OSVersion "Windows 11" `
                                          -OSReleaseID $OSReleaseID
 
     if ($DriverPack) {
