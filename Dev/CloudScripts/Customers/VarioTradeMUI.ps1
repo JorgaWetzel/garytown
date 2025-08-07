@@ -1,6 +1,4 @@
-# 99-Deployment.ps1  –  StartNet-Hook, minimal
-
-Import-Module OSD -Force
+# Import-Module OSD -Force
 
 Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) " -NoNewline
 Write-Host -ForegroundColor Green "PSCloudScript at functions.osdcloud.com"
