@@ -69,6 +69,8 @@ $Global:MyOSDCloud = @{
 # --------   HP-Spezifisches vorbereiten --------------------
 $Manufacturer = (Get-CimInstance Win32_ComputerSystem).Manufacturer
 if ($Manufacturer -match 'HP') {
+	
+	OSVersion = "Windows 11"
 
     # Produkt- und Modell-Infos aus WMI
     $Product = (Get-CimInstance Win32_ComputerSystemProduct).Version
