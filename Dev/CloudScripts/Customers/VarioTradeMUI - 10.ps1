@@ -42,6 +42,8 @@ $SrcWim 	 = 'Z:\OSDCloud\OS\Win11_24H2_MUI.wim'
 $SecurePwd = ConvertTo-SecureString $PlainPwd -AsPlainText -Force
 $Cred      = New-Object System.Management.Automation.PSCredential ($UserName,$SecurePwd)
 
+ping 10.10.100.100
+
 # Share verbinden
 if (-not (Get-PSDrive -Name $MapDrive -ErrorAction SilentlyContinue)) {
     New-PSDrive -Name $MapDrive `
