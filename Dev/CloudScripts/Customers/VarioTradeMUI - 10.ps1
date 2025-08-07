@@ -66,45 +66,32 @@ $Global:MyOSDCloud = @{
 }
 
 
-# --------   HP-Spezifisches vorbereiten --------------------
-$Manufacturer = (Get-CimInstance Win32_ComputerSystem).Manufacturer
-if ($Manufacturer -match 'HP') {
+# -------------------------------------------------
+# HP section one compact block
+# -------------------------------------------------
+if ($cs.Manufacturer -match 'HP') {
 
-    # Produkt- und Modell-Infos aus WMI
-    $Product = (Get-CimInstance Win32_ComputerSystemProduct).Version
-    $Model   = (Get-CimInstance Win32_ComputerSystem).Model
+    # --- OSDCloud flags ---------------------------------
+    $Global:MyOSDCloud.HPCMSLDriverPackLatest = $true  # auto-download SoftPaq
+    $Global:MyOSDCloud.HPTPMUpdate            = $true  # TPM firmware update
+    $Global:MyOSDCloud.HPBIOSUpdate           = $true  # BIOS update
+    $Global:MyOSDCloud.HPIAALL                = $true  # run HPIA –ALL
 
-    # Passendes DriverPack ermitteln
-    $DriverPack = Get-OSDCloudDriverPack -Product $Product `
-                                         -OSVersion $OSVersion `
-                                         -OSReleaseID $OSReleaseID
+    Write-Host 'HP CMSL auto driver pack (latest) enabled.' -fg Green
 
-    if ($DriverPack) {
-        $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
-        # Immer das aktuellste CMSL-Paket verwenden (offline-fähig)
-        $Global:MyOSDCloud.HPCMSLDriverPackLatest = $true
+    # --- optional BIOS setting script -------------------
+    try {
+        Invoke-WebRequest `
+            -Uri 'https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1' `
+            -UseBasicParsing -OutFile "$env:TEMP\Manage-HPBiosSettings.ps1"
+        . "$env:TEMP\Manage-HPBiosSettings.ps1"
+        Manage-HPBiosSettings -SetSettings
+        Write-Host 'HP BIOS settings applied.' -fg Green
     }
-
-    # HPIA / BIOS / TPM nur wenn das Gerät es unterstützt
-    if (Test-HPIASupport) {
-        $Global:MyOSDCloud.HPTPMUpdate   = $true
-        $Global:MyOSDCloud.HPBIOSUpdate  = $true
-
-        if ($HPBiosSkipZBook -and ($Product -ne '83B2' -or $Model -notmatch 'zbook')) {
-            $Global:MyOSDCloud.HPIAALL = $true
-        }
-
-        # BIOS-Settings optional anpassen
-        try {
-            iex (irm 'https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1')
-            Manage-HPBiosSettings -SetSettings
-        } catch {
-            Write-Warning "Manage-HPBiosSettings konnte nicht ausgeführt werden: $_"
-        }
+    catch {
+        Write-Warning "Manage-HPBiosSettings could not run: $_"
     }
 }
-
-
 #write variables to console
 Write-Output $Global:MyOSDCloud
 
