@@ -26,13 +26,13 @@ if ((Get-MyComputerModel) -match 'Virtual') {
 # Konfiguration – HIER NUR BEI BEDARF ANPASSEN
 # ======================================================================
 $DeployShare = '\\10.10.100.100\Daten'          # UNC-Pfad zum Deployment-Share
-$MapDrive    = 'Z'                              # gewünschter Laufwerks­buchstabe
+$MapDrive    = 'Z:'                              # gewünschter Laufwerks­buchstabe
 $UserName    = 'Jorga'                          # Domänen- oder lokaler User
 $PlainPwd    = 'Dont4getme'                     # Passwort (Klartext)
 
 
 #$DeployShare = '\\192.168.2.15\DeploymentShare$' # UNC-Pfad zum Deployment-Share
-#$MapDrive    = 'Z'                               # gewünschter Laufwerks­buchstabe
+#$MapDrive    = 'Z:'                               # gewünschter Laufwerks­buchstabe
 #$UserName    = 'VARIODEPLOY\Administrator'       # Domänen- oder lokaler User
 #$PlainPwd    = '12Monate'                        # Passwort (Klartext)
 
@@ -43,13 +43,11 @@ $SecurePwd = ConvertTo-SecureString $PlainPwd -AsPlainText -Force
 $Cred      = New-Object System.Management.Automation.PSCredential ($UserName,$SecurePwd)
 
 # Share verbinden
-if (-not (Get-PSDrive -Name $MapDrive -ErrorAction SilentlyContinue)) {
-    New-PSDrive -Name $MapDrive `
-                -PSProvider FileSystem `
-                -Root $DeployShare `
-                -Credential $Cred `
-                -ErrorAction Stop
+if (-not (Test-Path -Path $MapDrive)){
+	net use $MapDrive $DeployShare /user:$UserName $PlainPwd /persistent:no
 }
+if (-not (Test-Path -Path $MapDrive)){Write-Host "Failed to Map Drive" -ForegroundColor Red;return}
+else{Write-Host "Mapped Drive $MapDrive to $DeployShare" -ForegroundColor Green}
 
 
 # --- OSDCloud-Variablen setzen ----------------------------------------
