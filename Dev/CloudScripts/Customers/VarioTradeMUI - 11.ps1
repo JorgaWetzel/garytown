@@ -3,8 +3,8 @@
 Import-Module OSD -Force
 
 Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) " -NoNewline
-Write-Host -ForegroundColor Green "PSCloudScript at functions.osdcloud.com"
-Invoke-Expression (Invoke-RestMethod -Uri functions.osdcloud.com)
+# Write-Host -ForegroundColor Green "PSCloudScript at functions.osdcloud.com"
+# Invoke-Expression (Invoke-RestMethod -Uri functions.osdcloud.com)
 
 iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
