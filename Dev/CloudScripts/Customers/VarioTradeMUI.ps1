@@ -1,8 +1,8 @@
-# Import-Module OSD -Force
+Import-Module OSD -Force
 
 Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) " -NoNewline
-Write-Host -ForegroundColor Green "PSCloudScript at functions.osdcloud.com"
-Invoke-Expression (Invoke-RestMethod -Uri functions.osdcloud.com)
+# Write-Host -ForegroundColor Green "PSCloudScript at functions.osdcloud.com"
+# Invoke-Expression (Invoke-RestMethod -Uri functions.osdcloud.com)
 
 iex (irm functions.garytown.com)    # Custom Funktionen
 iex (irm functions.osdcloud.com)    # OSDCloud Funktionen
