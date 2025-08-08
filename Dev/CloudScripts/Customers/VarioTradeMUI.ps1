@@ -110,7 +110,33 @@ if (Test-HPIASupport){
 # --- Deployment ---------------------------------------------
 Invoke-OSDCloud
 
-# Set-OSDCloudUnattendAuditMode
+# --- OSDCloud First-Boot: Erfolgston + sofortiges Shutdown --------------------
+$autoDir = 'C:\OSDCloud\Automate\Startup'
+New-Item -ItemType Directory -Path $autoDir -Force | Out-Null
+
+$ps1 = @'
+# 99-varo-shutdown.ps1  (läuft als System vor OOBE)
+try {
+    # 1) kurzer Erfolgston (MessageBeep, dann Beep-Fallback)
+    $sig = '[DllImport("user32.dll")]public static extern bool MessageBeep(uint uType);'
+    Add-Type -MemberDefinition $sig -Name U -Namespace Win32 -ErrorAction SilentlyContinue | Out-Null
+    1..3 | ForEach-Object { [Win32.U]::MessageBeep(0x40) | Out-Null; Start-Sleep -Milliseconds 300 }
+    try { [console]::beep(800,200); [console]::beep(1000,200) } catch {}
+
+    # 2) Log und Shutdown
+    Add-Content -Path 'C:\Windows\Temp\SetupComplete.log' -Value ("[{0}] Vario shutdown triggered" -f (Get-Date))
+    Start-Process -FilePath 'shutdown.exe' -ArgumentList '/s','/t','0','/f' -WindowStyle Hidden
+}
+catch {
+    Add-Content -Path 'C:\Windows\Temp\SetupComplete.log' -Value ("[{0}] Vario shutdown failed: {1}" -f (Get-Date), $_.Exception.Message)
+}
+'@
+
+# Skript mit ASCII (kompatibel) schreiben; Name mit "99-" -> läuft als letztes
+$scriptPath = Join-Path $autoDir '99-varo-shutdown.ps1'
+Set-Content -Path $scriptPath -Value $ps1 -Encoding Ascii
+# -----------------------------------------------------------------------------
+
 
 # Initialize-OSDCloudStartnetUpdate
 Restart-Computer -Force
