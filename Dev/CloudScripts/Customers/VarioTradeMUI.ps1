@@ -17,16 +17,13 @@ Write-Host -ForegroundColor Green "Transport Layer Security (TLS) 1.2"
 #========================================================
 #   Netzwerkfreigabe verbinden
 #========================================================
-$DeployShare = "\\VARIODEPLOY\Deploy$"             # UNC-Pfad zur Freigabe
-$MapDrive    = 'Z:'                               # gewünschter Laufwerks­buchstabe
-$UserName    = 'VARIODEPLOY\Administrator'       # Domänen- oder lokaler User
-$PlainPwd    = '12Monate'                        # Passwort (Klartext)
 
+$DeployShare = '\\10.10.100.100\Daten'
+$MapDrive    = 'Z:'
+$UserName    = 'Jorga'
+$PlainPwd    = 'Dont4getme'
 $SrcWim      = 'Z:\OSDCloud\OS\Win11_24H2_MUI.wim'
 
-# Anmeldedaten vorbereiten
-$SecurePwd = ConvertTo-SecureString $PlainPwd -AsPlainText -Force
-$Cred      = New-Object System.Management.Automation.PSCredential ($UserName,$SecurePwd)
 
 # Share verbinden
 if (-not (Test-Path -Path $MapDrive)){
