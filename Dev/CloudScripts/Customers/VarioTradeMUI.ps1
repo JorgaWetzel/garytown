@@ -171,7 +171,7 @@ finally {
     } catch {
         Write-Host -ForegroundColor Yellow "[VarioTradeMUI] DriverPack cache block failed: $($_.Exception.Message)"
     }
-
+}
 # --- SetupComplete: 99-varo-shutdown.ps1 lokal schreiben (kein Download nötig) ---
 try {
     $setupDir = 'C:\Windows\Setup\Scripts'
