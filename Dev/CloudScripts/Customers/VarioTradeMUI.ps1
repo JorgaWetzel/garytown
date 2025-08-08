@@ -83,7 +83,7 @@ $Global:MyOSDCloud = @{
 
 # ---------------- Driver package first, HPIA as fallback --------------------
 if ($DriverPack){
-    Write-Host -ForegroundColor Cyan "Driver pack located – applying driver pack only."
+    Write-Host -ForegroundColor Cyan "Driver pack located applying driver pack only."
     $Global:MyOSDCloud.DriverPackName      = $DriverPack.Name
     $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true   # Driver-Pack aktiv
     $Global:MyOSDCloud.HPIAALL             = [bool]$false     # HPIA deaktivieren
