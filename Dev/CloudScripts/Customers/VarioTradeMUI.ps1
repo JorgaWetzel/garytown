@@ -92,10 +92,10 @@ if ($DriverPack){
 
 # ---------------- Driver package first, HPIA as fallback --------------------
 if ($DriverPack -and ($DriverPack.PSObject.Properties.Name -contains 'FullName') -and (Test-Path $DriverPack.FullName)) {
-    Write-Host -ForegroundColor Cyan "Driver pack located – applying driver pack only."
+    Write-Host -ForegroundColor Cyan "Driver pack located - applying driver pack only."
     $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
-    $Global:MyOSDCloud.HPIAALL = [bool]$false   # HPIA deaktivieren, Pack wird verwendet
-    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true   # (optional) sicherstellen, dass Pack-Logik aktiv ist
+    $Global:MyOSDCloud.HPIAALL = $false
+    $Global:MyOSDCloud.HPCMSLDriverPackLatest = $true
 
     # Cache in Z:\OSDCloud\DriverPacks\HP
     if (Test-Path 'Z:\') {
@@ -105,12 +105,12 @@ if ($DriverPack -and ($DriverPack.PSObject.Properties.Name -contains 'FullName')
         Copy-Item -Path $DriverPack.FullName -Destination $destFile -Force
         Write-Host "DriverPack cached to $destFile" -ForegroundColor Cyan
     } else {
-        Write-Host "Z:\ not present – skipping cache." -ForegroundColor Yellow
+        Write-Host "Z:\ not present - skipping cache." -ForegroundColor Yellow
     }
 }
 else {
-    Write-Host -ForegroundColor Yellow "No driver pack found – falling back to HPIA."
-    if (Test-HPIASupport) { $Global:MyOSDCloud.HPIAALL = [bool]$true }
+    Write-Host -ForegroundColor Yellow "No driver pack found - falling back to HPIA."
+    if (Test-HPIASupport) { $Global:MyOSDCloud.HPIAALL = $true }
 }
 
 # Optionale BIOS-/TPM-Updates beibehalten
