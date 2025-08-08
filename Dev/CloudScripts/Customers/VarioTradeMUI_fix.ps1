@@ -90,36 +90,25 @@ if ($DriverPack){
 }
 
 
-# ---------------- Driver package first, HPIA as fallback --------------------
-if ($DriverPack -and ($DriverPack.PSObject.Properties.Name -contains 'FullName') -and (Test-Path $DriverPack.FullName)) {
-    Write-Host -ForegroundColor Cyan "Driver pack located – applying driver pack only."
-    $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
-    $Global:MyOSDCloud.HPIAALL = [bool]$false   # HPIA deaktivieren, Pack wird verwendet
-    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true   # (optional) sicherstellen, dass Pack-Logik aktiv ist
-
-    # Cache in Z:\OSDCloud\DriverPacks\HP
-    if (Test-Path 'Z:\') {
-        $cacheDir = 'Z:\OSDCloud\DriverPacks\HP'
-        if (!(Test-Path $cacheDir)) { New-Item -ItemType Directory -Path $cacheDir -Force | Out-Null }
-        $destFile = Join-Path $cacheDir $DriverPack.Name
-        Copy-Item -Path $DriverPack.FullName -Destination $destFile -Force
-        Write-Host "DriverPack cached to $destFile" -ForegroundColor Cyan
-    } else {
-        Write-Host "Z:\ not present – skipping cache." -ForegroundColor Yellow
-    }
-}
-else {
-    Write-Host -ForegroundColor Yellow "No driver pack found – falling back to HPIA."
-    if (Test-HPIASupport) { $Global:MyOSDCloud.HPIAALL = [bool]$true }
+#Enable HPIA | Update HP BIOS | Update HP TPM
+# --- We want: DriverPack first, HPIA only as fallback; no MU Catalog drivers/firmware ---
+if ($DriverPack) {
+    Write-Host -ForegroundColor Cyan "Driver pack located – use DriverPack only; HPIA disabled (fallback only)."
+    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true
+    $Global:MyOSDCloud.HPIAALL = [bool]$false
+    $Global:MyOSDCloud.HPBIOSUpdate = [bool]$false
+    $Global:MyOSDCloud.HPTPMUpdate = [bool]$false
+} else {
+    Write-Host -ForegroundColor Yellow "No DriverPack found – enable HPIA as fallback."
+    if (Test-HPIASupport){ $Global:MyOSDCloud.HPIAALL = [bool]$true }
 }
 
-# Optionale BIOS-/TPM-Updates beibehalten
-if (Test-HPIASupport) {
-    $Global:MyOSDCloud.HPTPMUpdate  = [bool]$true
-    $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
-    iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
-    Manage-HPBiosSettings -SetSettings
-}
+# (Optional/no-op if not used by the module) prevent pulling from Microsoft Update Catalog
+$Global:MyOSDCloud.MsUpCatDrivers = [bool]$false
+$Global:MyOSDCloud.MsUpCatFirmware = [bool]$false
+
+# Ensure HP BIOS settings function is available if later needed
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
 
 
 
@@ -130,7 +119,29 @@ Write-Output $Global:MyOSDCloud
 # --- Deployment ---------------------------------------------
 Invoke-OSDCloud
 
-# Set-OSDCloudUnattendAuditMode
+# --- Cache the downloaded DriverPack to Z: (if present) and extract without 7-Zip ---
+try {
+    $CacheRoot = "Z:\OSDCloud\DriverPacks\HP"
+    $spExe = Get-ChildItem -Path "C:\Drivers" -Filter "sp*.exe" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    if ($spExe) {
+        if (Test-Path "Z:\") { New-Item -Path $CacheRoot -ItemType Directory -Force | Out-Null
+            Copy-Item -Path $spExe.FullName -Destination (Join-Path $CacheRoot $spExe.Name) -Force
+            Write-Host -ForegroundColor Green "Cached $($spExe.Name) to $CacheRoot"
+        }
+        $extractDir = Join-Path "C:\Drivers" $spExe.BaseName
+        if (!(Test-Path $extractDir)) {
+            Write-Host -ForegroundColor DarkCyan "Extracting $($spExe.Name) with SoftPaq switches to $extractDir"
+            Start-Process -FilePath $spExe.FullName -ArgumentList "/s","/e","/f",$extractDir -Wait
+        }
+    }
+} catch { Write-Warning $_ }
 
-# Initialize-OSDCloudStartnetUpdate
+# Harden Windows to not offer driver updates via Windows Update
+$scPath = "C:\Windows\Setup\Scripts\SetupComplete.ps1"
+New-Item -ItemType Directory -Path (Split-Path $scPath) -Force | Out-Null
+Add-Content -Path $scPath -Value @'
+New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" -Force | Out-Null
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" -Name ExcludeWUDriversInQualityUpdate -Type DWord -Value 1
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\DriverSearching" -Name SearchOrderConfig -Type DWord -Value 0
+'@
 Restart-Computer -Force

@@ -89,38 +89,18 @@ if ($DriverPack){
     $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
 }
 
-
-# ---------------- Driver package first, HPIA as fallback --------------------
-if ($DriverPack -and ($DriverPack.PSObject.Properties.Name -contains 'FullName') -and (Test-Path $DriverPack.FullName)) {
-    Write-Host -ForegroundColor Cyan "Driver pack located – applying driver pack only."
-    $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
-    $Global:MyOSDCloud.HPIAALL = [bool]$false   # HPIA deaktivieren, Pack wird verwendet
-    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true   # (optional) sicherstellen, dass Pack-Logik aktiv ist
-
-    # Cache in Z:\OSDCloud\DriverPacks\HP
-    if (Test-Path 'Z:\') {
-        $cacheDir = 'Z:\OSDCloud\DriverPacks\HP'
-        if (!(Test-Path $cacheDir)) { New-Item -ItemType Directory -Path $cacheDir -Force | Out-Null }
-        $destFile = Join-Path $cacheDir $DriverPack.Name
-        Copy-Item -Path $DriverPack.FullName -Destination $destFile -Force
-        Write-Host "DriverPack cached to $destFile" -ForegroundColor Cyan
-    } else {
-        Write-Host "Z:\ not present – skipping cache." -ForegroundColor Yellow
-    }
-}
-else {
-    Write-Host -ForegroundColor Yellow "No driver pack found – falling back to HPIA."
-    if (Test-HPIASupport) { $Global:MyOSDCloud.HPIAALL = [bool]$true }
-}
-
-# Optionale BIOS-/TPM-Updates beibehalten
-if (Test-HPIASupport) {
-    $Global:MyOSDCloud.HPTPMUpdate  = [bool]$true
+#Enable HPIA | Update HP BIOS | Update HP TPM
+ if (Test-HPIASupport){
+    #$Global:MyOSDCloud.DevMode = [bool]$True
+    $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
+    if ($Product -ne '83B2' -or $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
+    #{$Global:MyOSDCloud.HPIAALL = [bool]$true}
     $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
+    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true #In Test 
+    #Set HP BIOS Settings to what I want:
     iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
     Manage-HPBiosSettings -SetSettings
 }
-
 
 
 #write variables to console
@@ -133,4 +113,70 @@ Invoke-OSDCloud
 # Set-OSDCloudUnattendAuditMode
 
 # Initialize-OSDCloudStartnetUpdate
+
+# --- Cache HP DriverPack to Z: and enable HPIA fallback if no pack found -------
+try {
+    # Try to identify the newest HP SoftPaq (sp*.exe) downloaded by OSD/HP CMSL
+    $spExe = $null
+
+    # Prefer filename reported by MyOSDCloud (if available)
+    if ($Global:MyOSDCloud -and $Global:MyOSDCloud.DriverPackName) {
+        $cand = Join-Path 'C:\Drivers' $Global:MyOSDCloud.DriverPackName
+        if (Test-Path $cand) { $spExe = Get-Item $cand }
+    }
+
+    # Otherwise, search common locations
+    if (-not $spExe) {
+        $spExe = Get-ChildItem -Path 'C:\Drivers','C:\OSDCloud\DriverPacks\HP','D:\OSDCloud\DriverPacks\HP' `
+                 -Filter 'sp*.exe' -Recurse -ErrorAction SilentlyContinue |
+                 Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    }
+
+    if ($spExe) {
+        # Cache to Z:\ if present
+        if (Test-Path 'Z:\') {
+            $cacheRoot = 'Z:\OSDCloud\DriverPacks\HP'
+            if (!(Test-Path $cacheRoot)) { New-Item -ItemType Directory -Path $cacheRoot -Force | Out-Null }
+            $dest = Join-Path $cacheRoot $spExe.Name
+            Copy-Item $spExe.FullName $dest -Force
+            Write-Host "DriverPack cached to: $dest" -ForegroundColor Cyan
+        } else {
+            Write-Host "Z:\ not present – skipping cache." -ForegroundColor Yellow
+        }
+    } else {
+        Write-Warning "No HP DriverPack (sp*.exe) found – scheduling HPIA fallback at FirstBoot."
+
+        # Write a SetupComplete.cmd to run HPIA at first boot
+        $scriptRoot = 'C:\Windows\Setup\Scripts'
+        $hpiaRoot   = 'C:\Drivers\HPIA'
+        New-Item -ItemType Directory -Path $scriptRoot -Force | Out-Null
+        New-Item -ItemType Directory -Path $hpiaRoot   -Force | Out-Null
+
+        $setupCmd = @'
+@echo off
+:: HPIA fallback: download via PowerShell & run silent driver install
+powershell -ExecutionPolicy Bypass -NoProfile -Command ^
+  "$ErrorActionPreference='Stop'; ^
+    try { Import-Module HPCMSL -ErrorAction Stop } catch { Install-Module HPCMSL -Force -Scope AllUsers -AllowClobber }; ^
+    $sp = Get-SoftpaqList -Category Manageability | Where-Object { $_.Name -match 'HP Image Assistant' } | Sort-Object ReleaseDate -Descending | Select-Object -First 1; ^
+    if (-not $sp) { throw 'HPIA softpaq not found via HPCMSL' }; ^
+    $dest = 'C:\\Drivers\\HPIA'; New-Item -ItemType Directory -Force -Path $dest | Out-Null; ^
+    Save-Softpaq -Id $sp.Id -Destination $dest -Overwrite; ^
+    $spPath = Join-Path $dest ($sp.Id + '.exe'); ^
+    Start-Process $spPath -ArgumentList '/s','/e','/f', (Join-Path $dest 'bin') -Wait; ^
+    $hpia = Get-ChildItem (Join-Path $dest 'bin') -Filter 'HPImageAssistant*.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1; ^
+    if ($hpia) { Start-Process $hpia.FullName -ArgumentList '/Operation:Analyze','/Category:Driver','/Action:Install','/Silent','/NoReboot' -Wait } ^
+    else { Write-Error 'HPImageAssistant.exe not found after extraction' } ^
+  "
+
+exit /b 0
+'@
+
+        Set-Content -Path (Join-Path $scriptRoot 'SetupComplete.cmd') -Value $setupCmd -Encoding Ascii
+    }
+} catch {
+    Write-Warning "Caching/HPIA-fallback block failed: $($_.Exception.Message)"
+}
+# -------------------------------------------------------------------------------
+
 Restart-Computer -Force

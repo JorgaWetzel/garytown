@@ -89,38 +89,18 @@ if ($DriverPack){
     $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
 }
 
-
-# ---------------- Driver package first, HPIA as fallback --------------------
-if ($DriverPack -and ($DriverPack.PSObject.Properties.Name -contains 'FullName') -and (Test-Path $DriverPack.FullName)) {
-    Write-Host -ForegroundColor Cyan "Driver pack located – applying driver pack only."
-    $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
-    $Global:MyOSDCloud.HPIAALL = [bool]$false   # HPIA deaktivieren, Pack wird verwendet
-    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true   # (optional) sicherstellen, dass Pack-Logik aktiv ist
-
-    # Cache in Z:\OSDCloud\DriverPacks\HP
-    if (Test-Path 'Z:\') {
-        $cacheDir = 'Z:\OSDCloud\DriverPacks\HP'
-        if (!(Test-Path $cacheDir)) { New-Item -ItemType Directory -Path $cacheDir -Force | Out-Null }
-        $destFile = Join-Path $cacheDir $DriverPack.Name
-        Copy-Item -Path $DriverPack.FullName -Destination $destFile -Force
-        Write-Host "DriverPack cached to $destFile" -ForegroundColor Cyan
-    } else {
-        Write-Host "Z:\ not present – skipping cache." -ForegroundColor Yellow
-    }
-}
-else {
-    Write-Host -ForegroundColor Yellow "No driver pack found – falling back to HPIA."
-    if (Test-HPIASupport) { $Global:MyOSDCloud.HPIAALL = [bool]$true }
-}
-
-# Optionale BIOS-/TPM-Updates beibehalten
-if (Test-HPIASupport) {
-    $Global:MyOSDCloud.HPTPMUpdate  = [bool]$true
+#Enable HPIA | Update HP BIOS | Update HP TPM
+ if (Test-HPIASupport){
+    #$Global:MyOSDCloud.DevMode = [bool]$True
+    $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
+    if ($Product -ne '83B2' -or $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
+    #{$Global:MyOSDCloud.HPIAALL = [bool]$true}
     $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
+    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true #In Test 
+    #Set HP BIOS Settings to what I want:
     iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
     Manage-HPBiosSettings -SetSettings
 }
-
 
 
 #write variables to console
@@ -133,4 +113,37 @@ Invoke-OSDCloud
 # Set-OSDCloudUnattendAuditMode
 
 # Initialize-OSDCloudStartnetUpdate
+# --- Cache HP DriverPack nach Z: (robust) --------------------------------------
+try {
+    $cacheRoot = 'Z:\OSDCloud\DriverPacks\HP'
+
+    # Versuche zuerst, den durch OSD/HP gemeldeten Dateinamen zu verwenden
+    $spExe = $null
+    if ($Global:MyOSDCloud -and $Global:MyOSDCloud.DriverPackName) {
+        $cand = Join-Path 'C:\Drivers' $Global:MyOSDCloud.DriverPackName
+        if (Test-Path $cand) { $spExe = Get-Item $cand }
+    }
+
+    # Falls nicht gefunden: letzte sp*.exe suchen
+    if (-not $spExe) {
+        $spExe = Get-ChildItem -Path 'C:\Drivers','C:\OSDCloud\DriverPacks\HP','D:\OSDCloud\DriverPacks\HP' -Filter 'sp*.exe' -Recurse -ErrorAction SilentlyContinue |
+                 Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    }
+
+    if ($spExe -and (Test-Path 'Z:\')) {
+        if (!(Test-Path $cacheRoot)) { New-Item -ItemType Directory -Path $cacheRoot -Force | Out-Null }
+        $dest = Join-Path $cacheRoot $spExe.Name
+        Copy-Item $spExe.FullName $dest -Force
+        Write-Host "DriverPack gecached nach: $dest" -ForegroundColor Cyan
+    } else {
+        if (-not (Test-Path 'Z:\')) {
+            Write-Host "Z:\ nicht vorhanden – Cache übersprungen." -ForegroundColor Yellow
+        } else {
+            Write-Host "Kein SoftPaq (sp*.exe) gefunden – Cache übersprungen." -ForegroundColor Yellow
+        }
+    }
+} catch {
+    Write-Warning "Caching nach Z:\ fehlgeschlagen: $($_.Exception.Message)"
+}
+# -------------------------------------------------------------------------------
 Restart-Computer -Force
