@@ -14,37 +14,23 @@ Write-Host -ForegroundColor Green "Transport Layer Security (TLS) 1.2"
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 #[System.Net.WebRequest]::DefaultWebProxy.Credentials = [System.Net.CredentialCache]::DefaultCredentials
 
-#================================================
-#   [PreOS] Update Module
-#================================================
-if ((Get-MyComputerModel) -match 'Virtual') {
-    Write-Host  -ForegroundColor Green "Setting Display Resolution to 1600x"
-    Set-DisRes 1600
-}
+#========================================================
+#   Netzwerkfreigabe verbinden
+#========================================================
+$DeployShare = "\\VARIODEPLOY\Deploy$"             # UNC-Pfad zur Freigabe
+$MapDrive    = 'Z:'                               # gewünschter Laufwerks­buchstabe
+$UserName    = 'VARIODEPLOY\Administrator'       # Domänen- oder lokaler User
+$PlainPwd    = '12Monate'                        # Passwort (Klartext)
 
-# ======================================================================
-# Konfiguration – HIER NUR BEI BEDARF ANPASSEN
-# ======================================================================
-$DeployShare = '\\10.10.100.100\Daten'          # UNC-Pfad zum Deployment-Share
-$MapDrive    = 'Z:'                              # gewünschter Laufwerks­buchstabe
-$UserName    = 'Jorga'                          # Domänen- oder lokaler User
-$PlainPwd    = 'Dont4getme'                     # Passwort (Klartext)
+$SrcWim      = 'Z:\OSDCloud\OS\Win11_24H2_MUI.wim'
 
-
-#$DeployShare = '\\192.168.2.15\DeploymentShare$' # UNC-Pfad zum Deployment-Share
-#$MapDrive    = 'Z:'                               # gewünschter Laufwerks­buchstabe
-#$UserName    = 'VARIODEPLOY\Administrator'       # Domänen- oder lokaler User
-#$PlainPwd    = '12Monate'                        # Passwort (Klartext)
-
-$SrcWim 	 = 'Z:\OSDCloud\OS\Win11_24H2_MUI.wim'
-
-# Anmelde­daten vorbereiten
+# Anmeldedaten vorbereiten
 $SecurePwd = ConvertTo-SecureString $PlainPwd -AsPlainText -Force
 $Cred      = New-Object System.Management.Automation.PSCredential ($UserName,$SecurePwd)
 
 # Share verbinden
 if (-not (Test-Path -Path $MapDrive)){
-	net use $MapDrive $DeployShare /user:$UserName $PlainPwd /persistent:no
+    net use $MapDrive $DeployShare /user:$UserName $PlainPwd /persistent:no
 }
 if (-not (Test-Path -Path $MapDrive)) {
     Write-Host "Failed to Map Drive" -ForegroundColor Red
@@ -63,49 +49,45 @@ $Global:MyOSDCloud = @{
     OSImageIndex      = 1  
     ClearDiskConfirm  = $false
     ZTI               = $true
-	Firmware          = $false
-    UpdateOS          = $false     
-    UpdateDrivers     = $false      
+    Firmware          = $false
 }
 
-# ================================================================
-#   HP-Treiberpaket vorbereiten (mit lokalem Cache)
-# ================================================================
-$Product        = Get-MyComputerProduct
-$OSVersion      = 'Windows 11'
-$OSReleaseID    = '24H2'
-$DriverPackName = "$Product-$OSVersion-$OSReleaseID.exe"
-$DriverSearchPaths = @(
-    "Z:\OSDCloud\DriverPacks\DISM\HP\$Product",
-    "Z:\OSDCloud\DriverPacks\HP\$DriverPackName"
-)
+# --------   HP‑spezifisches vorbereiten --------------------
+$Product = (Get-HPDeviceProductID).ProductID
+$Model   = (Get-HPDeviceProductID).ProductName
 
-# --------   HP-Spezifisches vorbereiten --------------------
-$OSVersion = 'Windows 11' #Used to Determine Driver Pack
-$OSReleaseID = '24H2' #Used to Determine Driver Pack
-$DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
 
-if ($DriverPack){
-    $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
+# --- Treiber‑Logik ---------------------------------------------
+# 1) Versuche immer zuerst das passende Driver‑Pack via CMSL
+# 2) Falls KEIN Driver‑Pack vorhanden ist, verwende HPIA als Fallback
+
+$OSVersion   = 'Windows 11'    # Used to Determine Driver Pack
+$OSReleaseID = '24H2'         # Used to Determine Driver Pack
+$DriverPack  = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
+
+if ($DriverPack) {
+    # Driver‑Pack gefunden – nur dieses installieren
+    $Global:MyOSDCloud.DriverPackName         = $DriverPack.Name
+    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true
+    $Global:MyOSDCloud.HPIAALL                = [bool]$false
+} else {
+    # Kein Driver‑Pack – HPIA als Fallback benutzen, falls unterstützt
+    if (Test-HPIASupport) {
+        $Global:MyOSDCloud.HPIAALL = [bool]$true
+    }
 }
 
-#Enable HPIA | Update HP BIOS | Update HP TPM
- if (Test-HPIASupport){
-    #$Global:MyOSDCloud.DevMode = [bool]$True
-    $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
-    if ($Product -ne '83B2' -or $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
-    #{$Global:MyOSDCloud.HPIAALL = [bool]$true}
-    $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
-    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true #In Test 
-    #Set HP BIOS Settings to what I want:
-    iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
-    Manage-HPBiosSettings -SetSettings
+# ---------- Paket auf Laufwerk Z: cachen ------------------------
+$CacheRoot = 'Z:\OSDCloud\DriverPacks\HP'
+if (-not (Test-Path $CacheRoot)) { New-Item -Path $CacheRoot -ItemType Directory -Force | Out-Null }
+
+if ($DriverPack) {
+    $LocalDriverPack = Join-Path 'C:\Drivers' $DriverPack.Name
+    if (Test-Path $LocalDriverPack) {
+        Copy-Item -Path $LocalDriverPack -Destination $CacheRoot -Force
+    }
 }
-
-
-#write variables to console
-Write-Output $Global:MyOSDCloud
-
+# ----------------------------------------------------------------
 
 # --- Deployment ---------------------------------------------
 Invoke-OSDCloud
