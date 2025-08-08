@@ -109,7 +109,7 @@ if ($DriverPack -and ($DriverPack.PSObject.Properties.Name -contains 'FullName')
     }
 }
 else {
-    Write-Host -ForegroundColor Yellow "No driver pack found - falling back to HPIA."
+	Write-Host -ForegroundColor Yellow "No driver pack found - falling back to HPIA."
     if (Test-HPIASupport) { $Global:MyOSDCloud.HPIAALL = $true }
 }
 
