@@ -1,19 +1,36 @@
-# 99-Deployment.ps1  –  StartNet-Hook, minimal
-# ==== Quiet-on-error flag (controls Splash suppression in WinPE) ====
-$Global:VarioQuietFlagDir  = "X:\OSDCloud\Flags"
-$Global:VarioQuietFlagFile = Join-Path $Global:VarioQuietFlagDir "SilentSplashOff.txt"
-function Set-QuietSplash {
-    try {
-        if (!(Test-Path $Global:VarioQuietFlagDir)) {
-            New-Item -ItemType Directory -Path $Global:VarioQuietFlagDir -Force | Out-Null
+
+# ---------------- Driver package first, HPIA as fallback (with cache search) --------------------
+$DriverPack = Get-OSDCloudDriverPack
+
+# Falls kein DriverPack gefunden, im Cache auf Z: suchen
+if (-not $DriverPack -and (Test-Path 'Z:\OSDCloud\DriverPacks\HP')) {
+    $DriverPackPath = Get-ChildItem 'Z:\OSDCloud\DriverPacks\HP' -Filter *.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($DriverPackPath) {
+        $DriverPack = [PSCustomObject]@{
+            Name     = $DriverPackPath.Name
+            FullName = $DriverPackPath.FullName
         }
-        New-Item -Path $Global:VarioQuietFlagFile -ItemType File -Force | Out-Null
-        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] QuietSplash Flag gesetzt – Splash wird beim nächsten Start übersprungen."
-    } catch {
-        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Konnte QuietSplash Flag nicht setzen: $($_.Exception.Message)"
     }
 }
-# ================================================================
+
+if ($DriverPack) {
+    Write-Host -ForegroundColor Cyan 'Driver pack found - installing only driver pack.'
+    $Global:MyOSDCloud.DriverPackName        = $DriverPack.Name
+    $Global:MyOSDCloud.HPCMSLDriverPackLatest = $true    # Driver-Pack aktiv
+    $Global:MyOSDCloud.HPIAALL               = $false   # HPIA deaktivieren
+
+    # Paket im Cache auf Z: ablegen
+    $cacheDir = 'Z:\OSDCloud\DriverPacks\HP'
+    if (!(Test-Path $cacheDir)) { New-Item -ItemType Directory -Path $cacheDir -Force | Out-Null }
+    $destFile = Join-Path $cacheDir $DriverPack.Name
+    if (!(Test-Path $destFile)) { Copy-Item -Path $DriverPack.FullName -Destination $destFile -Force }
+}
+else {
+    Write-Host -ForegroundColor Yellow 'No driver pack found - falling back to HPIA.'
+    if (Test-HPIASupport) { $Global:MyOSDCloud.HPIAALL = $true }
+}
+
+# 99-Deployment.ps1  –  StartNet-Hook, minimal
 
 Import-Module OSD -Force
 
@@ -29,37 +46,20 @@ Write-Host -ForegroundColor Green "Transport Layer Security (TLS) 1.2"
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 #[System.Net.WebRequest]::DefaultWebProxy.Credentials = [System.Net.CredentialCache]::DefaultCredentials
 
-#================================================
-#   [PreOS] Update Module
-#================================================
-if ((Get-MyComputerModel) -match 'Virtual') {
-    Write-Host  -ForegroundColor Green "Setting Display Resolution to 1600x"
-    Set-DisRes 1600
-}
+#========================================================
+#   Netzwerkfreigabe verbinden
+#========================================================
 
-# ======================================================================
-# Konfiguration – HIER NUR BEI BEDARF ANPASSEN
-# ======================================================================
-$DeployShare = '\\10.10.100.100\Daten'          # UNC-Pfad zum Deployment-Share
-$MapDrive    = 'Z:'                              # gewünschter Laufwerks­buchstabe
-$UserName    = 'Jorga'                          # Domänen- oder lokaler User
-$PlainPwd    = 'Dont4getme'                     # Passwort (Klartext)
+$DeployShare = '\\10.10.100.100\Daten'
+$MapDrive    = 'Z:'
+$UserName    = 'Jorga'
+$PlainPwd    = 'Dont4getme'
+$SrcWim      = 'Z:\OSDCloud\OS\Win11_24H2_MUI.wim'
 
-
-#$DeployShare = '\\192.168.2.15\DeploymentShare$' # UNC-Pfad zum Deployment-Share
-#$MapDrive    = 'Z:'                               # gewünschter Laufwerks­buchstabe
-#$UserName    = 'VARIODEPLOY\Administrator'       # Domänen- oder lokaler User
-#$PlainPwd    = '12Monate'                        # Passwort (Klartext)
-
-$SrcWim 	 = 'Z:\OSDCloud\OS\Win11_24H2_MUI.wim'
-
-# Anmelde­daten vorbereiten
-$SecurePwd = ConvertTo-SecureString $PlainPwd -AsPlainText -Force
-$Cred      = New-Object System.Management.Automation.PSCredential ($UserName,$SecurePwd)
 
 # Share verbinden
 if (-not (Test-Path -Path $MapDrive)){
-	net use $MapDrive $DeployShare /user:$UserName $PlainPwd /persistent:no
+    net use $MapDrive $DeployShare /user:$UserName $PlainPwd /persistent:no
 }
 if (-not (Test-Path -Path $MapDrive)) {
     Write-Host "Failed to Map Drive" -ForegroundColor Red
@@ -78,121 +78,71 @@ $Global:MyOSDCloud = @{
     OSImageIndex      = 1  
     ClearDiskConfirm  = $false
     ZTI               = $true
-	Firmware          = $false
-    UpdateOS          = $false     
-    UpdateDrivers     = $false      
+    Firmware          = $false
 }
 
-# ================================================================
-#   HP-Treiberpaket vorbereiten (mit lokalem Cache)
-# ================================================================
-$Product        = Get-MyComputerProduct
-$OSVersion      = 'Windows 11'
-$OSReleaseID    = '24H2'
-$DriverPackName = "$Product-$OSVersion-$OSReleaseID.exe"
-$DriverSearchPaths = @(
-    "Z:\OSDCloud\DriverPacks\DISM\HP\$Product",
-    "Z:\OSDCloud\DriverPacks\HP\$DriverPackName"
-)
-
-# --------   HP-Spezifisches vorbereiten --------------------
-$OSVersion = 'Windows 11' #Used to Determine Driver Pack
-$OSReleaseID = '24H2' #Used to Determine Driver Pack
-$DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
-
+# ---------------- Driver package first, HPIA as fallback --------------------
 if ($DriverPack){
-    $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
-}
+    Write-Host -ForegroundColor Cyan "Driver pack located – applying driver pack only."
+    $Global:MyOSDCloud.DriverPackName      = $DriverPack.Name
+    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true   # Driver-Pack aktiv
+    $Global:MyOSDCloud.HPIAALL             = [bool]$false     # HPIA deaktivieren
 
-#Enable HPIA | Update HP BIOS | Update HP TPM
- if (Test-HPIASupport){
-    #$Global:MyOSDCloud.DevMode = [bool]$True
-    $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
-    if ($Product -ne '83B2' -or $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
-    #{$Global:MyOSDCloud.HPIAALL = [bool]$true}
-# If neither DriverPack nor HPIA is available, suppress Splash next boot to reveal errors
-try {
-    $haveLocalDP = Test-Path 'C:\Drivers' -PathType Container -and @(Get-ChildItem 'C:\Drivers' -Filter sp*.exe -ErrorAction SilentlyContinue).Count -gt 0
-    $hpiaSupported = $false
-    try { $hpiaSupported = (Test-HPIASupport) } catch {}
-    if (-not $haveLocalDP -and -not $hpiaSupported) {
-        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Kein DriverPack & kein HPIA verfügbar – setze QuietSplash Flag."
-        Set-QuietSplash
+    # Cache in Z:\OSDCloud\DriverPacks\HP
+    $cacheDir = "Z:\OSDCloud\DriverPacks\HP"
+    if (!(Test-Path $cacheDir)){ New-Item -ItemType Directory -Path $cacheDir -Force | Out-Null }
+    $destFile = Join-Path $cacheDir $DriverPack.Name
+    if (!(Test-Path $destFile)){ Copy-Item -Path $DriverPack.FullName -Destination $destFile -Force }
+}
+else {
+    Write-Host -ForegroundColor Yellow 'No driver pack found - falling back to HPIA (unless ZBook exception).'
+    if (Test-HPIASupport) {
+        if (($Product -ne '83B2') -or ($Model -notmatch 'zbook')) {
+            $Global:MyOSDCloud.HPIAALL = $true
+        } else {
+            Write-Host -ForegroundColor Yellow 'ZBook exception matched (Product 83B2 & Model contains zbook) - skipping HPIA.'
+            $Global:MyOSDCloud.HPIAALL = $false
+        }
     }
-} catch {}
+}
+# Optionale BIOS-/TPM-Updates beibehalten
+if (Test-HPIASupport){
+    $Global:MyOSDCloud.HPTPMUpdate  = [bool]$true
     $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
-    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true #In Test 
-    #Set HP BIOS Settings to what I want:
     iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
     Manage-HPBiosSettings -SetSettings
 }
 
-
-#write variables to console
-Write-Output $Global:MyOSDCloud
-
-
 # --- Deployment ---------------------------------------------
-try {
 Invoke-OSDCloud
-} catch {
-    Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Invoke-OSDCloud failed: $($_.Exception.Message)"
-    try { Set-QuietSplash } catch {}
-# --- Post Invoke-OSDCloud: ensure Z:\ cache of DriverPack and SetupComplete shutdown ---
+
+# --- OSDCloud First-Boot: Erfolgston + sofortiges Shutdown --------------------
+$autoDir = 'C:\OSDCloud\Automate\Startup'
+New-Item -ItemType Directory -Path $autoDir -Force | Out-Null
+
+$ps1 = @'
+# 99-varo-shutdown.ps1  (läuft als System vor OOBE)
 try {
-    # map info: assume Z: already mapped earlier by net use in script
-    if (Test-Path 'Z:\') {
-        $cacheDir = 'Z:\OSDCloud\DriverPacks\HP'
-        if (!(Test-Path $cacheDir)) { New-Item -ItemType Directory -Path $cacheDir -Force | Out-Null }
-        # prefer explicit DriverPack if object exists and file on disk
-        $dp = $null
-        if ($DriverPack -and ($DriverPack.PSObject.Properties.Name -contains 'FullName') -and (Test-Path $DriverPack.FullName)) {
-            $dp = Get-Item -LiteralPath $DriverPack.FullName -ErrorAction SilentlyContinue
-        }
-        if (-not $dp -and (Test-Path 'C:\Drivers')) {
-            $dp = Get-ChildItem 'C:\Drivers' -Filter sp*.exe -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-        }
-        if ($dp) {
-            $dest = Join-Path $cacheDir $dp.Name
-            if (!(Test-Path $dest)) {
-                Copy-Item -Path $dp.FullName -Destination $dest -Force
-                Write-Host -ForegroundColor Cyan "[VarioTradeMUI] Cached driver pack to $dest"
-            } else {
-                Write-Host -ForegroundColor Green "[VarioTradeMUI] Driver pack already cached at $dest"
-            }
-        } else {
-            Write-Host -ForegroundColor Yellow "[VarioTradeMUI] No sp*.exe found under C:\Drivers after Invoke-OSDCloud; skipping cache."
-        }
-    } else {
-        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Z:\ not available; skipping cache."
-    }
+    # 1) kurzer Erfolgston (MessageBeep, dann Beep-Fallback)
+    $sig = '[DllImport("user32.dll")]public static extern bool MessageBeep(uint uType);'
+    Add-Type -MemberDefinition $sig -Name U -Namespace Win32 -ErrorAction SilentlyContinue | Out-Null
+    1..3 | ForEach-Object { [Win32.U]::MessageBeep(0x40) | Out-Null; Start-Sleep -Milliseconds 300 }
+    try { [console]::beep(800,200); [console]::beep(1000,200) } catch {}
 
-    # Create SetupComplete to force OOBE shutdown using your 99-varo-shutdown.ps1
-    $setupDir = 'C:\Windows\Setup\Scripts'
-    New-Item -ItemType Directory -Path $setupDir -Force | Out-Null
-    $shutdownPs1 = Join-Path $setupDir '99-varo-shutdown.ps1'
-    try {
-        Invoke-RestMethod 'https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/Customers/99-varo-shutdown.ps1' | Out-File -FilePath $shutdownPs1 -Encoding ascii -Force
-        Write-Host -ForegroundColor Green "[VarioTradeMUI] Wrote $shutdownPs1"
-    } catch {
-        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Failed to download 99-varo-shutdown.ps1: $($_.Exception.Message)"
-    }
-    $scmd = @'
-@echo off
-echo [%date% %time%] Running 99-varo-shutdown.ps1 >> C:\Windows\Temp\varo-shutdown.log
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\Windows\Setup\Scripts\99-varo-shutdown.ps1"
-exit /b 0
+    # 2) Log und Shutdown
+    Add-Content -Path 'C:\Windows\Temp\SetupComplete.log' -Value ("[{0}] Vario shutdown triggered" -f (Get-Date))
+    Start-Process -FilePath 'shutdown.exe' -ArgumentList '/s','/t','0','/f' -WindowStyle Hidden
+}
+catch {
+    Add-Content -Path 'C:\Windows\Temp\SetupComplete.log' -Value ("[{0}] Vario shutdown failed: {1}" -f (Get-Date), $_.Exception.Message)
+}
 '@
-    $scPath = Join-Path $setupDir 'SetupComplete.cmd'
-    $scmd | Out-File -FilePath $scPath -Encoding ascii -Force
-    Write-Host -ForegroundColor Green "[VarioTradeMUI] Wrote $scPath"
-} catch {
-    Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Post-Invoke cache/SetupComplete block failed: $($_.Exception.Message)"
-}
-    throw
-}
 
-# Set-OSDCloudUnattendAuditMode
+# Skript mit ASCII (kompatibel) schreiben; Name mit "99-" -> läuft als letztes
+$scriptPath = Join-Path $autoDir '99-varo-shutdown.ps1'
+Set-Content -Path $scriptPath -Value $ps1 -Encoding Ascii
+# -----------------------------------------------------------------------------
+
 
 # Initialize-OSDCloudStartnetUpdate
 Restart-Computer -Force
