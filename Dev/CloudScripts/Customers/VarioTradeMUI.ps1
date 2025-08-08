@@ -49,42 +49,31 @@ $Global:MyOSDCloud = @{
     Firmware          = $false
 }
 
-# --------   HP‑spezifisches vorbereiten --------------------
-$Product = (Get-HPDeviceProductID).ProductID
-$Model   = (Get-HPDeviceProductID).ProductName
+# ---------------- Driver package first, HPIA as fallback --------------------
+if ($DriverPack){
+    Write-Host -ForegroundColor Cyan "Driver pack located – applying driver pack only."
+    $Global:MyOSDCloud.DriverPackName      = $DriverPack.Name
+    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true   # Driver-Pack aktiv
+    $Global:MyOSDCloud.HPIAALL             = [bool]$false     # HPIA deaktivieren
 
-
-# --- Treiber‑Logik ---------------------------------------------
-# 1) Versuche immer zuerst das passende Driver‑Pack via CMSL
-# 2) Falls KEIN Driver‑Pack vorhanden ist, verwende HPIA als Fallback
-
-$OSVersion   = 'Windows 11'    # Used to Determine Driver Pack
-$OSReleaseID = '24H2'         # Used to Determine Driver Pack
-$DriverPack  = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
-
-if ($DriverPack) {
-    # Driver‑Pack gefunden – nur dieses installieren
-    $Global:MyOSDCloud.DriverPackName         = $DriverPack.Name
-    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true
-    $Global:MyOSDCloud.HPIAALL                = [bool]$false
-} else {
-    # Kein Driver‑Pack – HPIA als Fallback benutzen, falls unterstützt
-    if (Test-HPIASupport) {
-        $Global:MyOSDCloud.HPIAALL = [bool]$true
-    }
+    # Cache in Z:\OSDCloud\DriverPacks\HP
+    $cacheDir = "Z:\OSDCloud\DriverPacks\HP"
+    if (!(Test-Path $cacheDir)){ New-Item -ItemType Directory -Path $cacheDir -Force | Out-Null }
+    $destFile = Join-Path $cacheDir $DriverPack.Name
+    if (!(Test-Path $destFile)){ Copy-Item -Path $DriverPack.FullName -Destination $destFile -Force }
+}
+else{
+    Write-Host -ForegroundColor Yellow "No driver pack found – falling back to HPIA."
+    if (Test-HPIASupport){ $Global:MyOSDCloud.HPIAALL = [bool]$true }
 }
 
-# ---------- Paket auf Laufwerk Z: cachen ------------------------
-$CacheRoot = 'Z:\OSDCloud\DriverPacks\HP'
-if (-not (Test-Path $CacheRoot)) { New-Item -Path $CacheRoot -ItemType Directory -Force | Out-Null }
-
-if ($DriverPack) {
-    $LocalDriverPack = Join-Path 'C:\Drivers' $DriverPack.Name
-    if (Test-Path $LocalDriverPack) {
-        Copy-Item -Path $LocalDriverPack -Destination $CacheRoot -Force
-    }
+# Optionale BIOS-/TPM-Updates beibehalten
+if (Test-HPIASupport){
+    $Global:MyOSDCloud.HPTPMUpdate  = [bool]$true
+    $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
+    iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
+    Manage-HPBiosSettings -SetSettings
 }
-# ----------------------------------------------------------------
 
 # --- Deployment ---------------------------------------------
 Invoke-OSDCloud
