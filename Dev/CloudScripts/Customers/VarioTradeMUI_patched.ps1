@@ -165,12 +165,12 @@ function Test-HPSoftPaqPresent {
 # After all CMSL/OSDCloud attempts, decide deterministically if HPIA must run:
 $DriverPackSp = Test-HPSoftPaqPresent -Path 'C:\Drivers'
 if ($DriverPackSp) {
-    Write-Host -ForegroundColor Cyan "Driver pack located – applying driver pack only: $($DriverPackSp.Name)"
+    Write-Host -ForegroundColor Cyan "Driver pack located â€“ applying driver pack only: $($DriverPackSp.Name)"
     $Global:MyOSDCloud.DriverPackName         = $DriverPackSp.Name
     $Global:MyOSDCloud.HPCMSLDriverPackLatest = $true
     $Global:MyOSDCloud.HPIAALL                = $false
 } else {
-    Write-Host -ForegroundColor Yellow "No driver pack found – falling back to HPIA."
+    Write-Host -ForegroundColor Yellow "No driver pack found â€“ falling back to HPIA."
     $Global:MyOSDCloud.DriverPackName         = $null
     $Global:MyOSDCloud.HPCMSLDriverPackLatest = $false
     $Global:MyOSDCloud.HPIAALL                = $true
