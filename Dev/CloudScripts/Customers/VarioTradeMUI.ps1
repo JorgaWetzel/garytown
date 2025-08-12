@@ -82,7 +82,7 @@ if (-not (Test-Path -Path $MapDrive)) {
 
 # ---- Automatische Vorpruefung vor Deployment ----
 if ($CurrentIP -match '^10\.10\.100\.') {
-Invoke-IntuneAutopilotPreflight -StopOnBlock
+Invoke-IntuneAutopilotPreflight -AllowSerialFallback -StopOnBlock
 }
 
 
