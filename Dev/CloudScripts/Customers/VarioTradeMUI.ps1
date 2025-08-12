@@ -121,12 +121,6 @@ if ($DriverPack){
     $Global:MyOSDCloud.DriverPackName      = $DriverPack.Name
     $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true   # Driver-Pack aktiv
     $Global:MyOSDCloud.HPIAALL             = [bool]$false     # HPIA deaktivieren
-
-    # Cache in Z:\OSDCloud\DriverPacks\HP
-    $cacheDir = "Z:\OSDCloud\DriverPacks\HP"
-    if (!(Test-Path $cacheDir)){ New-Item -ItemType Directory -Path $cacheDir -Force | Out-Null }
-    $destFile = Join-Path $cacheDir $DriverPack.Name
-    if (!(Test-Path $destFile)){ Copy-Item -Path $DriverPack.FullName -Destination $destFile -Force }
 }
 else{
     Write-Host -ForegroundColor Yellow "No driver pack found – falling back to HPIA."
