@@ -38,13 +38,13 @@ if ((Get-MyComputerModel) -match 'Virtual') {
 }
 
 # ======================================================================
-# Automatische Konfiguration basierend auf IP-Bereich
+# Automatische Konfiguration basierend auf IP-Bereich (WinPE-tauglich)
 # ======================================================================
 
-# Aktuelle IPv4-Adresse ermitteln (nur aktive Adapter)
-$CurrentIP = (Get-NetIPAddress -AddressFamily IPv4 `
-    | Where-Object { $_.IPAddress -match '^10\.10\.100\.|^192\.168\.2\.' } `
-    | Select-Object -First 1 -ExpandProperty IPAddress)
+# Aktuelle IP-Adresse aus ipconfig holen
+$CurrentIP = (ipconfig | Select-String "IPv4" | ForEach-Object {
+    ($_ -split ":")[-1].Trim()
+} | Where-Object { $_ -match "^10\.10\.100\.|^192\.168\.2\." } | Select-Object -First 1)
 
 if ($CurrentIP -match '^10\.10\.100\.') {
     # Konfiguration für 10.10.100.x
@@ -66,10 +66,6 @@ else {
 }
 
 $SrcWim = 'Z:\OSDCloud\OS\Win11_24H2_MUI.wim'
-
-# Anmeldedaten vorbereiten
-$SecurePwd = ConvertTo-SecureString $PlainPwd -AsPlainText -Force
-$Cred      = New-Object System.Management.Automation.PSCredential ($UserName,$SecurePwd)
 
 # Share verbinden
 if (-not (Test-Path -Path $MapDrive)){
