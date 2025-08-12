@@ -89,6 +89,7 @@ function Get-GraphConfig {
         [string[]] $CandidatePaths = @(
             "$PSScriptRoot\GraphApp.json",
             "X:\OSDCloud\GraphApp.json",
+			"Z:\OSDCloud\GraphApp.json",
             "X:\OSDCloud\Scripts\GraphApp.json",
             "X:\GraphApp.json"
         )

@@ -39,9 +39,6 @@ if ((Get-MyComputerModel) -match 'Virtual') {
     Set-DisRes 1600
 }
 
-# ---- Automatische Vorpruefung vor Deployment ----
-Invoke-IntuneAutopilotPreflight -StopOnBlock
-
 # ======================================================================
 # Automatische Konfiguration basierend auf IP-Bereich (WinPE-tauglich)
 # ======================================================================
@@ -83,6 +80,9 @@ if (-not (Test-Path -Path $MapDrive)) {
     Write-Host "Mapped Drive $MapDrive to $DeployShare" -ForegroundColor Green
 }
 
+
+# ---- Automatische Vorpruefung vor Deployment ----
+Invoke-IntuneAutopilotPreflight -StopOnBlock
 
 # ================================================================
 #   OSDCloud-Variablen setzen
