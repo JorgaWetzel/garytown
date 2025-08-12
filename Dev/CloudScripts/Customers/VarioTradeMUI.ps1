@@ -23,11 +23,13 @@ Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')
 
 iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
-
 #Transport Layer Security (TLS) 1.2
 Write-Host -ForegroundColor Green "Transport Layer Security (TLS) 1.2"
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 #[System.Net.WebRequest]::DefaultWebProxy.Credentials = [System.Net.CredentialCache]::DefaultCredentials
+
+$functionsUrl = 'https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions3.ps1'
+iex (Invoke-WebRequest -UseBasicParsing -Uri $functionsUrl).Content
 
 #================================================
 #   [PreOS] Update Module
@@ -36,6 +38,9 @@ if ((Get-MyComputerModel) -match 'Virtual') {
     Write-Host  -ForegroundColor Green "Setting Display Resolution to 1600x"
     Set-DisRes 1600
 }
+
+# ---- Automatische Vorpruefung vor Deployment ----
+Invoke-IntuneAutopilotPreflight -StopOnBlock
 
 # ======================================================================
 # Automatische Konfiguration basierend auf IP-Bereich (WinPE-tauglich)
