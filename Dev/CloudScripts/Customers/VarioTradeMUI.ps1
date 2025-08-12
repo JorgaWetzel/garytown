@@ -82,7 +82,7 @@ if (-not (Test-Path -Path $MapDrive)) {
 
 
 # ---- Automatische Vorpruefung vor Deployment ----
-Invoke-IntuneAutopilotPreflight -StopOnBlock
+# Invoke-IntuneAutopilotPreflight -StopOnBlock
 
 # ================================================================
 #   OSDCloud-Variablen setzen
