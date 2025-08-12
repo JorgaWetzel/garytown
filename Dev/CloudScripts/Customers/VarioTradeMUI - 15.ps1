@@ -172,6 +172,71 @@ finally {
         Write-Host -ForegroundColor Yellow "[VarioTradeMUI] DriverPack cache block failed: $($_.Exception.Message)"
     }
 }
+# --- SetupComplete: 99-varo-shutdown.ps1 lokal schreiben (kein Download nötig) ---
+try {
+    $setupDir = 'C:\Windows\Setup\Scripts'
+    New-Item -ItemType Directory -Path $setupDir -Force | Out-Null
+
+    $shutdownPs1 = Join-Path $setupDir '99-varo-shutdown.ps1'
+    $shutdownContent = @'
+# ===== VarioTrade OOBE: Beep + Shutdown (mit Zeit-Log) =====
+try { New-Item -ItemType Directory -Path 'C:\Windows\Temp' -Force | Out-Null } catch {}
+$logFile = 'C:\Windows\Temp\varo-shutdown.log'
+
+Add-Content -Path $logFile -Value ("[START] $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - OOBE Shutdown Script gestartet")
+
+# Doppel-Beep: Console.Beep (ohne Audioservice), mit WAV-Fallback
+try {
+    [console]::Beep(880,180); Start-Sleep -Milliseconds 120; [console]::Beep(1200,240)
+} catch {
+    try {
+        $wav = [IO.Path]::Combine($env:TEMP,'vbeep.wav')
+        [IO.File]::WriteAllBytes($wav, [Convert]::FromBase64String(
+        'UklGRsQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQcAAAAA////AP///wD///8A////AP///wD///8A'))
+        Add-Type -AssemblyName System.Windows.Forms
+        (New-Object System.Media.SoundPlayer $wav).PlaySync()
+        Remove-Item $wav -ErrorAction SilentlyContinue
+    } catch {}
+}
+
+# Marker + Shutdown
+New-Item -Path 'C:\Windows\Temp\varo.oobe.ran' -ItemType File -Force | Out-Null
+Add-Content -Path $logFile -Value ("[END] $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Shutdown eingeleitet")
+Start-Sleep -Seconds 2
+Start-Process -FilePath "shutdown.exe" -ArgumentList "/s /t 3 /f" -WindowStyle Hidden
+# ===== end VarioTrade OOBE =====
+'@
+
+    # Primär: lokal schreiben
+    $shutdownContent | Out-File -FilePath $shutdownPs1 -Encoding ascii -Force
+    Write-Host -ForegroundColor Green "[VarioTradeMUI] Wrote $shutdownPs1 (inline)"
+
+    # Optional: korrigierter Raw-Download überschreibt lokale Version, falls erreichbar
+    try {
+        $rawUrl = 'https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Customers/99-varo-shutdown.ps1'
+        $tmp = Join-Path $env:TEMP '99-varo-shutdown.ps1'
+        Invoke-RestMethod $rawUrl | Out-File -FilePath $tmp -Encoding ascii -Force
+        if ((Test-Path $tmp) -and ((Get-Item $tmp).Length -gt 0)) {
+            Copy-Item $tmp $shutdownPs1 -Force
+            Write-Host -ForegroundColor Green "[VarioTradeMUI] Updated $shutdownPs1 from GitHub (raw)"
+        }
+    } catch {
+        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Raw download optional – verwende lokale Inline-Version. ($($_.Exception.Message))"
+    }
+
+    # SetupComplete.cmd schreiben (ruft PS1 auf)
+    $scmd = @'
+@echo off
+echo [%date% %time%] Running 99-varo-shutdown.ps1 >> C:\Windows\Temp\varo-shutdown.log
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\Windows\Setup\Scripts\99-varo-shutdown.ps1"
+exit /b 0
+'@
+    $scPath = Join-Path $setupDir 'SetupComplete.cmd'
+    $scmd | Out-File -FilePath $scPath -Encoding ascii -Force
+    Write-Host -ForegroundColor Green "[VarioTradeMUI] Wrote $scPath"
+} catch {
+    Write-Host -ForegroundColor Yellow "[VarioTradeMUI] SetupComplete creation failed: $($_.Exception.Message)"
+}
 
 # Set-OSDCloudUnattendAuditMode
 
