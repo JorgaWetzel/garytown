@@ -80,9 +80,11 @@ if (-not (Test-Path -Path $MapDrive)) {
     Write-Host "Mapped Drive $MapDrive to $DeployShare" -ForegroundColor Green
 }
 
-
 # ---- Automatische Vorpruefung vor Deployment ----
-# Invoke-IntuneAutopilotPreflight -StopOnBlock
+if ($CurrentIP -match '^10\.10\.100\.') {
+Invoke-IntuneAutopilotPreflight -StopOnBlock
+}
+
 
 # ================================================================
 #   OSDCloud-Variablen setzen
