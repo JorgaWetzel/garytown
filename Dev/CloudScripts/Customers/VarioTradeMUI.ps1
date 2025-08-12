@@ -38,29 +38,42 @@ if ((Get-MyComputerModel) -match 'Virtual') {
 }
 
 # ======================================================================
-# Konfiguration – HIER NUR BEI BEDARF ANPASSEN
+# Automatische Konfiguration basierend auf IP-Bereich
 # ======================================================================
-<#
-$DeployShare = '\\10.10.100.100\Daten'          # UNC-Pfad zum Deployment-Share
-$MapDrive    = 'Z:'                              # gewünschter Laufwerks­buchstabe
-$UserName    = 'Jorga'                          # Domänen- oder lokaler User
-$PlainPwd    = 'Dont4getme'                     # Passwort (Klartext)
-#>
 
-$DeployShare = '\\192.168.2.15\DeploymentShare$' # UNC-Pfad zum Deployment-Share
-$MapDrive    = 'Z:'                               # gewünschter Laufwerks­buchstabe
-$UserName    = 'VARIODEPLOY\Administrator'                    # Domänen- oder lokaler User
-$PlainPwd    = '12Monate'                         # Passwort (Klartext)
+# Aktuelle IPv4-Adresse ermitteln (nur aktive Adapter)
+$CurrentIP = (Get-NetIPAddress -AddressFamily IPv4 `
+    | Where-Object { $_.IPAddress -match '^10\.10\.100\.|^192\.168\.2\.' } `
+    | Select-Object -First 1 -ExpandProperty IPAddress)
 
-$SrcWim 	 = 'Z:\OSDCloud\OS\Win11_24H2_MUI.wim'
+if ($CurrentIP -match '^10\.10\.100\.') {
+    # Konfiguration für 10.10.100.x
+    $DeployShare = '\\10.10.100.100\Daten'
+    $MapDrive    = 'Z:'
+    $UserName    = 'Jorga'
+    $PlainPwd    = 'Dont4getme'
+}
+elseif ($CurrentIP -match '^192\.168\.2\.') {
+    # Konfiguration für 192.168.2.x
+    $DeployShare = '\\192.168.2.15\DeploymentShare$'
+    $MapDrive    = 'Z:'
+    $UserName    = 'VARIODEPLOY\Administrator'
+    $PlainPwd    = '12Monate'
+}
+else {
+    Write-Host "Keine passende IP-Konfiguration gefunden!" -ForegroundColor Red
+    return
+}
 
-# Anmelde­daten vorbereiten
+$SrcWim = 'Z:\OSDCloud\OS\Win11_24H2_MUI.wim'
+
+# Anmeldedaten vorbereiten
 $SecurePwd = ConvertTo-SecureString $PlainPwd -AsPlainText -Force
 $Cred      = New-Object System.Management.Automation.PSCredential ($UserName,$SecurePwd)
 
 # Share verbinden
 if (-not (Test-Path -Path $MapDrive)){
-	net use $MapDrive $DeployShare /user:$UserName $PlainPwd /persistent:no
+    net use $MapDrive $DeployShare /user:$UserName $PlainPwd /persistent:no
 }
 if (-not (Test-Path -Path $MapDrive)) {
     Write-Host "Failed to Map Drive" -ForegroundColor Red
@@ -68,6 +81,7 @@ if (-not (Test-Path -Path $MapDrive)) {
 } else {
     Write-Host "Mapped Drive $MapDrive to $DeployShare" -ForegroundColor Green
 }
+
 
 # ================================================================
 #   OSDCloud-Variablen setzen
