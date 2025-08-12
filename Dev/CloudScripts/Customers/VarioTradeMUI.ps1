@@ -47,9 +47,9 @@ $UserName    = 'Jorga'                          # Domänen- oder lokaler User
 $PlainPwd    = 'Dont4getme'                     # Passwort (Klartext)
 #>
 
-$DeployShare = '\\192.168.2.16\DeploymentShare$' # UNC-Pfad zum Deployment-Share
+$DeployShare = '\\192.168.2.15\DeploymentShare$' # UNC-Pfad zum Deployment-Share
 $MapDrive    = 'Z:'                               # gewünschter Laufwerks­buchstabe
-$UserName    = 'Administrator'                    # Domänen- oder lokaler User
+$UserName    = 'VARIODEPLOY\Administrator'                    # Domänen- oder lokaler User
 $PlainPwd    = '12Monate'                         # Passwort (Klartext)
 
 $SrcWim 	 = 'Z:\OSDCloud\OS\Win11_24H2_MUI.wim'
