@@ -1,4 +1,4 @@
-# 99-Deployment.ps1    StartNet-Hook, minimal
+# 99-Deployment.ps1  –  StartNet-Hook, minimal
 # ==== Quiet-on-error flag (controls Splash suppression in WinPE) ====
 $Global:VarioQuietFlagDir  = "X:\OSDCloud\Flags"
 $Global:VarioQuietFlagFile = Join-Path $Global:VarioQuietFlagDir "SilentSplashOff.txt"
@@ -8,7 +8,7 @@ function Set-QuietSplash {
             New-Item -ItemType Directory -Path $Global:VarioQuietFlagDir -Force | Out-Null
         }
         New-Item -Path $Global:VarioQuietFlagFile -ItemType File -Force | Out-Null
-        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] QuietSplash Flag gesetzt  Splash wird beim nchsten Start bersprungen."
+        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] QuietSplash Flag gesetzt – Splash wird beim nächsten Start übersprungen."
     } catch {
         Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Konnte QuietSplash Flag nicht setzen: $($_.Exception.Message)"
     }
@@ -38,23 +38,23 @@ if ((Get-MyComputerModel) -match 'Virtual') {
 }
 
 # ======================================================================
-# Konfiguration  HIER NUR BEI BEDARF ANPASSEN
+# Konfiguration – HIER NUR BEI BEDARF ANPASSEN
 # ======================================================================
 <#
 $DeployShare = '\\10.10.100.100\Daten'          # UNC-Pfad zum Deployment-Share
-$MapDrive    = 'Z:'                              # gewnschter Laufwerksbuchstabe
-$UserName    = 'Jorga'                          # Domnen- oder lokaler User
+$MapDrive    = 'Z:'                              # gewünschter Laufwerks­buchstabe
+$UserName    = 'Jorga'                          # Domänen- oder lokaler User
 $PlainPwd    = 'Dont4getme'                     # Passwort (Klartext)
 #>
 
 $DeployShare = '\\192.168.2.15\DeploymentShare$' # UNC-Pfad zum Deployment-Share
-$MapDrive    = 'Z:'                               # gewnschter Laufwerksbuchstabe
-$UserName    = 'VARIODEPLOY\Administrator'                    # Domnen- oder lokaler User
+$MapDrive    = 'Z:'                               # gewünschter Laufwerks­buchstabe
+$UserName    = 'VARIODEPLOY\Administrator'                    # Domänen- oder lokaler User
 $PlainPwd    = '12Monate'                         # Passwort (Klartext)
 
 $SrcWim 	 = 'Z:\OSDCloud\OS\Win11_24H2_MUI.wim'
 
-# Anmeldedaten vorbereiten
+# Anmelde­daten vorbereiten
 $SecurePwd = ConvertTo-SecureString $PlainPwd -AsPlainText -Force
 $Cred      = New-Object System.Management.Automation.PSCredential ($UserName,$SecurePwd)
 
@@ -105,45 +105,31 @@ if ($DriverPack){
     $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
 }
 
-# ---------------- Driver package first, HPIA as fallback (robust) --------------------
-# Nach ALLEN CMSL/OSDCloud-Versuchen prfen wir REAL, ob ein SoftPaq vorhanden ist:
-function Test-HPSoftPaqPresent {
-    param([string]$Path = 'C:\Drivers')
-    try {
-        $sp = Get-ChildItem -Path $Path -Filter 'sp*.exe' -ErrorAction SilentlyContinue |
-              Where-Object { $_.Length -gt 50MB } | Select-Object -First 1
-        return $sp
-    } catch { return $null }
-}
+# ---------------- Driver package first, HPIA as fallback --------------------
+if ($DriverPack){
+    Write-Host -ForegroundColor Cyan "Driver pack located – applying driver pack only."
+    $Global:MyOSDCloud.DriverPackName      = $DriverPack.Name
+    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true   # Driver-Pack aktiv
+    $Global:MyOSDCloud.HPIAALL             = [bool]$false     # HPIA deaktivieren
 
-$DriverPack = Test-HPSoftPaqPresent -Path 'C:\Drivers'  # < ersetzt die alte Quelle fr $DriverPack
-
-if ($DriverPack) {
-    Write-Host -ForegroundColor Cyan "Driver pack located  applying driver pack only."
-    $Global:MyOSDCloud.DriverPackName          = $DriverPack.Name             # echtes File
-    $Global:MyOSDCloud.HPCMSLDriverPackLatest  = $true                        # Pack aktiv
-    $Global:MyOSDCloud.HPIAALL                 = $false                       # HPIA aus
-
-    # Optional: Cache auf dein Medium (nur wenn vorhanden)
+    # Cache in Z:\OSDCloud\DriverPacks\HP
     $cacheDir = "Z:\OSDCloud\DriverPacks\HP"
-    if (Test-Path 'Z:\') {
-        if (!(Test-Path $cacheDir)){ New-Item -ItemType Directory -Path $cacheDir -Force | Out-Null }
-        $destFile = Join-Path $cacheDir $DriverPack.Name
-        if (!(Test-Path $destFile)){ Copy-Item -Path $DriverPack.FullName -Destination $destFile -Force }
-    }
+    if (!(Test-Path $cacheDir)){ New-Item -ItemType Directory -Path $cacheDir -Force | Out-Null }
+    $destFile = Join-Path $cacheDir $DriverPack.Name
+    if (!(Test-Path $destFile)){ Copy-Item -Path $DriverPack.FullName -Destination $destFile -Force }
 }
-else {
-    Write-Host -ForegroundColor Yellow "No driver pack found  falling back to HPIA."
-    # KEIN String "None", KEIN abhngiges Test-HPIASupport: wir setzen klar das Flag
-    $Global:MyOSDCloud.DriverPackName         = $null
-    $Global:MyOSDCloud.HPCMSLDriverPackLatest = $false
-    $Global:MyOSDCloud.HPIAALL                = $true
+else{
+    Write-Host -ForegroundColor Yellow "No driver pack found – falling back to HPIA."
+    if (Test-HPIASupport){ $Global:MyOSDCloud.HPIAALL = [bool]$true }
 }
- 
-#Set HP BIOS Settings to what I want:
-iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
-Manage-HPBiosSettings -SetSettings
 
+# Optionale BIOS-/TPM-Updates beibehalten
+if (Test-HPIASupport){
+    $Global:MyOSDCloud.HPTPMUpdate  = [bool]$true
+    $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
+    iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
+    Manage-HPBiosSettings -SetSettings
+}
 
 #write variables to console
 Write-Output $Global:MyOSDCloud
@@ -151,33 +137,6 @@ Write-Output $Global:MyOSDCloud
 # --- Deployment ---------------------------------------------
 try {
     Invoke-OSDCloud
-
-# ================= Robust DriverPack presence check & Fallback Flag (BEGIN) =================
-function Test-HPSoftPaqPresent {
-    param([string]$Path = 'C:\Drivers')
-    try {
-        $sp = Get-ChildItem -Path $Path -Filter 'sp*.exe' -ErrorAction SilentlyContinue |
-              Where-Object { $_.Length -gt 50MB } | Select-Object -First 1
-        return $sp
-    } catch { return $null }
-}
-
-# After all CMSL/OSDCloud attempts, decide deterministically if HPIA must run:
-$DriverPackSp = Test-HPSoftPaqPresent -Path 'C:\Drivers'
-if ($DriverPackSp) {
-    Write-Host -ForegroundColor Cyan "Driver pack located – applying driver pack only: $($DriverPackSp.Name)"
-    $Global:MyOSDCloud.DriverPackName         = $DriverPackSp.Name
-    $Global:MyOSDCloud.HPCMSLDriverPackLatest = $true
-    $Global:MyOSDCloud.HPIAALL                = $false
-} else {
-    Write-Host -ForegroundColor Yellow "No driver pack found – falling back to HPIA."
-    $Global:MyOSDCloud.DriverPackName         = $null
-    $Global:MyOSDCloud.HPCMSLDriverPackLatest = $false
-    $Global:MyOSDCloud.HPIAALL                = $true
-}
-# ================= Robust DriverPack presence check & Fallback Flag (END) =================
-
-
 }
 catch {
     Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Invoke-OSDCloud failed: $($_.Exception.Message)"
@@ -216,51 +175,8 @@ finally {
     }
 }
 
+
 # Set-OSDCloudUnattendAuditMode
 
 # Initialize-OSDCloudStartnetUpdate
-
-
-# ================= Create SetupComplete.cmd with conditional HPIA (BEGIN) =================
-try {
-    $setupScripts = 'C:\Windows\Setup\Scripts'
-    $newSetupComplete = Join-Path $setupScripts 'SetupComplete.cmd'
-    New-Item -ItemType Directory -Force -Path $setupScripts | Out-Null
-
-    $lines = @()
-    $lines += '@echo off'
-    $lines += 'setlocal'
-
-    if ($Global:MyOSDCloud.HPIAALL) {
-        $lines += 'set LOG=C:\HPIA\Logs'
-        $lines += 'set REP=C:\HPIA\Reports'
-        $lines += 'set SP=C:\HPIA\SPs'
-        $lines += 'mkdir %LOG% 2>NUL & mkdir %REP% 2>NUL & mkdir %SP% 2=NUL'
-        $lines += 'echo [%DATE% %TIME%] HPIA-Fallback aktiv >> %LOG%\HPIA.log'
-
-        # Download HPIA on the fly (no pre-staging required)
-        $lines += 'powershell -NoP -EP Bypass -Command "Try { iwr -UseBasicParsing ''https://hpia.hpcloud.hp.com/downloads/HPImageAssistant.exe'' -OutFile ''C:\HPIA\HPImageAssistant.exe'' -ErrorAction Stop } Catch { exit 1 }"'
-        $lines += 'if not exist C:\HPIA\HPImageAssistant.exe exit /b 1'
-
-        # Analyze + Install (Drivers only), silent, with report/cache
-        $lines += '"C:\HPIA\HPImageAssistant.exe" /Operation:Analyze /Action:Install /Category:Drivers /Silent /ReportFolder %REP% /SoftPaqDownloadFolder %SP%'
-        $lines += 'set EC=%ERRORLEVEL%'
-        $lines += 'echo [%DATE% %TIME%] HPIA ExitCode %EC%>> %LOG%\HPIA.log'
-        $lines += 'if %EC% EQU 0 shutdown /r /t 5 /c "Treiberinstallation (HPIA) abgeschlossen"'
-    } else {
-        # Optional: install SoftPaqs silently if present
-        $lines += 'for %%S in (C:\Drivers\sp*.exe) do ('
-        $lines += '  echo Installiere %%S ...'
-        $lines += '  "%%S" /s /e /f C:\Drivers\Extract 2>nul'
-        $lines += ')'
-    }
-
-    $lines += 'endlocal'
-    Set-Content -Path $newSetupComplete -Value ($lines -join "`r`n") -Encoding ASCII
-    Write-Host "[OSD] Wrote $newSetupComplete (HPIA-Fallback aktiviert: $($Global:MyOSDCloud.HPIAALL))"
-} catch {
-    Write-Warning "[OSD] SetupComplete creation failed: $($_.Exception.Message)"
-}
-# ================= Create SetupComplete.cmd with conditional HPIA (END) =================
-
 Restart-Computer -Force
