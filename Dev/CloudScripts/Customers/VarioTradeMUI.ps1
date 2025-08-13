@@ -82,9 +82,8 @@ if (-not (Test-Path -Path $MapDrive)) {
 
 # ---- Automatische Vorpruefung vor Deployment ----
 if ($CurrentIP -match '^10\.10\.100\.') {
-$env:GRAPHAPP_JSON_PATH = 'Z:\OSDCloud\GraphApp.json'
-$res = Invoke-AutopilotProbeImport -AllowSerialFallback
-$res | Format-List
+$env:GRAPHAPP_JSON_PATH = 'Z:\OSDCloud\GraphApp.json'  # falls du Z:\ nutzt
+Invoke-IntuneAutopilotPreflight -AllowSerialFallback -StopOnBlock
 }
 
 
