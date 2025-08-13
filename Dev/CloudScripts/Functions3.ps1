@@ -155,6 +155,16 @@ function Get-HardwareHashBase64 {
 }
 
 function Test-AutopilotBySerial {
+<#
+.SYNOPSIS
+  Robust-Fallback: prueft, ob Seriennummer bereits als Autopilot-Device existiert.
+.DESCRIPTION
+  Strategie:
+   1) v1.0 + $filter (eq)
+   2) beta + $filter (eq)
+   3) Paged Listing (v1.0) + clientseitiges Filtern (zur Not)
+  Gibt { Found, Matches } zurueck.
+#>
     param(
         [Parameter(Mandatory)] [string] $Serial,
         [Parameter(Mandatory)] [string] $Token
@@ -165,15 +175,59 @@ function Test-AutopilotBySerial {
     }
 
     $filterSerial = $Serial.Replace("'", "''")
-    $url = "https://graph.microsoft.com/v1.0/deviceManagement/windowsAutopilotDeviceIdentities?`$filter=serialNumber eq '$filterSerial'"
-    try {
-        $res = Invoke-RestMethod -Method Get -Uri $url -Headers @{ Authorization = "Bearer $Token" } -ErrorAction Stop
-        $cnt = ($res.value | Measure-Object).Count
+    $headers = @{ Authorization = "Bearer $Token" }
+
+    # Helper zum Aufruf + 400-Erkennung
+    function Invoke-Graph([string] $Url) {
+        try {
+            return ,(Invoke-RestMethod -Method Get -Uri $Url -Headers $headers -ErrorAction Stop)
+        } catch {
+            $status = $_.Exception.Response.StatusCode.value__
+            $msg = $_.ErrorDetails.Message
+            return @{ __error = $true; status = $status; message = $msg }
+        }
+    }
+
+    # 1) v1.0 mit $filter
+    $u1 = "https://graph.microsoft.com/v1.0/deviceManagement/windowsAutopilotDeviceIdentities?`$filter=serialNumber eq '$filterSerial'"
+    $r1 = Invoke-Graph $u1
+    if (-not $r1.__error) {
+        $cnt = ($r1.value | Measure-Object).Count
         return [pscustomobject]@{ Found = ($cnt -gt 0); Matches = $cnt }
-    } catch {
-        Write-Host "Seriennummer-Abfrage fehlgeschlagen (HTTP): $($_.Exception.Message)" -ForegroundColor Yellow
+    }
+    if ($r1.status -ne 400) {
+        Write-Host "Seriennummer-Abfrage v1.0 fehlgeschlagen ($($r1.status)): $($r1.message)" -ForegroundColor Yellow
         return [pscustomobject]@{ Found = $false; Matches = 0 }
     }
+
+    # 2) beta mit $filter
+    $u2 = "https://graph.microsoft.com/beta/deviceManagement/windowsAutopilotDeviceIdentities?`$filter=serialNumber eq '$filterSerial'"
+    $r2 = Invoke-Graph $u2
+    if (-not $r2.__error) {
+        $cnt = ($r2.value | Measure-Object).Count
+        return [pscustomobject]@{ Found = ($cnt -gt 0); Matches = $cnt }
+    }
+    if ($r2.status -ne 400) {
+        Write-Host "Seriennummer-Abfrage beta fehlgeschlagen ($($r2.status)): $($r2.message)" -ForegroundColor Yellow
+        return [pscustomobject]@{ Found = $false; Matches = 0 }
+    }
+
+    # 3) Paged Listing (v1.0) und local match (als letzte Instanz)
+    Write-Host "Falle zur Sicherheit auf paged Listing + lokalen Vergleich zurueck..." -ForegroundColor Yellow
+    $url = "https://graph.microsoft.com/v1.0/deviceManagement/windowsAutopilotDeviceIdentities?`$top=999"
+    $matches = 0
+    while ($url) {
+        $page = Invoke-Graph $url
+        if ($page.__error) {
+            Write-Host "Paged Listing fehlgeschlagen ($($page.status)): $($page.message)" -ForegroundColor Yellow
+            break
+        }
+        foreach ($d in $page.value) {
+            if (($d.serialNumber -as [string]) -and ($d.serialNumber -eq $Serial)) { $matches++ }
+        }
+        $url = $page.'@odata.nextLink'
+    }
+    return [pscustomobject]@{ Found = ($matches -gt 0); Matches = $matches }
 }
 
 # -------------------------------
