@@ -1,41 +1,80 @@
-# Läuft im Full-OS (SYSTEM), hat also vollen Zugriff auf MDM/WMI -> HW-Hash verfügbar.
-
+# Autopilot-OOBE-Preflight.ps1
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+$ErrorActionPreference = 'Stop'
 
-# Functions3.ps1 laden (dein Repo)
-$functionsUrl = 'https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions3.ps1'
-$functions = Invoke-WebRequest -UseBasicParsing -Uri $functionsUrl -ErrorAction Stop
-$null = Invoke-Expression $functions.Content
+function Remove-FileQuiet {
+    param([Parameter(Mandatory)] [string] $Path)
+    try {
+        if (Test-Path -LiteralPath $Path) {
+            try { Set-Content -LiteralPath $Path -Value '' -NoNewline -Encoding Ascii -ErrorAction SilentlyContinue } catch {}
+            Remove-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+        }
+    } catch {}
+}
+function Clear-GraphSecrets {
+    try { [Environment]::SetEnvironmentVariable('GRAPHAPP_JSON_PATH', $null, 'Process') } catch {}
+    try { [Environment]::SetEnvironmentVariable('GRAPHAPP_JSON_PATH', $null, 'Machine') } catch {}
+    Remove-FileQuiet -Path 'C:\ProgramData\GraphApp.json'
+    Remove-FileQuiet -Path 'C:\Windows\Temp\GraphApp.json'
+}
+function Cleanup-Tools {
+    Remove-FileQuiet -Path 'C:\Windows\Temp\nircmd.zip'
+    Remove-FileQuiet -Path 'C:\Windows\Temp\nircmdc.exe'
+    Remove-FileQuiet -Path 'C:\Windows\Temp\nircmd.exe'
+}
+function Speak-IfPossible($text) {
+    try {
+        $nir = 'C:\Windows\Temp\nircmdc.exe'
+        if (-not (Test-Path $nir)) {
+            Invoke-WebRequest -UseBasicParsing -Uri 'https://www.nirsoft.net/utils/nircmd-x64.zip' -OutFile 'C:\Windows\Temp\nircmd.zip'
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            [IO.Compression.ZipFile]::ExtractToDirectory('C:\Windows\Temp\nircmd.zip','C:\Windows\Temp')
+            if (Test-Path 'C:\Windows\Temp\nircmdc.exe') { $nir = 'C:\Windows\Temp\nircmdc.exe' }
+        }
+        if (Test-Path $nir) { Start-Process -FilePath $nir -ArgumentList ('speak text "{0}" 0 100' -f $text) -WindowStyle Hidden }
+    } catch {}
+}
 
-# Graph-Creds-Quelle (anpassen, wenn du woanders ablegst)
-$env:GRAPHAPP_JSON_PATH = 'Z:\OSDCloud\GraphApp.json'  # oder C:\ProgramData\GraphApp.json
+# Functions3 laden (nur Hash-Weg)
+$fxUrl = 'https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions3.ps1'
+$fx = Invoke-WebRequest -UseBasicParsing -Uri $fxUrl
+Invoke-Expression $fx.Content
 
-# Nur der Hash-Weg, KEIN Serien-Fallback
-$res = Invoke-AutopilotProbeImport   # bewusst: ohne -AllowSerialFallback
+# Quelle fuer GraphApp.json bestimmen (kein Z:\ im Full OS)
+if (-not $env:GRAPHAPP_JSON_PATH) {
+    if (Test-Path 'C:\ProgramData\GraphApp.json') { $env:GRAPHAPP_JSON_PATH = 'C:\ProgramData\GraphApp.json' }
+    elseif (Test-Path 'C:\Windows\Temp\GraphApp.json') { $env:GRAPHAPP_JSON_PATH = 'C:\Windows\Temp\GraphApp.json' }
+}
 
-# Loggen
-$log = "C:\Windows\Temp\AutopilotPreflight.log"
+# Preflight ausfuehren (nur HW-Hash)
+$res = Invoke-IntuneAutopilotPreflight -StopOnBlock:$false
+
+# Credentials/Tools VOR sichtbarer Aktion bereinigen
+Clear-GraphSecrets
+Cleanup-Tools
+
+# Log
+$log = 'C:\Windows\Temp\AutopilotPreflight.log'
 "$(Get-Date -Format s) Code=$($res.Code) Message=$($res.Message)" | Out-File -FilePath $log -Append -Encoding utf8
 
 switch ($res.Code) {
     808 {
-        # BLOCK: Gerät ist in einem ANDEREN Tenant registriert -> sofort runterfahren
-        # Cleanup hat Functions3 bereits gemacht.
-        shutdown.exe /s /t 15 /c "Autopilot 808: Geraet ist in anderem Tenant registriert. Lieferung STOPP."
+        New-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Force | Out-Null
+        Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'legalnoticecaption' -Value 'AUTOPILOT BLOCKIERT'
+        Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'legalnoticetext' -Value "Dieses Geraet ist in einem anderen Microsoft Intune Tenant registriert (Code 808). Lieferung stoppen."
+        Speak-IfPossible "Achtung. Dieses Geraet ist in einem anderen Tenant registriert. Lieferung stoppen."
+        shutdown.exe /s /t 25 /c "AUTOPILOT 808: Geraet in ANDEREM Tenant registriert. Lieferung STOPP."
         exit 23
     }
     806 {
-        # Bereits in deinem Tenant – je nach Policy: stoppen oder weiter
-        shutdown.exe /s /t 15 /c "Autopilot 806: Geraet bereits im Quarantaene-Tenant registriert."
+        Speak-IfPossible "Hinweis. Dieses Geraet ist bereits in diesem Tenant registriert."
+        shutdown.exe /s /t 25 /c "AUTOPILOT 806: Geraet bereits in DIESEM Tenant registriert."
         exit 23
     }
-    0 {
-        # OK: nicht woanders registriert -> still weiter in OOBE
-        exit 0
-    }
+    0   { exit 0 }
     default {
-        # Unerwarteter Fehler: vorsichtshalber stoppen (oder: weiterlaufen lassen – deine Entscheidung)
-        shutdown.exe /s /t 15 /c "Autopilot Preflight Fehler: $($res.Message)"
+        Speak-IfPossible ("Autopilot Pruefung fehlgeschlagen. {0}" -f $res.Message)
+        shutdown.exe /s /t 25 /c ("AUTOPILOT Fehler: {0}" -f $res.Message)
         exit 23
     }
 }

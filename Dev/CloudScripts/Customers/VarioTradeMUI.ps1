@@ -82,8 +82,34 @@ if (-not (Test-Path -Path $MapDrive)) {
 
 # ---- Automatische Vorpruefung vor Deployment ----
 if ($CurrentIP -match '^10\.10\.100\.') {
-$env:GRAPHAPP_JSON_PATH = 'Z:\OSDCloud\GraphApp.json'  # falls du Z:\ nutzt
-Invoke-IntuneAutopilotPreflight -AllowSerialFallback -StopOnBlock
+	
+# --- Post OS-Apply: OOBE-Preflight sicher ins Ziel-OS schreiben ---
+try {
+    $ss = 'C:\Windows\Setup\Scripts'
+    New-Item -ItemType Directory -Path $ss -Force | Out-Null
+
+    # SetupComplete.cmd
+    @'
+@echo off
+powershell.exe -NoLogo -ExecutionPolicy Bypass -File "%SystemRoot%\Setup\Scripts\Autopilot-OOBE-Preflight.ps1"
+exit /b 0
+'@ | Set-Content -Path "$ss\SetupComplete.cmd" -Encoding Ascii
+
+    # Autopilot-OOBE-Preflight.ps1 (aus Repo ziehen)
+    $preUrl = 'https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Autopilot-OOBE-Preflight.ps1'
+    Invoke-WebRequest -UseBasicParsing -Uri $preUrl -OutFile "$ss\Autopilot-OOBE-Preflight.ps1"
+
+    # Optional: falls du GraphApp.json temporaer lokal brauchst (wird im Preflight wieder geloescht)
+    $gp = 'C:\ProgramData\GraphApp.json'
+    if (-not (Test-Path $gp) -and (Test-Path 'Z:\OSDCloud\GraphApp.json')) {
+        Copy-Item 'Z:\OSDCloud\GraphApp.json' $gp -Force
+    }
+
+    Write-Host -ForegroundColor Green "[VarioTradeMUI] OOBE-Preflight hinterlegt."
+}
+catch {
+    Write-Host -ForegroundColor Yellow "[VarioTradeMUI] OOBE-Preflight Hinterlegung fehlgeschlagen: $($_.Exception.Message)"
+}           
 }
 
 
@@ -137,9 +163,26 @@ else{
 }
 
 # Optionale BIOS-/TPM-Updates beibehalten
+function Ensure-TSEnv {
+    if ($global:TSEnv) { return }
+    try { $global:TSEnv = New-Object -ComObject Microsoft.SMS.TSEnvironment; return } catch {}
+    Add-Type -Language CSharp @"
+using System;
+public class FakeTSEnv {
+  public string Value(string name) { return Environment.GetEnvironmentVariable(name); }
+  public void Value(string name, string value) { Environment.SetEnvironmentVariable(name, value); }
+}
+"@
+    $global:TSEnv = New-Object FakeTSEnv
+    if (-not $env:_SMSTSLogPath) { $env:_SMSTSLogPath = "X:\Windows\Temp" }
+    if (-not $env:SMSTSLogPath)  { $env:SMSTSLogPath  = "X:\Windows\Temp" }
+}
+Ensure-TSEnv
+
+# Dein Block bleibt aktiv – jetzt ohne Fehler:
 if (Test-HPIASupport){
-    $Global:MyOSDCloud.HPTPMUpdate  = [bool]$true
-    $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
+    $Global:MyOSDCloud.HPTPMUpdate  = $true
+    $Global:MyOSDCloud.HPBIOSUpdate = $true
     iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
     Manage-HPBiosSettings -SetSettings
 }
