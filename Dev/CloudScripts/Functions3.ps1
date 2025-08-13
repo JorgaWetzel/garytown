@@ -1,12 +1,9 @@
 # Functions3.ps1
 # ============================================================
-# Funktionen fuer OSDCloud/WinPE Preflight-Check (OEM/Refurb)
-# Ziel: Vor Deployment pruefen, ob ein Geraet bereits in einem
-#       anderen Tenant fuer Windows Autopilot registriert ist.
-# Methode: Probe-Import in Quarantaene-Tenant + sofortiges Cleanup.
-# Hinweis: Echten "Dry-Run" gibt es nicht.
-# Update: Fallback, wenn WinPE den HW-Hash nicht liefern kann:
-#         optionaler SERIENNUMMER-Check (schwaecher).
+# OSDCloud/WinPE Preflight-Check (OEM/Refurb)
+# Ziel: Vor Deployment pruefen, ob ein Geraet bereits in einem anderen Tenant
+#       fuer Windows Autopilot registriert ist. Ohne "Weltabfrage" -> Probe-Import
+#       in Quarantaene-Tenant + sofortiges Cleanup. Optionaler Fallback per Seriennummer.
 # ============================================================
 
 Set-StrictMode -Version Latest
@@ -25,15 +22,7 @@ $script:DefaultScriptFolder          = "X:\OSDCloud\Scripts"
 function Use-GetWindowsAutopilotInfo {
 <#
 .SYNOPSIS
-  Laedt IMMER die Community-Version von Andrew Taylor herunter und dot-sourct sie.
-
-.DESCRIPTION
-  Keine lokale Suche, kein Fallback. Immer frisch von GitHub laden.
-  Speichert die Datei unter X:\OSDCloud\Scripts\get-windowsautopilotinfocommunity.ps1
-  und dot-sourct sie, so dass Get-WindowsAutopilotInfo sofort verfuegbar ist.
-
-.OUTPUTS
-  [bool] True bei Erfolg, False bei Fehler.
+  Laedt IMMER die Community-Version (Andrew Taylor) und dot-sourct sie.
 #>
     if (-not (Test-Path -LiteralPath $script:DefaultScriptFolder)) {
         New-Item -ItemType Directory -Path $script:DefaultScriptFolder -Force | Out-Null
@@ -54,40 +43,39 @@ function Use-GetWindowsAutopilotInfo {
 function Get-Serial {
 <#
 .SYNOPSIS
-  Liefert die Seriennummer des Geraets (Trim).
-
-.OUTPUTS
-  [string] oder $null
+  Liefert eine bereinigte Seriennummer (Trim) oder $null.
+.DESCRIPTION
+  Probiert CIM, dann WMI, dann IdentifyingNumber.
+  Filtert bekannte Platzhalter ("To be filled by O.E.M.", "Default string", usw.).
 #>
-    try {
-        $s = (Get-CimInstance -ClassName Win32_BIOS -ErrorAction Stop).SerialNumber
-        if ($s) { return $s.Trim() }
-    } catch {}
-    try {
-        $s = (Get-WmiObject -Class Win32_BIOS -ErrorAction Stop).SerialNumber
-        if ($s) { return $s.Trim() }
-    } catch {}
-    try {
-        $s = (Get-WmiObject -Class Win32_ComputerSystemProduct -ErrorAction Stop).IdentifyingNumber
-        if ($s) { return $s.Trim() }
-    } catch {}
+    $candidates = @()
+    try { $candidates += (Get-CimInstance -ClassName Win32_BIOS -ErrorAction Stop).SerialNumber } catch {}
+    try { $candidates += (Get-WmiObject -Class Win32_BIOS -ErrorAction Stop).SerialNumber } catch {}
+    try { $candidates += (Get-WmiObject -Class Win32_ComputerSystemProduct -ErrorAction Stop).IdentifyingNumber } catch {}
+
+    foreach ($raw in $candidates) {
+        if (-not $raw) { continue }
+        $s = "$raw".Trim()
+        if (-not $s) { continue }
+        # Filter ungueltige/Platzhalter-Seriennummern
+        $bad = @(
+            '^to be filled', '^default string$', '^system serial number$', '^none$', '^not applicable$', '^n/?a$',
+            '^serial$', '^unknown$', '^unspecified$', '^oem$', '^o\.e\.m\.$', '^\*+$', '^0+$', '^123456', '^\s+$'
+        )
+        $isBad = $false
+        foreach ($b in $bad) { if ($s -imatch $b) { $isBad = $true; break } }
+        if (-not $isBad) { return $s }
+    }
     return $null
 }
 
 function Get-GraphConfig {
 <#
 .SYNOPSIS
-  Laedt die Graph App-Credentials fuer den Quarantaene-Tenant.
-
+  Laedt die Graph App-Credentials (Tenant/Client/Secret).
 .DESCRIPTION
-  Sucht nach GraphApp.json in typischen Pfaden oder faellt auf ENV-Variablen zurueck:
-    GRAPH_TENANT_ID, GRAPH_CLIENT_ID, GRAPH_CLIENT_SECRET
-  Zusaetzlich unterstuetzt:
-    - $env:GRAPHAPP_JSON_PATH (Vollpfad zu einer JSON)
-    - Z:\* Pfade (z. B. Netzlaufwerk fuers Deployment)
-
-.OUTPUTS
-  PSCustomObject mit tenantId, clientId, clientSecret
+  Sucht JSON an typischen Pfaden inkl. Z:\ und ENV:GRAPHAPP_JSON_PATH,
+  faellt sonst auf ENV-Creds (GRAPH_TENANT_ID/CLIENT_ID/CLIENT_SECRET) zurueck.
 #>
     param(
         [string[]] $CandidatePaths = @(
@@ -131,17 +119,6 @@ function Get-GraphConfig {
 }
 
 function Get-GraphToken {
-<#
-.SYNOPSIS
-  Holt ein OAuth2 Token fuer Microsoft Graph (Client Credentials).
-
-.PARAMETER TenantId
-.PARAMETER ClientId
-.PARAMETER ClientSecret
-
-.OUTPUTS
-  [string] access_token oder $null
-#>
     param(
         [Parameter(Mandatory)] [string] $TenantId,
         [Parameter(Mandatory)] [string] $ClientId,
@@ -164,13 +141,6 @@ function Get-GraphToken {
 }
 
 function Get-HardwareHashBase64 {
-<#
-.SYNOPSIS
-  Liefert den Windows Autopilot Hardware Hash (Base64) via Community Script.
-
-.OUTPUTS
-  [string] Base64 oder $null
-#>
     if (-not (Use-GetWindowsAutopilotInfo)) { return $null }
 
     try {
@@ -185,23 +155,14 @@ function Get-HardwareHashBase64 {
 }
 
 function Test-AutopilotBySerial {
-<#
-.SYNOPSIS
-  Schwaecherer Fallback: prueft, ob Seriennummer bereits als Autopilot-Device existiert.
-
-.DESCRIPTION
-  Nutzt v1.0 GET /deviceManagement/windowsAutopilotDeviceIdentities?$filter=serialNumber eq '...'
-  Liefert TRUE, wenn mindestens ein Eintrag existiert.
-
-.OUTPUTS
-  PSCustomObject:
-    Found   : [bool]
-    Matches : [int]
-#>
     param(
         [Parameter(Mandatory)] [string] $Serial,
         [Parameter(Mandatory)] [string] $Token
     )
+
+    if ([string]::IsNullOrWhiteSpace($Serial)) {
+        return [pscustomobject]@{ Found = $false; Matches = 0 }
+    }
 
     $filterSerial = $Serial.Replace("'", "''")
     $url = "https://graph.microsoft.com/v1.0/deviceManagement/windowsAutopilotDeviceIdentities?`$filter=serialNumber eq '$filterSerial'"
@@ -210,7 +171,7 @@ function Test-AutopilotBySerial {
         $cnt = ($res.value | Measure-Object).Count
         return [pscustomobject]@{ Found = ($cnt -gt 0); Matches = $cnt }
     } catch {
-        Write-Host "Seriennummer-Abfrage fehlgeschlagen: $($_.Exception.Message)" -ForegroundColor Yellow
+        Write-Host "Seriennummer-Abfrage fehlgeschlagen (HTTP): $($_.Exception.Message)" -ForegroundColor Yellow
         return [pscustomobject]@{ Found = $false; Matches = 0 }
     }
 }
@@ -220,36 +181,11 @@ function Test-AutopilotBySerial {
 # -------------------------------
 
 function Invoke-AutopilotProbeImport {
-<#
-.SYNOPSIS
-  Prueft, ob eine Registrierung grundsaetzlich moeglich ist (ohne dauerhaft zu registrieren).
-
-.PARAMETER AllowSerialFallback
-  Wenn der Hardware-Hash in WinPE nicht ermittelbar ist, nutze
-  einen schwaecheren Seriennummer-Check als Fallback.
-  Ergebnis-Codes:
-    0   = Gruen (Probe-Import moeglich + Cleanup)
-    806 = Bereits in DIESEM Tenant
-    808 = Bereits in ANDEREM Tenant
-    26  = Kein Hash; Seriennummer nicht gefunden (schwaecheres Gruen)
-    27  = Kein Hash; Seriennummer gefunden (treat as block)
-    21  = Keine SN/Hash ermittelbar
-    22  = Keine Graph-Creds/Token
-    25  = Sonstiger Import-Fehler
-
-.OUTPUTS
-  PSCustomObject:
-    Success  : [bool]
-    Code     : [int]
-    Message  : [string]
-#>
-    param(
-        [switch] $AllowSerialFallback
-    )
+    param([switch] $AllowSerialFallback)
 
     $cfg = Get-GraphConfig
     if (-not $cfg) {
-        return [pscustomobject]@{ Success = $false; Code = 22; Message = "Keine Graph-Credentials (GraphApp.json oder ENV) gefunden." }
+        return [pscustomobject]@{ Success = $false; Code = 22; Message = "Keine Graph-Credentials (GraphApp.json/ENV) gefunden." }
     }
 
     $token = Get-GraphToken -TenantId $cfg.tenantId -ClientId $cfg.clientId -ClientSecret $cfg.clientSecret
@@ -259,7 +195,7 @@ function Invoke-AutopilotProbeImport {
 
     $serial = Get-Serial
     if (-not $serial) {
-        return [pscustomobject]@{ Success = $false; Code = 21; Message = "Seriennummer nicht ermittelbar." }
+        return [pscustomobject]@{ Success = $false; Code = 21; Message = "Seriennummer nicht ermittelbar oder ungueltig." }
     }
 
     $hashB64 = Get-HardwareHashBase64
@@ -304,10 +240,9 @@ function Invoke-AutopilotProbeImport {
         return [pscustomobject]@{ Success = $false; Code = 25; Message = "Import-Fehler: $msg" }
     }
 
-    # Kurze Wartezeit fuer Server-Materialisierung
     Start-Sleep -Seconds 5
 
-    # Cleanup: windowsAutopilotDeviceIdentities (v1.0) nach SerialNumber
+    # Cleanup
     try {
         $filterSerial = $serial.Replace("'", "''")
         $wadp = Invoke-RestMethod -Method Get -Uri ("https://graph.microsoft.com/v1.0/deviceManagement/windowsAutopilotDeviceIdentities?`$filter=serialNumber eq '{0}'" -f $filterSerial) -Headers @{ Authorization = "Bearer $token" } -ErrorAction Stop
@@ -318,7 +253,6 @@ function Invoke-AutopilotProbeImport {
         }
     } catch {}
 
-    # Cleanup: importedWindowsAutopilotDeviceIdentities (beta) via importId
     try {
         $imp = Invoke-RestMethod -Method Get -Uri ("https://graph.microsoft.com/beta/deviceManagement/importedWindowsAutopilotDeviceIdentities?`$filter=importId eq '{0}'" -f $importId) -Headers @{ Authorization = "Bearer $token" } -ErrorAction Stop
         foreach ($i in $imp.value) {
@@ -332,18 +266,6 @@ function Invoke-AutopilotProbeImport {
 }
 
 function Invoke-IntuneAutopilotPreflight {
-<#
-.SYNOPSIS
-  Komfort-Wrapper fuer den Preflight-Check mit konsistenter Ausgabe.
-
-.PARAMETER StopOnBlock
-  Bricht den Prozess mit Exitcode ab, wenn das Geraet blockiert ist.
-.PARAMETER AllowSerialFallback
-  Aktiviert den schwaecheren Fallback ueber Seriennummer-Abfrage.
-
-.OUTPUTS
-  Gibt das Ergebnisobjekt (Success/Code/Message) zurueck.
-#>
     param(
         [switch] $StopOnBlock,
         [switch] $AllowSerialFallback
@@ -352,10 +274,10 @@ function Invoke-IntuneAutopilotPreflight {
 
     switch ($res.Code) {
         0   { Write-Host $res.Message -ForegroundColor Green }
-        26  { Write-Host $res.Message -ForegroundColor Yellow }  # schwaches Gruen
+        26  { Write-Host $res.Message -ForegroundColor Yellow }
         806 { Write-Host $res.Message -ForegroundColor Red }
         808 { Write-Host $res.Message -ForegroundColor Red }
-        27  { Write-Host $res.Message -ForegroundColor Red }      # Fallback-Block
+        27  { Write-Host $res.Message -ForegroundColor Red }
         21  { Write-Host $res.Message -ForegroundColor Yellow }
         22  { Write-Host $res.Message -ForegroundColor Yellow }
         25  { Write-Host $res.Message -ForegroundColor Yellow }
@@ -363,13 +285,10 @@ function Invoke-IntuneAutopilotPreflight {
     }
 
     if ($StopOnBlock -and ($res.Code -in 806,808,27,21,22,25)) {
-        # 23 = generischer Block-Exitcode fuer OEM-Flow
         exit 23
     }
 
     return $res
 }
 
-# ============================================================
-# ENDE Functions3.ps1
-# ============================================================
+# EOF
