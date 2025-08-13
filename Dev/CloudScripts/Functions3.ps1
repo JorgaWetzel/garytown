@@ -157,14 +157,27 @@ function Get-GraphToken {
 }
 
 function Get-HardwareHashBase64 {
-<#
-.SYNOPSIS
-  Liefert den Windows Autopilot Hardware Hash (Base64) via Community Script.
-.DESCRIPTION
-  WinPE hat oft keinen MDM-Provider -> Script wirft Fehler. Wir fangen das ab.
-#>
-    if (-not (Use-GetWindowsAutopilotInfo)) { return $null }
+    <#
+    .SYNOPSIS
+      Liefert HW-Hash (Base64), ruft Community-Script nur auf, wenn WinPE den Provider hat.
+    #>
 
+    # 1) Schnellcheck: Ist die MDM-Bridge / DevDetail-Klasse ueberhaupt vorhanden?
+    $mdmOk = $false
+    try {
+        $null = Get-CimInstance -Namespace 'root\cimv2\mdm\dmmap' -ClassName 'MDM_DevDetail_Ext01' -ErrorAction Stop
+        $mdmOk = $true
+    } catch {
+        # kein Provider im WinPE -> nicht versuchen, Script aufzurufen (vermeidet rote Fehler)
+    }
+
+    if (-not $mdmOk) {
+        Write-Host "HW-Hash im WinPE nicht verfuegbar (kein MDM/WMI-Provider). Ueberspringe Hash-Versuch." -ForegroundColor Yellow
+        return $null
+    }
+
+    # 2) Nur wenn Provider da ist: Community-Script laden & Hash holen
+    if (-not (Use-GetWindowsAutopilotInfo)) { return $null }
     try {
         if (Get-Command Get-WindowsAutopilotInfo -ErrorAction SilentlyContinue) {
             $info = Get-WindowsAutopilotInfo -OutputObject -ErrorAction Stop
@@ -172,9 +185,7 @@ function Get-HardwareHashBase64 {
         }
     } catch {
         $msg = $_.Exception.Message
-        if ($_.PSObject.Properties.Name -contains 'ErrorDetails' -and $_.ErrorDetails -and $_.ErrorDetails.Message) {
-            $msg = $_.ErrorDetails.Message
-        }
+        if ($_.PSObject.Properties.Name -contains 'ErrorDetails' -and $_.ErrorDetails -and $_.ErrorDetails.Message) { $msg = $_.ErrorDetails.Message }
         Write-Host "Hardware Hash via Community-Script nicht ermittelbar: $msg" -ForegroundColor Yellow
     }
     return $null
