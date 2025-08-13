@@ -212,22 +212,22 @@ function Test-AutopilotBySerial {
         return [pscustomobject]@{ Found = $false; Matches = 0 }
     }
 
-    # 3) Paged Listing (v1.0) und local match (als letzte Instanz)
-    Write-Host "Falle zur Sicherheit auf paged Listing + lokalen Vergleich zurueck..." -ForegroundColor Yellow
-    $url = "https://graph.microsoft.com/v1.0/deviceManagement/windowsAutopilotDeviceIdentities?`$top=999"
-    $matches = 0
-    while ($url) {
-        $page = Invoke-Graph $url
-        if ($page.__error) {
-            Write-Host "Paged Listing fehlgeschlagen ($($page.status)): $($page.message)" -ForegroundColor Yellow
-            break
-        }
-        foreach ($d in $page.value) {
-            if (($d.serialNumber -as [string]) -and ($d.serialNumber -eq $Serial)) { $matches++ }
-        }
-        $url = $page.'@odata.nextLink'
-    }
-    return [pscustomobject]@{ Found = ($matches -gt 0); Matches = $matches }
+	# 3) Paged Listing (v1.0) und local match (als letzte Instanz)
+	Write-Host "Falle zur Sicherheit auf paged Listing + lokalen Vergleich zurueck..." -ForegroundColor Yellow
+	$url = "https://graph.microsoft.com/v1.0/deviceManagement/windowsAutopilotDeviceIdentities?`$top=999"
+	$matches = 0
+	while ($url) {
+		$page = Invoke-Graph $url
+		if ($page.__error) {
+			Write-Host "Paged Listing fehlgeschlagen ($($page.status)): $($page.message)" -ForegroundColor Yellow
+			break
+		}
+		foreach ($d in $page.value) {
+			if (($d.serialNumber -as [string]) -and ($d.serialNumber -eq $Serial)) { $matches++ }
+		}
+		$url = $page.'@odata.nextLink'
+	}
+	return [pscustomobject]@{ Found = ($matches -gt 0); Matches = $matches }
 }
 
 # -------------------------------
