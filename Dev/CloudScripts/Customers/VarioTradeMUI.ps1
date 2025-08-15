@@ -83,34 +83,6 @@ if (-not (Test-Path -Path $MapDrive)) {
 # ---- Automatische Vorpruefung vor Deployment ----
 if ($CurrentIP -match '^10\.10\.100\.') {
 	
-# --- Post OS-Apply: OOBE-Preflight sicher ins Ziel-OS schreiben ---
-try {
-    $ss = 'C:\Windows\Setup\Scripts'
-    New-Item -ItemType Directory -Path $ss -Force | Out-Null
-
-    # SetupComplete.cmd
-    @'
-@echo off
-powershell.exe -NoLogo -ExecutionPolicy Bypass -File "%SystemRoot%\Setup\Scripts\Autopilot-OOBE-Preflight.ps1"
-exit /b 0
-'@ | Set-Content -Path "$ss\SetupComplete.cmd" -Encoding Ascii
-
-    # Autopilot-OOBE-Preflight.ps1 (aus Repo ziehen)
-    $preUrl = 'https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Autopilot-OOBE-Preflight.ps1'
-    Invoke-WebRequest -UseBasicParsing -Uri $preUrl -OutFile "$ss\Autopilot-OOBE-Preflight.ps1"
-
-    # Optional: falls du GraphApp.json temporaer lokal brauchst (wird im Preflight wieder geloescht)
-    $gp = 'C:\ProgramData\GraphApp.json'
-    if (-not (Test-Path $gp) -and (Test-Path 'Z:\OSDCloud\GraphApp.json')) {
-        Copy-Item 'Z:\OSDCloud\GraphApp.json' $gp -Force
-    }
-
-    Write-Host -ForegroundColor Green "[VarioTradeMUI] OOBE-Preflight hinterlegt."
-}
-catch {
-    Write-Host -ForegroundColor Yellow "[VarioTradeMUI] OOBE-Preflight Hinterlegung fehlgeschlagen: $($_.Exception.Message)"
-}  
-
 # --- Post OS-Apply: GraphApp.json von Z:\ ins Ziel-OS kopieren (wird spaeter geloescht) ---
 try {
     $src  = 'Z:\OSDCloud\GraphApp.json'
@@ -120,21 +92,28 @@ try {
         New-Item -ItemType Directory -Path (Split-Path -Path $dest) -Force | Out-Null
         Copy-Item -LiteralPath $src -Destination $dest -Force
 
-        # sensible ACLs: nur SYSTEM & Admins
-        $acl = New-Object System.Security.AccessControl.FileSecurity
-        $ruleSystem  = New-Object System.Security.AccessControl.FileSystemAccessRule('SYSTEM','FullControl','Allow')
-        $ruleAdmins  = New-Object System.Security.AccessControl.FileSystemAccessRule('BUILTIN\Administrators','FullControl','Allow')
-        $acl.SetOwner([System.Security.Principal.NTAccount]'BUILTIN\Administrators')
-        $acl.SetAccessRuleProtection($true,$false)
-        $acl.AddAccessRule($ruleSystem); $acl.AddAccessRule($ruleAdmins)
-        Set-Acl -LiteralPath $dest -AclObject $acl
+        # ACLs: nur SYSTEM & BUILTIN\Administrators per SID
+        $sidSystem = New-Object System.Security.Principal.SecurityIdentifier 'S-1-5-18'      # SYSTEM
+        $sidAdmins = New-Object System.Security.Principal.SecurityIdentifier 'S-1-5-32-544'   # Builtin Admins
 
-        Write-Host -ForegroundColor Green "[VarioTradeMUI] GraphApp.json nach $dest kopiert."
+        $fs = New-Object System.Security.AccessControl.FileSecurity
+        $fs.SetAccessRuleProtection($true, $false)  # Vererbung aus
+        $fs.SetOwner($sidSystem)
+
+        $ruleSystem = New-Object System.Security.AccessControl.FileSystemAccessRule($sidSystem, 'FullControl', 'Allow')
+        $ruleAdmins = New-Object System.Security.AccessControl.FileSystemAccessRule($sidAdmins, 'FullControl', 'Allow')
+        $fs.AddAccessRule($ruleSystem)
+        $fs.AddAccessRule($ruleAdmins)
+
+        Set-Acl -LiteralPath $dest -AclObject $fs
+
+        Write-Host -ForegroundColor Green "[VarioTradeMUI] GraphApp.json nach $dest kopiert (ACLs auf SYSTEM/Admins gesetzt)."
     } else {
-        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Quelle $src nicht gefunden – Preflight wird sonst mit Code 22 scheitern."
+        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Quelle $src nicht gefunden – Preflight meldet sonst Code 22."
     }
-} catch {
-    Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Kopieren der GraphApp.json fehlgeschlagen: $($_.Exception.Message)"
+}
+catch {
+    Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Kopieren/ACL GraphApp.json fehlgeschlagen: $($_.Exception.Message)"
 }
 
 }
@@ -193,8 +172,14 @@ else{
 
 # Optionale BIOS-/TPM-Updates beibehalten
 function Ensure-TSEnv {
-    if ($global:TSEnv) { return }
-    try { $global:TSEnv = New-Object -ComObject Microsoft.SMS.TSEnvironment; return } catch {}
+    # Statt: if ($global:TSEnv) { return }
+    if (Get-Variable -Name TSEnv -Scope Global -ErrorAction SilentlyContinue) { return }
+
+    try {
+        $global:TSEnv = New-Object -ComObject Microsoft.SMS.TSEnvironment
+        return
+    } catch {}
+
     Add-Type -Language CSharp @"
 using System;
 public class FakeTSEnv {
@@ -203,6 +188,7 @@ public class FakeTSEnv {
 }
 "@
     $global:TSEnv = New-Object FakeTSEnv
+
     if (-not $env:_SMSTSLogPath) { $env:_SMSTSLogPath = "X:\Windows\Temp" }
     if (-not $env:SMSTSLogPath)  { $env:SMSTSLogPath  = "X:\Windows\Temp" }
 }
