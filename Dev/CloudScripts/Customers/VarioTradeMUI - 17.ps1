@@ -109,34 +109,7 @@ exit /b 0
 }
 catch {
     Write-Host -ForegroundColor Yellow "[VarioTradeMUI] OOBE-Preflight Hinterlegung fehlgeschlagen: $($_.Exception.Message)"
-}  
-
-# --- Post OS-Apply: GraphApp.json von Z:\ ins Ziel-OS kopieren (wird spaeter geloescht) ---
-try {
-    $src  = 'Z:\OSDCloud\GraphApp.json'
-    $dest = 'C:\ProgramData\GraphApp.json'
-
-    if (Test-Path -LiteralPath $src) {
-        New-Item -ItemType Directory -Path (Split-Path -Path $dest) -Force | Out-Null
-        Copy-Item -LiteralPath $src -Destination $dest -Force
-
-        # sensible ACLs: nur SYSTEM & Admins
-        $acl = New-Object System.Security.AccessControl.FileSecurity
-        $ruleSystem  = New-Object System.Security.AccessControl.FileSystemAccessRule('SYSTEM','FullControl','Allow')
-        $ruleAdmins  = New-Object System.Security.AccessControl.FileSystemAccessRule('BUILTIN\Administrators','FullControl','Allow')
-        $acl.SetOwner([System.Security.Principal.NTAccount]'BUILTIN\Administrators')
-        $acl.SetAccessRuleProtection($true,$false)
-        $acl.AddAccessRule($ruleSystem); $acl.AddAccessRule($ruleAdmins)
-        Set-Acl -LiteralPath $dest -AclObject $acl
-
-        Write-Host -ForegroundColor Green "[VarioTradeMUI] GraphApp.json nach $dest kopiert."
-    } else {
-        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Quelle $src nicht gefunden – Preflight wird sonst mit Code 22 scheitern."
-    }
-} catch {
-    Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Kopieren der GraphApp.json fehlgeschlagen: $($_.Exception.Message)"
-}
-
+}           
 }
 
 
