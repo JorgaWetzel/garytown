@@ -80,45 +80,6 @@ if (-not (Test-Path -Path $MapDrive)) {
     Write-Host "Mapped Drive $MapDrive to $DeployShare" -ForegroundColor Green
 }
 
-# ---- Automatische Vorpruefung vor Deployment ----
-if ($CurrentIP -match '^10\.10\.100\.') {
-	
-# --- Post OS-Apply: GraphApp.json von Z:\ ins Ziel-OS kopieren (wird spaeter geloescht) ---
-try {
-    $src  = 'Z:\OSDCloud\GraphApp.json'
-    $dest = 'C:\ProgramData\GraphApp.json'
-
-    if (Test-Path -LiteralPath $src) {
-        New-Item -ItemType Directory -Path (Split-Path -Path $dest) -Force | Out-Null
-        Copy-Item -LiteralPath $src -Destination $dest -Force
-
-        # ACLs: nur SYSTEM & BUILTIN\Administrators per SID
-        $sidSystem = New-Object System.Security.Principal.SecurityIdentifier 'S-1-5-18'      # SYSTEM
-        $sidAdmins = New-Object System.Security.Principal.SecurityIdentifier 'S-1-5-32-544'   # Builtin Admins
-
-        $fs = New-Object System.Security.AccessControl.FileSecurity
-        $fs.SetAccessRuleProtection($true, $false)  # Vererbung aus
-        $fs.SetOwner($sidSystem)
-
-        $ruleSystem = New-Object System.Security.AccessControl.FileSystemAccessRule($sidSystem, 'FullControl', 'Allow')
-        $ruleAdmins = New-Object System.Security.AccessControl.FileSystemAccessRule($sidAdmins, 'FullControl', 'Allow')
-        $fs.AddAccessRule($ruleSystem)
-        $fs.AddAccessRule($ruleAdmins)
-
-        Set-Acl -LiteralPath $dest -AclObject $fs
-
-        Write-Host -ForegroundColor Green "[VarioTradeMUI] GraphApp.json nach $dest kopiert (ACLs auf SYSTEM/Admins gesetzt)."
-    } else {
-        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Quelle $src nicht gefunden – Preflight meldet sonst Code 22."
-    }
-}
-catch {
-    Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Kopieren/ACL GraphApp.json fehlgeschlagen: $($_.Exception.Message)"
-}
-
-}
-
-
 # ================================================================
 #   OSDCloud-Variablen setzen
 # ================================================================
@@ -293,6 +254,44 @@ finally {
     } catch {
         Write-Host -ForegroundColor Yellow "[VarioTradeMUI] DriverPack cache block failed: $($_.Exception.Message)"
     }
+}
+
+# ---- Automatische Vorpruefung vor Deployment ----
+if ($CurrentIP -match '^10\.10\.100\.') {
+	
+# --- Post OS-Apply: GraphApp.json von Z:\ ins Ziel-OS kopieren (wird spaeter geloescht) ---
+try {
+    $src  = 'Z:\OSDCloud\GraphApp.json'
+    $dest = 'C:\ProgramData\GraphApp.json'
+
+    if (Test-Path -LiteralPath $src) {
+        New-Item -ItemType Directory -Path (Split-Path -Path $dest) -Force | Out-Null
+        Copy-Item -LiteralPath $src -Destination $dest -Force
+
+        # ACLs: nur SYSTEM & BUILTIN\Administrators per SID
+        $sidSystem = New-Object System.Security.Principal.SecurityIdentifier 'S-1-5-18'      # SYSTEM
+        $sidAdmins = New-Object System.Security.Principal.SecurityIdentifier 'S-1-5-32-544'   # Builtin Admins
+
+        $fs = New-Object System.Security.AccessControl.FileSecurity
+        $fs.SetAccessRuleProtection($true, $false)  # Vererbung aus
+        $fs.SetOwner($sidSystem)
+
+        $ruleSystem = New-Object System.Security.AccessControl.FileSystemAccessRule($sidSystem, 'FullControl', 'Allow')
+        $ruleAdmins = New-Object System.Security.AccessControl.FileSystemAccessRule($sidAdmins, 'FullControl', 'Allow')
+        $fs.AddAccessRule($ruleSystem)
+        $fs.AddAccessRule($ruleAdmins)
+
+        Set-Acl -LiteralPath $dest -AclObject $fs
+
+        Write-Host -ForegroundColor Green "[VarioTradeMUI] GraphApp.json nach $dest kopiert (ACLs auf SYSTEM/Admins gesetzt)."
+    } else {
+        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Quelle $src nicht gefunden – Preflight meldet sonst Code 22."
+    }
+}
+catch {
+    Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Kopieren/ACL GraphApp.json fehlgeschlagen: $($_.Exception.Message)"
+}
+
 }
 
 
