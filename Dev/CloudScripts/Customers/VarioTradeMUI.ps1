@@ -131,7 +131,56 @@ $Global:MyOSDCloud = @{
     ZTI               = $true
 	Firmware          = $false
     UpdateOS          = $false     
-    UpdateDrivers     = $false      
+    UpdateDrivers     = $false 
+
+    # --- Image / Installation ---
+    # ImageFileFullName = 'Pfad zur WIM-Datei'
+    # ImageFileItem     = Get-Item 'Pfad zur WIM'
+    # ImageFileName     = 'Win11_24H2_MUI.wim'
+    # OSImageIndex      = 1
+    # Edition           = 'Enterprise'
+    # Language          = 'de-CH'
+    # TimeZone          = 'W. Europe Standard Time'
+    # ClearDiskConfirm  = $false
+    # ZTI               = $true
+
+    # --- Firmware / Hardware ---
+    # Firmware          = $true      # BIOS/Firmware-Update aktivieren
+    # TPMUpdate         = $true      # TPM-Update aktivieren
+    # SkipBitLocker     = $true      # BitLocker-Enable überspringen
+    # DriverPackName    = 'HP EliteBook x360 G7'
+    # DriverPackLatest  = $true      # immer neueste DriverPacks von OSDCloud
+    # HPCMSLDriverPackLatest = $true # für HP: CMSL-Treiber immer aktuell
+
+    # --- Windows Updates ---
+    # UpdateOS          = $true      # Windows Quality Updates nach Deployment
+    # UpdateDrivers     = $true      # Treiber über Windows Update
+    # UpdateFirmware    = $true      # Firmware-Updates über Windows Update
+    # UpdateMicrosoft365= $true      # Office/M365 Updates ziehen
+    # UpdateDotNet      = $true      # .NET Updates über Windows Update
+    # UpdateFeature     = $true      # Feature Updates (Versionssprung) zulassen
+    # UpdateCumulative  = $true      # Cumulative Updates nach Deployment
+    # UpdateSecurity    = $true      # Security Patches separat erzwingen
+
+    # --- OOBE / Autopilot ---
+    # SkipOOBE          = $true      # OOBE-Dialog überspringen
+    # SkipAutopilot     = $true      # Autopilot-Registrierung deaktivieren
+    # AutopilotJSON     = 'C:\OSDCloud\AutopilotProfile.json' 
+    #                     # Profil explizit angeben (statt automatisch suchen)
+
+    # --- Features / Optionen ---
+    # InstallNetFX3     = $true      # .NET Framework 3.5 mitinstallieren
+    # EnableWindowsStore= $true      # Windows Store aktivieren
+    # RemoveBuiltInApps = $true      # Standard-Apps deinstallieren
+    # EnableHyperV      = $true      # Hyper-V gleich aktivieren
+    # EnableRSAT        = $true      # RSAT-Tools mitinstallieren
+    # EnableWSL         = $true      # Windows Subsystem for Linux aktivieren
+    # AddLanguages      = @('fr-CH','it-CH') # weitere Sprachen hinzufügen
+
+    # --- WinPE / Setup ---
+    # UpdateWinPE       = $true      # WinPE vorab aktualisieren
+    # Wallpaper         = "$OSDCloudWorkspace\wallpaper.jpg"
+    # SkipReboot        = $true      # Reboot am Ende unterdrücken (Testzwecke)	
 }
 
 # ================================================================
