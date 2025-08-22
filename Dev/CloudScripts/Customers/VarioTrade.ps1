@@ -65,21 +65,59 @@ $Global:MyOSDCloud = [ordered]@{
 # Start-OSDCloudGUI
 # Start-OSDCloudGUIDev
 
+
+# --------   HP-Spezifisches vorbereiten --------------------
+$OSVersion = 'Windows 11' #Used to Determine Driver Pack
+$OSReleaseID = '24H2'     #Used to Determine Driver Pack
 $DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
 
 if ($DriverPack){
     $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
 }
 
-#Enable HPIA | Update HP BIOS | Update HP TPM
- if (Test-HPIASupport){
-    #$Global:MyOSDCloud.DevMode = [bool]$True
-    $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
-    if ($Product -ne '83B2' -or $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
-    #{$Global:MyOSDCloud.HPIAALL = [bool]$true}
-    $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
-    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true #In Test 
-    #Set HP BIOS Settings to what I want:
+# ---------------- Driver package first, HPIA as fallback --------------------
+if ($DriverPack){
+    Write-Host -ForegroundColor Cyan "Driver pack located – applying driver pack only."
+    $Global:MyOSDCloud.DriverPackName      = $DriverPack.Name
+    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true   # Driver-Pack aktiv
+    $Global:MyOSDCloud.HPIAALL             = [bool]$false     # HPIA deaktivieren
+	if ($Product -ne '83B2' -or $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
+    if ($Product -ne '895E' -or $Model -notmatch "z2mini"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
+	
+}
+else{
+    Write-Host -ForegroundColor Yellow "No driver pack found – falling back to HPIA."
+    if (Test-HPIASupport){ $Global:MyOSDCloud.HPIAALL = [bool]$true }
+}
+
+# Optionale BIOS-/TPM-Updates beibehalten
+function Ensure-TSEnv {
+    # Statt: if ($global:TSEnv) { return }
+    if (Get-Variable -Name TSEnv -Scope Global -ErrorAction SilentlyContinue) { return }
+
+    try {
+        $global:TSEnv = New-Object -ComObject Microsoft.SMS.TSEnvironment
+        return
+    } catch {}
+
+    Add-Type -Language CSharp @"
+using System;
+public class FakeTSEnv {
+  public string Value(string name) { return Environment.GetEnvironmentVariable(name); }
+  public void Value(string name, string value) { Environment.SetEnvironmentVariable(name, value); }
+}
+"@
+    $global:TSEnv = New-Object FakeTSEnv
+
+    if (-not $env:_SMSTSLogPath) { $env:_SMSTSLogPath = "X:\Windows\Temp" }
+    if (-not $env:SMSTSLogPath)  { $env:SMSTSLogPath  = "X:\Windows\Temp" }
+}
+Ensure-TSEnv
+
+# Dein Block bleibt aktiv – jetzt ohne Fehler:
+if (Test-HPIASupport){
+    $Global:MyOSDCloud.HPTPMUpdate  = $true
+    $Global:MyOSDCloud.HPBIOSUpdate = $true
     iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
     Manage-HPBiosSettings -SetSettings
 }
