@@ -1,7 +1,9 @@
 $ScriptName = 'Buechweid.ps1'
 $ScriptVersion = '28.08.2025'
-iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
-iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
+Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
+
+# iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
+# iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
 
 #================================================
 #   [PreOS] Update Module
@@ -10,14 +12,6 @@ if ((Get-MyComputerModel) -match 'Virtual') {
     Write-Host  -ForegroundColor Green "Setting Display Resolution to 1600x"
     Set-DisRes 1600
 }
-
-<#
-Write-Host -ForegroundColor Green "Updating OSD PowerShell Module"
-Install-Module OSD -Force
-
-Write-Host  -ForegroundColor Green "Importing OSD PowerShell Module"
-Import-Module OSD -Force   
-#>
 
 #=======================================================================
 #   [OS] Params and Start-OSDCloud
@@ -61,7 +55,7 @@ $Global:MyOSDCloud = [ordered]@{
     CheckSHA1 = [bool]$true
 }
 
-# Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
+Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
 # Start-OSDCloudGUI
 # Start-OSDCloudGUIDev
 
@@ -89,57 +83,6 @@ if ($DriverPack){
 Write-Output $Global:MyOSDCloud
 
 #================================================
-#  [PostOS] OOBEDeploy Configuration
-#================================================
-Write-Host -ForegroundColor Green "Create C:\ProgramData\OSDeploy\OSDeploy.OOBEDeploy.json"
-$OOBEDeployJson = @'
-{
-    "AddNetFX3":  {
-                      "IsPresent":  true
-                  },
-    "Autopilot":  {
-                      "IsPresent":  false
-                  },
-    "RemoveAppx":  [
-                    "MicrosoftTeams",
-                    "Microsoft.BingWeather",
-                    "Microsoft.BingNews",
-                    "Microsoft.GamingApp",
-                    "Microsoft.GetHelp",
-                    "Microsoft.Getstarted",
-                    "Microsoft.Messaging",
-                    "Microsoft.MicrosoftOfficeHub",
-                    "Microsoft.MicrosoftSolitaireCollection",
-                    "Microsoft.People",
-                    "Microsoft.PowerAutomateDesktop",
-                    "Microsoft.StorePurchaseApp",
-                    "Microsoft.Todos",
-                    "microsoft.windowscommunicationsapps",
-                    "Microsoft.WindowsFeedbackHub",
-                    "Microsoft.WindowsMaps",
-                    "Microsoft.WindowsSoundRecorder",
-                    "Microsoft.Xbox.TCUI",
-                    "Microsoft.XboxGameOverlay",
-                    "Microsoft.XboxGamingOverlay",
-                    "Microsoft.XboxIdentityProvider",
-                    "Microsoft.XboxSpeechToTextOverlay",
-                    "Microsoft.ZuneMusic",
-                    "Microsoft.ZuneVideo"
-                   ],
-    "UpdateDrivers":  {
-                          "IsPresent":  true
-                      },
-    "UpdateWindows":  {
-                          "IsPresent":  true
-                      }
-}
-'@
-If (!(Test-Path "C:\ProgramData\OSDeploy")) {
-    New-Item "C:\ProgramData\OSDeploy" -ItemType Directory -Force | Out-Null
-}
-$OOBEDeployJson | Out-File -FilePath "C:\ProgramData\OSDeploy\OSDeploy.OOBEDeploy.json" -Encoding ascii -Force
-
-#================================================
 #  [PostOS] AutopilotOOBE Configuration Staging
 #================================================
 Write-Host -ForegroundColor Green "Define Computername:"
@@ -160,12 +103,6 @@ Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/he
 Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/PostActionTaskBuechweidVerwaltung.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\PostActionTask.ps1' -Encoding ascii -Force
 Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/SetupComplete.ps1 | Out-File -FilePath 'C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1' -Encoding ascii -Force
 
-# Downloading and extracting Scripts.zip
-# Write-Host -ForegroundColor Green "Downloading and extracting Scripts.zip"
-# Invoke-WebRequest -Uri "https://github.com/JorgaWetzel/garytown/raw/refs/heads/master/Dev/CloudScripts/Scripts.zip" -OutFile "C:\Windows\Setup\Scripts\Scripts.zip" -Verbose
-# Add-Type -AssemblyName System.IO.Compression.FileSystem
-# [System.IO.Compression.ZipFile]::ExtractToDirectory("C:\Windows\Setup\Scripts\Scripts.zip", "C:\Windows\Setup\Scripts")
-# Remove-Item -Path "C:\Windows\Setup\Scripts\Scripts.zip" -Force
 
 $OOBECMD = @'
 @echo off
