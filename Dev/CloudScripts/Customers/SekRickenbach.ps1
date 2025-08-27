@@ -1,35 +1,9 @@
-# 99-Deployment.ps1  –  StartNet-Hook, minimal
-# ==== Quiet-on-error flag (controls Splash suppression in WinPE) ====
-$Global:VarioQuietFlagDir  = "X:\OSDCloud\Flags"
-$Global:VarioQuietFlagFile = Join-Path $Global:VarioQuietFlagDir "SilentSplashOff.txt"
-function Set-QuietSplash {
-    try {
-        if (!(Test-Path $Global:VarioQuietFlagDir)) {
-            New-Item -ItemType Directory -Path $Global:VarioQuietFlagDir -Force | Out-Null
-        }
-        New-Item -Path $Global:VarioQuietFlagFile -ItemType File -Force | Out-Null
-        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] QuietSplash Flag gesetzt – Splash wird beim nächsten Start übersprungen."
-    } catch {
-        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Konnte QuietSplash Flag nicht setzen: $($_.Exception.Message)"
-    }
-}
-# ================================================================
+$ScriptName = 'Buechweid.ps1'
+$ScriptVersion = '28.08.2025'
+Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
 
-Import-Module OSD -Force
-
-Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) " -NoNewline
-# Write-Host -ForegroundColor Green "PSCloudScript at functions.osdcloud.com"
-# Invoke-Expression (Invoke-RestMethod -Uri functions.osdcloud.com)
-
-iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
-iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
-#Transport Layer Security (TLS) 1.2
-Write-Host -ForegroundColor Green "Transport Layer Security (TLS) 1.2"
-[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-#[System.Net.WebRequest]::DefaultWebProxy.Credentials = [System.Net.CredentialCache]::DefaultCredentials
-
-$functionsUrl = 'https://raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions3.ps1'
-iex (Invoke-WebRequest -UseBasicParsing -Uri $functionsUrl).Content
+# iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
+# iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
 
 #================================================
 #   [PreOS] Update Module
@@ -39,95 +13,38 @@ if ((Get-MyComputerModel) -match 'Virtual') {
     Set-DisRes 1600
 }
 
-
-$SrcWim = 'Z:\OSDCloud\OS\Win11_24H2_MUI.wim'
-
-# Share verbinden
-if (-not (Test-Path -Path $MapDrive)){
-    net use $MapDrive $DeployShare /user:$UserName $PlainPwd /persistent:no
+#=======================================================================
+#   [OS] Params and Start-OSDCloud
+#=======================================================================
+#Used to Determine Driver Pack
+$Params = @{
+    OSVersion = "Windows 11"
+    OSBuild = "24H2"
+    OSEdition = "Pro"
+    OSLanguage = "de-DE"
+    OSLicense = "Retail"
+    ZTI = $true
+    Firmware = $false
 }
-if (-not (Test-Path -Path $MapDrive)) {
-    Write-Host "Failed to Map Drive" -ForegroundColor Red
-    return
-} else {
-    Write-Host "Mapped Drive $MapDrive to $DeployShare" -ForegroundColor Green
+Start-OSDCloud @Params
+
+
+
+# Full List https://github.com/OSDeploy/OSD/blob/06d544f0bff26b560e19676582d273e1c229cfac/Public/OSDCloud.ps1#L521
+#Set OSDCloud Vars
+$Global:MyOSDCloud = [ordered]@{
+    Restart = [bool]$False
+    RecoveryPartition = [bool]$true
+    OEMActivation = [bool]$True
+    WindowsUpdate = [bool]$true
+    WindowsUpdateDrivers = [bool]$False
+    WindowsDefenderUpdate = [bool]$False
+    SetTimeZone = [bool]$False
+    ClearDiskConfirm = [bool]$False
+    ShutdownSetupComplete = [bool]$False
+    SyncMSUpCatDriverUSB = [bool]$true
+    CheckSHA1 = [bool]$true
 }
-
-# ================================================================
-#   OSDCloud-Variablen setzen9
-# ================================================================
-$Global:MyOSDCloud = @{
-    ImageFileFullName = $SrcWim
-    ImageFileItem     = Get-Item $SrcWim
-    ImageFileName     = 'Win11_24H2_MUI.wim'
-    OSImageIndex      = 1  
-    ClearDiskConfirm  = $false
-    ZTI               = $true
-	Firmware          = $false
-    UpdateOS          = $false     
-    UpdateDrivers     = $false 
-
-    # --- Image / Installation ---
-    # ImageFileFullName = 'Pfad zur WIM-Datei'
-    # ImageFileItem     = Get-Item 'Pfad zur WIM'
-    # ImageFileName     = 'Win11_24H2_MUI.wim'
-    # OSImageIndex      = 1
-    # Edition           = 'Enterprise'
-    # Language          = 'de-CH'
-    # TimeZone          = 'W. Europe Standard Time'
-    # ClearDiskConfirm  = $false
-    # ZTI               = $true
-
-    # --- Firmware / Hardware ---
-    # Firmware          = $true      # BIOS/Firmware-Update aktivieren
-    # TPMUpdate         = $true      # TPM-Update aktivieren
-    # SkipBitLocker     = $true      # BitLocker-Enable überspringen
-    # DriverPackName    = 'HP EliteBook x360 G7'
-    # DriverPackLatest  = $true      # immer neueste DriverPacks von OSDCloud
-    # HPCMSLDriverPackLatest = $true # für HP: CMSL-Treiber immer aktuell
-
-    # --- Windows Updates ---
-    # UpdateOS          = $true      # Windows Quality Updates nach Deployment
-    # UpdateDrivers     = $true      # Treiber über Windows Update
-    # UpdateFirmware    = $true      # Firmware-Updates über Windows Update
-    # UpdateMicrosoft365= $true      # Office/M365 Updates ziehen
-    # UpdateDotNet      = $true      # .NET Updates über Windows Update
-    # UpdateFeature     = $true      # Feature Updates (Versionssprung) zulassen
-    # UpdateCumulative  = $true      # Cumulative Updates nach Deployment
-    # UpdateSecurity    = $true      # Security Patches separat erzwingen
-
-    # --- OOBE / Autopilot ---
-    # SkipOOBE          = $true      # OOBE-Dialog überspringen
-    # SkipAutopilot     = $true      # Autopilot-Registrierung deaktivieren
-    # AutopilotJSON     = 'C:\OSDCloud\AutopilotProfile.json' 
-    #                     # Profil explizit angeben (statt automatisch suchen)
-
-    # --- Features / Optionen ---
-    # InstallNetFX3     = $true      # .NET Framework 3.5 mitinstallieren
-    # EnableWindowsStore= $true      # Windows Store aktivieren
-    # RemoveBuiltInApps = $true      # Standard-Apps deinstallieren
-    # EnableHyperV      = $true      # Hyper-V gleich aktivieren
-    # EnableRSAT        = $true      # RSAT-Tools mitinstallieren
-    # EnableWSL         = $true      # Windows Subsystem for Linux aktivieren
-    # AddLanguages      = @('fr-CH','it-CH') # weitere Sprachen hinzufügen
-
-    # --- WinPE / Setup ---
-    # UpdateWinPE       = $true      # WinPE vorab aktualisieren
-    # Wallpaper         = "$OSDCloudWorkspace\wallpaper.jpg"
-    # SkipReboot        = $true      # Reboot am Ende unterdrücken (Testzwecke)	
-}
-
-# ================================================================
-#   HP-Treiberpaket vorbereiten (mit lokalem Cache)
-# ================================================================
-$Product        = Get-MyComputerProduct
-$OSVersion      = 'Windows 11'
-$OSReleaseID    = '24H2'
-$DriverPackName = "$Product-$OSVersion-$OSReleaseID.exe"
-$DriverSearchPaths = @(
-    "Z:\OSDCloud\DriverPacks\DISM\HP\$Product",
-    "Z:\OSDCloud\DriverPacks\HP\$DriverPackName"
-)
 
 # --------   HP-Spezifisches vorbereiten --------------------
 $OSVersion = 'Windows 11' #Used to Determine Driver Pack
@@ -140,7 +57,7 @@ if ($DriverPack){
 
 # ---------------- Driver package first, HPIA as fallback --------------------
 if ($DriverPack){
-    Write-Host -ForegroundColor Cyan "Driver pack located – applying driver pack only."
+    Write-Host -ForegroundColor Cyan "Driver pack located â€“ applying driver pack only."
     $Global:MyOSDCloud.DriverPackName      = $DriverPack.Name
     $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true   # Driver-Pack aktiv
     $Global:MyOSDCloud.HPIAALL             = [bool]$false     # HPIA deaktivieren
@@ -149,7 +66,7 @@ if ($DriverPack){
 	
 }
 else{
-    Write-Host -ForegroundColor Yellow "No driver pack found – falling back to HPIA."
+    Write-Host -ForegroundColor Yellow "No driver pack found â€“ falling back to HPIA."
     if (Test-HPIASupport){ $Global:MyOSDCloud.HPIAALL = [bool]$true }
 }
 
@@ -177,7 +94,7 @@ public class FakeTSEnv {
 }
 Ensure-TSEnv
 
-# Dein Block bleibt aktiv – jetzt ohne Fehler:
+# Dein Block bleibt aktiv â€“ jetzt ohne Fehler:
 if (Test-HPIASupport){
     $Global:MyOSDCloud.HPTPMUpdate  = $true
     $Global:MyOSDCloud.HPBIOSUpdate = $true
@@ -188,87 +105,64 @@ if (Test-HPIASupport){
 #write variables to console
 Write-Output $Global:MyOSDCloud
 
-# --- Deployment ---------------------------------------------
-try {
-    Invoke-OSDCloud
-}
-catch {
-    Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Invoke-OSDCloud failed: $($_.Exception.Message)"
-    try { Set-QuietSplash } catch {}
-}
-finally {
-    # --- Post Invoke-OSDCloud: Cache DriverPack nach Z:\ ---
-    try {
-        if (Test-Path 'Z:\') {
-            $cacheDir = 'Z:\OSDCloud\DriverPacks\HP'
-            if (!(Test-Path $cacheDir)) { New-Item -ItemType Directory -Path $cacheDir -Force | Out-Null }
-            # prefer explicit DriverPack if object exists and file on disk
-            $dp = $null
-            if ($DriverPack -and ($DriverPack.PSObject.Properties.Name -contains 'FullName') -and (Test-Path $DriverPack.FullName)) {
-                $dp = Get-Item -LiteralPath $DriverPack.FullName -ErrorAction SilentlyContinue
-            }
-            if (-not $dp -and (Test-Path 'C:\Drivers')) {
-                $dp = Get-ChildItem 'C:\Drivers' -Filter sp*.exe -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-            }
-            if ($dp) {
-                $dest = Join-Path $cacheDir $dp.Name
-                if (!(Test-Path $dest)) {
-                    Copy-Item -Path $dp.FullName -Destination $dest -Force
-                    Write-Host -ForegroundColor Cyan "[VarioTradeMUI] Cached driver pack to $dest"
-                } else {
-                    Write-Host -ForegroundColor Green "[VarioTradeMUI] Driver pack already cached at $dest"
-                }
-            } else {
-                Write-Host -ForegroundColor Yellow "[VarioTradeMUI] No sp*.exe found under C:\Drivers after Invoke-OSDCloud; skipping cache."
-            }
-        } else {
-            Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Z:\ not available; skipping cache."
-        }
-    } catch {
-        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] DriverPack cache block failed: $($_.Exception.Message)"
-    }
-}
+#================================================
+#  [PostOS] AutopilotOOBE Configuration Staging
+#================================================
+Write-Host -ForegroundColor Green "Define Computername:"
+$Serial = Get-WmiObject Win32_bios | Select-Object -ExpandProperty SerialNumber
+$TargetComputername = $Serial.Substring(4,8)
 
-# ---- Automatische Vorpruefung vor Deployment ----
-if ($CurrentIP -match '^10\.10\.100\.') {
-	
-# --- Post OS-Apply: GraphApp.json von Z:\ ins Ziel-OS kopieren (wird spaeter geloescht) ---
-try {
-    $src  = 'Z:\OSDCloud\GraphApp.json'
-    $dest = 'C:\ProgramData\GraphApp.json'
-
-    if (Test-Path -LiteralPath $src) {
-        New-Item -ItemType Directory -Path (Split-Path -Path $dest) -Force | Out-Null
-        Copy-Item -LiteralPath $src -Destination $dest -Force
-
-        # ACLs: nur SYSTEM & BUILTIN\Administrators per SID
-        $sidSystem = New-Object System.Security.Principal.SecurityIdentifier 'S-1-5-18'      # SYSTEM
-        $sidAdmins = New-Object System.Security.Principal.SecurityIdentifier 'S-1-5-32-544'   # Builtin Admins
-
-        $fs = New-Object System.Security.AccessControl.FileSecurity
-        $fs.SetAccessRuleProtection($true, $false)  # Vererbung aus
-        $fs.SetOwner($sidSystem)
-
-        $ruleSystem = New-Object System.Security.AccessControl.FileSystemAccessRule($sidSystem, 'FullControl', 'Allow')
-        $ruleAdmins = New-Object System.Security.AccessControl.FileSystemAccessRule($sidAdmins, 'FullControl', 'Allow')
-        $fs.AddAccessRule($ruleSystem)
-        $fs.AddAccessRule($ruleAdmins)
-
-        Set-Acl -LiteralPath $dest -AclObject $fs
-
-        Write-Host -ForegroundColor Green "[VarioTradeMUI] GraphApp.json nach $dest kopiert (ACLs auf SYSTEM/Admins gesetzt)."
-    } else {
-        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Quelle $src nicht gefunden – Preflight meldet sonst Code 22."
-    }
-}
-catch {
-    Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Kopieren/ACL GraphApp.json fehlgeschlagen: $($_.Exception.Message)"
-}
-
-}
+$AssignedComputerName = "SRB-$TargetComputername"
+Write-Host -ForegroundColor Red $AssignedComputerName
+Write-Host ""
 
 
-# Set-OSDCloudUnattendAuditMode
+#================================================
+#  [PostOS] OOBE CMD Command Line
+#================================================
+Write-Host -ForegroundColor Green "Downloading and creating script for OOBE phase"
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/Set-KeyboardLanguage.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\keyboard.ps1' -Encoding ascii -Force
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/Install-EmbeddedProductKey.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\productkey.ps1' -Encoding ascii -Force
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/PostActionTaskSekRbach.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\PostActionTask.ps1' -Encoding ascii -Force
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/SetupComplete.ps1 | Out-File -FilePath 'C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1' -Encoding ascii -Force
 
-# Initialize-OSDCloudStartnetUpdate
-Restart-Computer -Force
+
+$OOBECMD = @'
+@echo off
+REM Planen der AusfÃ¼hrung der Skripte nach dem nÃ¤chsten Neustart
+start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\keyboard.ps1
+exit
+'@
+$OOBECMD | Out-File -FilePath 'C:\Windows\Setup\Scripts\oobe.cmd' -Encoding ascii -Force
+
+#================================================
+#  [PostOS] SetupComplete CMD Command Line OSDCloud
+#================================================
+
+$osdCloudDir = 'C:\OSDCloud\Scripts\SetupComplete'
+# Create the OOBE CMD command line
+$OOBECMD = @'
+@echo off
+# CALL %Windir%\Setup\Scripts\DeCompile.exe
+# DEL /F /Q %Windir%\Setup\Scripts\DeCompile.exe >nul
+start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\productkey.ps1
+# start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\keyboard.ps1
+# start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\autopilotprereq.ps1
+# start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\autopilotoobe.ps1
+CALL powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\PostActionTask.ps1
+start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1
+exit 
+'@
+
+$OOBECMD | Out-File -FilePath "$osdCloudDir\SetupComplete.cmd" -Encoding ascii -Force
+
+#=======================================================================
+#   Restart-Computer
+#=======================================================================
+Write-Host  -ForegroundColor Green "Restarting in 20 seconds!"
+Start-Sleep -Seconds 20
+wpeutil reboot
+
+
+
+
