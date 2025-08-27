@@ -39,33 +39,6 @@ if ((Get-MyComputerModel) -match 'Virtual') {
     Set-DisRes 1600
 }
 
-# ======================================================================
-# Automatische Konfiguration basierend auf IP-Bereich (WinPE-tauglich)
-# ======================================================================
-
-# Aktuelle IP-Adresse aus ipconfig holen
-$CurrentIP = (ipconfig | Select-String "IPv4" | ForEach-Object {
-    ($_ -split ":")[-1].Trim()
-} | Where-Object { $_ -match "^10\.10\.100\.|^192\.168\.2\." } | Select-Object -First 1)
-
-if ($CurrentIP -match '^10\.10\.100\.') {
-    # Konfiguration für 10.10.100.x
-    $DeployShare = '\\10.10.100.100\Daten'
-    $MapDrive    = 'Z:'
-    $UserName    = 'Jorga'
-    $PlainPwd    = 'Dont4getme'
-}
-elseif ($CurrentIP -match '^192\.168\.2\.') {
-    # Konfiguration für 192.168.2.x
-    $DeployShare = '\\192.168.2.15\DeploymentShare$'
-    $MapDrive    = 'Z:'
-    $UserName    = 'VARIODEPLOY\Administrator'
-    $PlainPwd    = '12Monate'
-}
-else {
-    Write-Host "Keine passende IP-Konfiguration gefunden!" -ForegroundColor Red
-    return
-}
 
 $SrcWim = 'Z:\OSDCloud\OS\Win11_24H2_MUI.wim'
 
@@ -81,7 +54,7 @@ if (-not (Test-Path -Path $MapDrive)) {
 }
 
 # ================================================================
-#   OSDCloud-Variablen setzen
+#   OSDCloud-Variablen setzen9
 # ================================================================
 $Global:MyOSDCloud = @{
     ImageFileFullName = $SrcWim

@@ -1,5 +1,5 @@
-$ScriptName = 'oneICT.ps1'
-$ScriptVersion = '02.10.2024'
+$ScriptName = 'Buechweid.ps1'
+$ScriptVersion = '28.08.2025'
 iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
 
@@ -32,7 +32,7 @@ $Params = @{
     ZTI = $true
     Firmware = $false
 }
-# Start-OSDCloud @Params
+Start-OSDCloud @Params
 
 $Product = (Get-MyComputerProduct)
 $Model = (Get-MyComputerModel)
@@ -65,59 +65,22 @@ $Global:MyOSDCloud = [ordered]@{
 # Start-OSDCloudGUI
 # Start-OSDCloudGUIDev
 
-
-# --------   HP-Spezifisches vorbereiten --------------------
-$OSVersion = 'Windows 11' #Used to Determine Driver Pack
-$OSReleaseID = '24H2'     #Used to Determine Driver Pack
 $DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
 
 if ($DriverPack){
     $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
 }
 
-# ---------------- Driver package first, HPIA as fallback --------------------
-if ($DriverPack){
-    Write-Host -ForegroundColor Cyan "Driver pack located – applying driver pack only."
-    $Global:MyOSDCloud.DriverPackName      = $DriverPack.Name
-    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true   # Driver-Pack aktiv
-    $Global:MyOSDCloud.HPIAALL             = [bool]$false     # HPIA deaktivieren
-	if ($Product -ne '83B2' -or $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
-    if ($Product -ne '895E' -or $Model -notmatch "z2mini"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
-	
-}
-else{
-    Write-Host -ForegroundColor Yellow "No driver pack found – falling back to HPIA."
-    if (Test-HPIASupport){ $Global:MyOSDCloud.HPIAALL = [bool]$true }
-}
-
-# Optionale BIOS-/TPM-Updates beibehalten
-function Ensure-TSEnv {
-    # Statt: if ($global:TSEnv) { return }
-    if (Get-Variable -Name TSEnv -Scope Global -ErrorAction SilentlyContinue) { return }
-
-    try {
-        $global:TSEnv = New-Object -ComObject Microsoft.SMS.TSEnvironment
-        return
-    } catch {}
-
-    Add-Type -Language CSharp @"
-using System;
-public class FakeTSEnv {
-  public string Value(string name) { return Environment.GetEnvironmentVariable(name); }
-  public void Value(string name, string value) { Environment.SetEnvironmentVariable(name, value); }
-}
-"@
-    $global:TSEnv = New-Object FakeTSEnv
-
-    if (-not $env:_SMSTSLogPath) { $env:_SMSTSLogPath = "X:\Windows\Temp" }
-    if (-not $env:SMSTSLogPath)  { $env:SMSTSLogPath  = "X:\Windows\Temp" }
-}
-Ensure-TSEnv
-
-# Dein Block bleibt aktiv – jetzt ohne Fehler:
-if (Test-HPIASupport){
-    $Global:MyOSDCloud.HPTPMUpdate  = $true
-    $Global:MyOSDCloud.HPBIOSUpdate = $true
+#Enable HPIA | Update HP BIOS | Update HP TPM
+ if (Test-HPIASupport){
+    #$Global:MyOSDCloud.DevMode = [bool]$True
+    $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
+    if ($Product -ne '83B2' -or $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
+	if ($Product -eq '895E' -or $Model -match "z2mini"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
+    #{$Global:MyOSDCloud.HPIAALL = [bool]$true}
+    $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
+    $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true #In Test 
+    #Set HP BIOS Settings to what I want:
     iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
     Manage-HPBiosSettings -SetSettings
 }
@@ -126,13 +89,64 @@ if (Test-HPIASupport){
 Write-Output $Global:MyOSDCloud
 
 #================================================
+#  [PostOS] OOBEDeploy Configuration
+#================================================
+Write-Host -ForegroundColor Green "Create C:\ProgramData\OSDeploy\OSDeploy.OOBEDeploy.json"
+$OOBEDeployJson = @'
+{
+    "AddNetFX3":  {
+                      "IsPresent":  true
+                  },
+    "Autopilot":  {
+                      "IsPresent":  false
+                  },
+    "RemoveAppx":  [
+                    "MicrosoftTeams",
+                    "Microsoft.BingWeather",
+                    "Microsoft.BingNews",
+                    "Microsoft.GamingApp",
+                    "Microsoft.GetHelp",
+                    "Microsoft.Getstarted",
+                    "Microsoft.Messaging",
+                    "Microsoft.MicrosoftOfficeHub",
+                    "Microsoft.MicrosoftSolitaireCollection",
+                    "Microsoft.People",
+                    "Microsoft.PowerAutomateDesktop",
+                    "Microsoft.StorePurchaseApp",
+                    "Microsoft.Todos",
+                    "microsoft.windowscommunicationsapps",
+                    "Microsoft.WindowsFeedbackHub",
+                    "Microsoft.WindowsMaps",
+                    "Microsoft.WindowsSoundRecorder",
+                    "Microsoft.Xbox.TCUI",
+                    "Microsoft.XboxGameOverlay",
+                    "Microsoft.XboxGamingOverlay",
+                    "Microsoft.XboxIdentityProvider",
+                    "Microsoft.XboxSpeechToTextOverlay",
+                    "Microsoft.ZuneMusic",
+                    "Microsoft.ZuneVideo"
+                   ],
+    "UpdateDrivers":  {
+                          "IsPresent":  true
+                      },
+    "UpdateWindows":  {
+                          "IsPresent":  true
+                      }
+}
+'@
+If (!(Test-Path "C:\ProgramData\OSDeploy")) {
+    New-Item "C:\ProgramData\OSDeploy" -ItemType Directory -Force | Out-Null
+}
+$OOBEDeployJson | Out-File -FilePath "C:\ProgramData\OSDeploy\OSDeploy.OOBEDeploy.json" -Encoding ascii -Force
+
+#================================================
 #  [PostOS] AutopilotOOBE Configuration Staging
 #================================================
 Write-Host -ForegroundColor Green "Define Computername:"
 $Serial = Get-WmiObject Win32_bios | Select-Object -ExpandProperty SerialNumber
 $TargetComputername = $Serial.Substring(4,8)
 
-$AssignedComputerName = "PC-$TargetComputername"
+$AssignedComputerName = "MEL-$TargetComputername"
 Write-Host -ForegroundColor Red $AssignedComputerName
 Write-Host ""
 
@@ -170,9 +184,17 @@ $AutopilotOOBEJson | Out-File -FilePath "C:\ProgramData\OSDeploy\OSDeploy.Autopi
 Write-Host -ForegroundColor Green "Downloading and creating script for OOBE phase"
 Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/Set-KeyboardLanguage.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\keyboard.ps1' -Encoding ascii -Force
 Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/Install-EmbeddedProductKey.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\productkey.ps1' -Encoding ascii -Force
+# Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/AP-Prereq.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\autopilotprereq.ps1' -Encoding ascii -Force
+# Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/Start-AutopilotOOBE.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\autopilotoobe.ps1' -Encoding ascii -Force
 Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/PostActionTaskBuechweidVerwaltung.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\PostActionTask.ps1' -Encoding ascii -Force
 Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/SetupComplete.ps1 | Out-File -FilePath 'C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1' -Encoding ascii -Force
-# Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/PostActionUser.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\PostActionUser.ps1' -Encoding ascii -Force
+
+# Downloading and extracting Scripts.zip
+# Write-Host -ForegroundColor Green "Downloading and extracting Scripts.zip"
+# Invoke-WebRequest -Uri "https://github.com/JorgaWetzel/garytown/raw/refs/heads/master/Dev/CloudScripts/Scripts.zip" -OutFile "C:\Windows\Setup\Scripts\Scripts.zip" -Verbose
+# Add-Type -AssemblyName System.IO.Compression.FileSystem
+# [System.IO.Compression.ZipFile]::ExtractToDirectory("C:\Windows\Setup\Scripts\Scripts.zip", "C:\Windows\Setup\Scripts")
+# Remove-Item -Path "C:\Windows\Setup\Scripts\Scripts.zip" -Force
 
 $OOBECMD = @'
 @echo off
@@ -190,14 +212,18 @@ $osdCloudDir = 'C:\OSDCloud\Scripts\SetupComplete'
 # Create the OOBE CMD command line
 $OOBECMD = @'
 @echo off
+# CALL %Windir%\Setup\Scripts\DeCompile.exe
+# DEL /F /Q %Windir%\Setup\Scripts\DeCompile.exe >nul
 start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\productkey.ps1
-start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1 
-call powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\PostActionTask.ps1
+# start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\keyboard.ps1
+# start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\autopilotprereq.ps1
+# start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\autopilotoobe.ps1
+CALL powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\PostActionTask.ps1
+start /wait powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1
 exit 
 '@
 
 $OOBECMD | Out-File -FilePath "$osdCloudDir\SetupComplete.cmd" -Encoding ascii -Force
-
 
 #=======================================================================
 #   Restart-Computer
@@ -205,3 +231,7 @@ $OOBECMD | Out-File -FilePath "$osdCloudDir\SetupComplete.cmd" -Encoding ascii -
 Write-Host  -ForegroundColor Green "Restarting in 20 seconds!"
 Start-Sleep -Seconds 20
 wpeutil reboot
+
+
+
+
