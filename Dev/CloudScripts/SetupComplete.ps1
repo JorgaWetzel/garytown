@@ -97,16 +97,12 @@ Set-Chocolatey
 }
 
 $app_packages = 
-"Microsoft.WindowsCamera",
-"Clipchamp.Clipchamp",
-"Microsoft.WindowsAlarms",
 "Microsoft.549981C3F5F10", # Cortana
 "Microsoft.WindowsFeedbackHub",
 "microsoft.windowscommunicationsapps",
 "Microsoft.WindowsMaps",
 "Microsoft.ZuneMusic",
 "Microsoft.BingNews",
-"Microsoft.Todos",
 "Microsoft.ZuneVideo",
 "Microsoft.MicrosoftOfficeHub",
 "Microsoft.OutlookForWindows",
