@@ -46,8 +46,6 @@ try {
     iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
     iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions2.ps1)
 
-    Write-Host -ForegroundColor Gray "**Running Chocolatey Framework**"
-    Set-Chocolatey
 	
 	Write-Host -ForegroundColor Gray "**Add Cutomer Chocolatey Repository**"
 	$ErrorActionPreference = 'Stop'

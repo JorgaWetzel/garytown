@@ -1,4 +1,4 @@
-$ScriptName = 'Buechweid.ps1'
+$ScriptName = 'SekRickenbach.ps1'
 $ScriptVersion = '28.08.2025'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
 
