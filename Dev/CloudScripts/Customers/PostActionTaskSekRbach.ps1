@@ -66,7 +66,7 @@ try {
     # SOFTWARE-INSTALLATIONEN
     # ------------------------------------------------------------
     Write-Host -ForegroundColor Green "Office wird installiert"
-    choco upgrade office365business --params "/exclude:Access Groove Lync Publisher /language:de-DE /eula:FALSE" `
+    choco upgrade office365business --params "/exclude:Access Groove Lync Publisher Bing /language:de-DE /eula:FALSE" `
                  -y --no-progress --ignore-checksums
 
     Write-Host -ForegroundColor Green "Standard Apps werden installiert"
