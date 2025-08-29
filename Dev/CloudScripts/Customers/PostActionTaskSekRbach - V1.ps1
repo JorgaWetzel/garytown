@@ -48,14 +48,12 @@ try {
 
 	
 	Write-Host -ForegroundColor Gray "**Add Cutomer Chocolatey Repository**"
-	& "C:\ProgramData\chocolatey\bin\choco.exe" source add `
-	  --name="SRbach" `
-	  --source="https://chocoserver:8443/repository/SRbach/" `
-	  --allow-self-service `
-	  --user="SRbach" `
-	  --password="TF2annC4sM4hMvMojT3RWQrAe" `
-	  --priority=2
-
+	$ErrorActionPreference = 'Stop'
+	$choco   = Join-Path $env:ChocolateyInstall 'choco.exe'  # z.B. C:\ProgramData\Chocolatey\choco.exe
+	$srcName = 'SRbach'
+	$srcUrl  = 'https://chocoserver:8443/repository/SRbach/'
+	$srcUser = 'SRbach'
+	$srcPass = 'TF2annC4sM4hMvMojT3RWQrAe'  # besser per Env-Var/Secret laden
 
 	Write-Host -ForegroundColor Gray 'Add Customer Chocolatey Repository'
 	& $choco source add -n=$srcName -s="$srcUrl" --user="$srcUser" --password="$srcPass" --priority=2 --allow-self-service
