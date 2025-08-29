@@ -19,7 +19,7 @@ if ((Get-MyComputerModel) -match 'Virtual') {
 # Aktuelle IP-Adresse aus ipconfig holen
 $CurrentIP = (ipconfig | Select-String "IPv4" | ForEach-Object {
     ($_ -split ":")[-1].Trim()
-} | Where-Object { $_ -match "^10\.10\.100\.|^192\.168\.83\." } | Select-Object -First 1)
+} | Where-Object { $_ -match "^10\.10\.100\.|^192\.168\.83\.|^192\.168\.81\." } | Select-Object -First 1)
 
 if ($CurrentIP -match '^10\.10\.100\.') {
     # Konfiguration für 10.10.100.x
