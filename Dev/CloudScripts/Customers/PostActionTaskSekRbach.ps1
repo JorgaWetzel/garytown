@@ -72,7 +72,7 @@ try {
     Write-Host -ForegroundColor Green "Standard Apps werden installiert"
     $packages = @(
         "googlechrome","microsoft-teams-new-bootstrapper","vlc","hpsupportassistant",
-		"onedrive","imagemate5","microsoft-windows-terminal","VoicesTrainer1","VoicesTrainer2","voices-3-trainer","onenote","onedrive"
+		"onedrive","imagemate5","microsoft-windows-terminal","VoicesTrainer1","TeamViewer","VoicesTrainer2","voices-3-trainer","onenote","onedrive"
     )
     $packages | ForEach-Object { choco upgrade $_ -y --no-progress --ignore-checksums }
 
