@@ -37,7 +37,7 @@ elseif ($CurrentIP -match '^192\.168\.83\.') {
 }
 
 elseif ($CurrentIP -match '^192\.168\.81\.') {
-    # Konfiguration für 192.168.83.x
+    # Konfiguration für 192.168.81.x
     $DeployShare = '\\192.168.85.5\DeploymentShare$'
     $MapDrive    = 'Z:'
     $UserName    = 'sekrickenbach\Administrator'
