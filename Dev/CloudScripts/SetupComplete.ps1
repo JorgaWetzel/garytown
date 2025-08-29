@@ -19,8 +19,8 @@ $Global:oobeCloud = @{
     oobeRemoveAppxPackageName = 'Solitaire'
     oobeAddCapability = $false
     oobeAddCapabilityName = 'GroupPolicy','ServerManager','VolumeActivation'
-    oobeUpdateDrivers = $true
-    oobeUpdateWindows = $true
+    oobeUpdateDrivers = $false
+    oobeUpdateWindows = $false
     oobeRestartComputer = $false
     EmbeddedProductKey = $false
     oobeStopComputer = $false
@@ -29,7 +29,6 @@ $Global:oobeCloud = @{
 #region functions
 iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
-iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
 iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions2.ps1)
 #endregion
 

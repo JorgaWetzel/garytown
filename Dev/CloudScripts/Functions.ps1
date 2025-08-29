@@ -1142,10 +1142,10 @@ function Set-DefaultProfilePersonalPref {
     New-ItemProperty -Path $Path -Name "Value" -Value Allow -PropertyType String -Force | Out-Null
     
     #Set DarkMode
-    $Path = "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
-    New-Item -Path $Path -ItemType Directory -Force | Out-Null
-    New-ItemProperty -Path $Path -Name "AppsUseLightTheme" -Value 0 -PropertyType Dword -Force | Out-Null
-    New-ItemProperty -Path $Path -Name "SystemUsesLightTheme" -Value 0 -PropertyType Dword -Force | Out-Null
+    # $Path = "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+    # New-Item -Path $Path -ItemType Directory -Force | Out-Null
+    # New-ItemProperty -Path $Path -Name "AppsUseLightTheme" -Value 0 -PropertyType Dword -Force | Out-Null
+    # New-ItemProperty -Path $Path -Name "SystemUsesLightTheme" -Value 0 -PropertyType Dword -Force | Out-Null
 
     #Show Hidden Stuff
     $Path = "$VirtualRegistryPath_software\Policies\Microsoft\Windows\Explorer\Advanced"
