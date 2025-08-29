@@ -12,39 +12,73 @@ if ((Get-MyComputerModel) -match 'Virtual') {
     Write-Host  -ForegroundColor Green "Setting Display Resolution to 1600x"
     Set-DisRes 1600
 }
+# ======================================================================
+# Automatische Konfiguration basierend auf IP-Bereich (WinPE-tauglich)
+# ======================================================================
 
-#=======================================================================
-#   [OS] Params and Start-OSDCloud
-#=======================================================================
-#Used to Determine Driver Pack
-$Params = @{
-    OSVersion = "Windows 11"
-    OSBuild = "24H2"
-    OSEdition = "Pro"
-    OSLanguage = "de-DE"
-    OSLicense = "Retail"
-    ZTI = $true
-    Firmware = $false
+# Aktuelle IP-Adresse aus ipconfig holen
+$CurrentIP = (ipconfig | Select-String "IPv4" | ForEach-Object {
+    ($_ -split ":")[-1].Trim()
+} | Where-Object { $_ -match "^10\.10\.100\.|^192\.168\.85\." } | Select-Object -First 1)
+
+if ($CurrentIP -match '^10\.10\.100\.') {
+    # Konfiguration für 10.10.100.x
+    $DeployShare = '\\10.10.100.100\Daten'
+    $MapDrive    = 'Z:'
+    $UserName    = 'Jorga'
+    $PlainPwd    = 'Dont4getme'
 }
-Start-OSDCloud @Params
-
-
-
-# Full List https://github.com/OSDeploy/OSD/blob/06d544f0bff26b560e19676582d273e1c229cfac/Public/OSDCloud.ps1#L521
-#Set OSDCloud Vars
-$Global:MyOSDCloud = [ordered]@{
-    Restart = [bool]$False
-    RecoveryPartition = [bool]$true
-    OEMActivation = [bool]$True
-    WindowsUpdate = [bool]$true
-    WindowsUpdateDrivers = [bool]$False
-    WindowsDefenderUpdate = [bool]$False
-    SetTimeZone = [bool]$False
-    ClearDiskConfirm = [bool]$False
-    ShutdownSetupComplete = [bool]$False
-    SyncMSUpCatDriverUSB = [bool]$true
-    CheckSHA1 = [bool]$true
+elseif ($CurrentIP -match '^192\.168\.85\.') {
+    # Konfiguration für 192.168.2.x
+    $DeployShare = '\\192.168.85.15\DeploymentShare$'
+    $MapDrive    = 'Z:'
+    $UserName    = 'sekrickenbach\Administrator'
+    $PlainPwd    = 'R1ck3nb@ch'
 }
+else {
+    Write-Host "Keine passende IP-Konfiguration gefunden!" -ForegroundColor Red
+    return
+}
+
+$SrcWim = 'Z:\OSDCloud\OS\Win11_24H2.wim'
+
+# Share verbinden
+if (-not (Test-Path -Path $MapDrive)){
+    net use $MapDrive $DeployShare /user:$UserName $PlainPwd /persistent:no
+}
+if (-not (Test-Path -Path $MapDrive)) {
+    Write-Host "Failed to Map Drive" -ForegroundColor Red
+    return
+} else {
+    Write-Host "Mapped Drive $MapDrive to $DeployShare" -ForegroundColor Green
+}
+
+# ================================================================
+#   OSDCloud-Variablen setzen
+# ================================================================
+$Global:MyOSDCloud = @{
+    ImageFileFullName = $SrcWim
+    ImageFileItem     = Get-Item $SrcWim
+    ImageFileName     = 'Win11_24H2.wim'
+    OSImageIndex      = 5 
+    ClearDiskConfirm  = $false
+    ZTI               = $true
+	Firmware          = $false
+    UpdateOS          = $false     
+    UpdateDrivers     = $false 
+}
+
+# ================================================================
+#   HP-Treiberpaket vorbereiten (mit lokalem Cache)
+# ================================================================
+$Product        = Get-MyComputerProduct
+$OSVersion      = 'Windows 11'
+$OSReleaseID    = '24H2'
+$DriverPackName = "$Product-$OSVersion-$OSReleaseID.exe"
+$DriverSearchPaths = @(
+    "Z:\OSDCloud\DriverPacks\DISM\HP\$Product",
+    "Z:\OSDCloud\DriverPacks\HP\$DriverPackName"
+)
 
 # --------   HP-Spezifisches vorbereiten --------------------
 $OSVersion = 'Windows 11' #Used to Determine Driver Pack
@@ -104,6 +138,47 @@ if (Test-HPIASupport){
 
 #write variables to console
 Write-Output $Global:MyOSDCloud
+
+# --- Deployment ---------------------------------------------
+try {
+    Invoke-OSDCloud
+}
+catch {
+    Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Invoke-OSDCloud failed: $($_.Exception.Message)"
+    try { Set-QuietSplash } catch {}
+}
+finally {
+    # --- Post Invoke-OSDCloud: Cache DriverPack nach Z:\ ---
+    try {
+        if (Test-Path 'Z:\') {
+            $cacheDir = 'Z:\OSDCloud\DriverPacks\HP'
+            if (!(Test-Path $cacheDir)) { New-Item -ItemType Directory -Path $cacheDir -Force | Out-Null }
+            # prefer explicit DriverPack if object exists and file on disk
+            $dp = $null
+            if ($DriverPack -and ($DriverPack.PSObject.Properties.Name -contains 'FullName') -and (Test-Path $DriverPack.FullName)) {
+                $dp = Get-Item -LiteralPath $DriverPack.FullName -ErrorAction SilentlyContinue
+            }
+            if (-not $dp -and (Test-Path 'C:\Drivers')) {
+                $dp = Get-ChildItem 'C:\Drivers' -Filter sp*.exe -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+            }
+            if ($dp) {
+                $dest = Join-Path $cacheDir $dp.Name
+                if (!(Test-Path $dest)) {
+                    Copy-Item -Path $dp.FullName -Destination $dest -Force
+                    Write-Host -ForegroundColor Cyan "[VarioTradeMUI] Cached driver pack to $dest"
+                } else {
+                    Write-Host -ForegroundColor Green "[VarioTradeMUI] Driver pack already cached at $dest"
+                }
+            } else {
+                Write-Host -ForegroundColor Yellow "[VarioTradeMUI] No sp*.exe found under C:\Drivers after Invoke-OSDCloud; skipping cache."
+            }
+        } else {
+            Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Z:\ not available; skipping cache."
+        }
+    } catch {
+        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] DriverPack cache block failed: $($_.Exception.Message)"
+    }
+}
 
 #================================================
 #  [PostOS] OOBE CMD Command Line

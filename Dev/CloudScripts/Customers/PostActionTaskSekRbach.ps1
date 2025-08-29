@@ -25,7 +25,7 @@ if (!(Get-ScheduledTask -TaskName $ScheduledTaskName -ErrorAction SilentlyContin
 
 try {
     # ------------------------------------------------------------
-    # Transkript & Netzwerk-Warte­schleife
+    # Transkript & Netzwerk-Warte�schleife
     # ------------------------------------------------------------
     $Transcript = "PostActions.log"
     $null = Start-Transcript -Path (Join-Path "C:\OSDCloud\Logs" $Transcript) -ErrorAction Ignore
@@ -48,14 +48,12 @@ try {
 
 	
 	Write-Host -ForegroundColor Gray "**Add Cutomer Chocolatey Repository**"
-	& "C:\ProgramData\chocolatey\bin\choco.exe" source add `
-	  --name="SRbach" `
-	  --source="https://chocoserver:8443/repository/SRbach/" `
-	  --allow-self-service `
-	  --user="SRbach" `
-	  --password="TF2annC4sM4hMvMojT3RWQrAe" `
-	  --priority=2
-
+	$ErrorActionPreference = 'Stop'
+	$choco   = Join-Path $env:ChocolateyInstall 'choco.exe'  # z.B. C:\ProgramData\Chocolatey\choco.exe
+	$srcName = 'SRbach'
+	$srcUrl  = 'https://chocoserver:8443/repository/SRbach/'
+	$srcUser = 'SRbach'
+	$srcPass = 'TF2annC4sM4hMvMojT3RWQrAe'  # besser per Env-Var/Secret laden
 
 	Write-Host -ForegroundColor Gray 'Add Customer Chocolatey Repository'
 	& $choco source add -n=$srcName -s="$srcUrl" --user="$srcUser" --password="$srcPass" --priority=2 --allow-self-service
@@ -72,12 +70,12 @@ try {
     Write-Host -ForegroundColor Green "Standard Apps werden installiert"
     $packages = @(
         "googlechrome","microsoft-teams-new-bootstrapper","vlc","hpsupportassistant",
-		"onedrive","imagemate5","microsoft-windows-terminal","VoicesTrainer1","TeamViewer","VoicesTrainer2","voices-3-trainer","onenote","onedrive"
+		"onedrive","imagemate5","microsoft-windows-terminal","VoicesTrainer1","VoicesTrainer2","voices-3-trainer","onenote","onedrive"
     )
     $packages | ForEach-Object { choco upgrade $_ -y --no-progress --ignore-checksums }
 
     # ------------------------------------------------------------
-    # Windows-Komponenten sperren (Outlook/Dev Home) …
+    # Windows-Komponenten sperren (Outlook/Dev Home)
     # ------------------------------------------------------------
     "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate",
     "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\OutlookUpdate",
@@ -86,8 +84,8 @@ try {
         ForEach-Object { Remove-Item $_ -Force -ErrorAction SilentlyContinue }
 
     # ------------------------------------------------------------
-    # TASKBAR- & START-LAYOUT, SHORTCUTS, POWER, FOLDERS …
-    # (Restlicher Inhalt unverändert)
+    # TASKBAR- & START-LAYOUT, SHORTCUTS, POWER, FOLDERS �
+    # (Restlicher Inhalt unverndert)
     # ------------------------------------------------------------
     # ... (dein ganzer bestehender Code bleibt hier unangetastet) ...
     # ------------------------------------------------------------
@@ -101,10 +99,10 @@ try {
     Start-WindowsUpdateDriver
 }
 catch {
-    Write-Error $_   # Task bleibt erhalten; Skript läuft beim nächsten Start erneut
+    Write-Error $_   # Task bleibt erhalten; Skript luft beim nächsten Start erneut
 }
 finally {
-    # Transkript schließen (falls noch aktiv) und Task immer löschen
+    # Transkript schließen (falls noch aktiv) und Task immer lschen
     Stop-Transcript -ErrorAction SilentlyContinue
     Unregister-ScheduledTask -TaskName $ScheduledTaskName -Confirm:$false -ErrorAction SilentlyContinue
 }
@@ -113,5 +111,5 @@ finally {
 # Schreibe das eingebettete Skript auf die Platte
 $PostActionScript | Out-File -FilePath $ScriptPath -Force -Encoding UTF8
 
-# Führe es einmalig sofort aus
+# Fhre es einmalig sofort aus
 & $ScriptPath
