@@ -96,13 +96,12 @@ try {
     # ------------------------------------------------------------
 
     # Windows Updates
-    #Write-Host -ForegroundColor Gray "**Running Microsoft Defender Updates**"
-    #Update-DefenderStack
-    #Write-Host -ForegroundColor Gray "**Running Microsoft Windows Updates**"
-    #Start-WindowsUpdate
-    #Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
-    #Start-WindowsUpdateDriver
-	
+    Write-Host -ForegroundColor Gray "**Running Microsoft Defender Updates**"
+    Update-DefenderStack
+    Write-Host -ForegroundColor Gray "**Running Microsoft Windows Updates**"
+    Start-WindowsUpdate
+    Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
+    Start-WindowsUpdateDriver
     # Erfolgreich bis hier -> Task entfernen
     Unregister-ScheduledTask -TaskName $ScheduledTaskName -Confirm:$false -ErrorAction SilentlyContinue
 }

@@ -25,7 +25,7 @@ if (!(Get-ScheduledTask -TaskName $ScheduledTaskName -ErrorAction SilentlyContin
 
 try {
     # ------------------------------------------------------------
-    # Transkript & Netzwerk-Warteschleife
+    # Transkript & Netzwerk-Warte≠schleife
     # ------------------------------------------------------------
     $Transcript = "PostActions.log"
     $null = Start-Transcript -Path (Join-Path "C:\OSDCloud\Logs" $Transcript) -ErrorAction Ignore
@@ -50,7 +50,6 @@ try {
 		$env:ChocolateyInstall = [Environment]::GetEnvironmentVariable('ChocolateyInstall','Machine')
 		if (-not $env:ChocolateyInstall) { throw "ChocolateyInstall ist nicht gesetzt." }
 	}
-	$env:PATH = "$env:ChocolateyInstall\bin;$env:PATH"
 	$choco = Join-Path $env:ChocolateyInstall 'choco.exe'
 
 	Write-Host -ForegroundColor Gray "**Add Cutomer Chocolatey Repository**"
@@ -89,22 +88,19 @@ try {
         ForEach-Object { Remove-Item $_ -Force -ErrorAction SilentlyContinue }
 
     # ------------------------------------------------------------
-    # TASKBAR- & START-LAYOUT, SHORTCUTS, POWER, FOLDERS 
+    # TASKBAR- & START-LAYOUT, SHORTCUTS, POWER, FOLDERS ¶
     # (Restlicher Inhalt unverndert)
     # ------------------------------------------------------------
     # ... (dein ganzer bestehender Code bleibt hier unangetastet) ...
     # ------------------------------------------------------------
 
     # Windows Updates
-    #Write-Host -ForegroundColor Gray "**Running Microsoft Defender Updates**"
-    #Update-DefenderStack
-    #Write-Host -ForegroundColor Gray "**Running Microsoft Windows Updates**"
-    #Start-WindowsUpdate
-    #Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
-    #Start-WindowsUpdateDriver
-	
-    # Erfolgreich bis hier -> Task entfernen
-    Unregister-ScheduledTask -TaskName $ScheduledTaskName -Confirm:$false -ErrorAction SilentlyContinue
+    Write-Host -ForegroundColor Gray "**Running Microsoft Defender Updates**"
+    Update-DefenderStack
+    Write-Host -ForegroundColor Gray "**Running Microsoft Windows Updates**"
+    Start-WindowsUpdate
+    Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
+    Start-WindowsUpdateDriver
 }
 catch {
     Write-Error $_   # Task bleibt erhalten; Skript luft beim n√§chsten Start erneut
@@ -112,6 +108,7 @@ catch {
 finally {
     # Transkript schlie√üen (falls noch aktiv) und Task immer lschen
     Stop-Transcript -ErrorAction SilentlyContinue
+    Unregister-ScheduledTask -TaskName $ScheduledTaskName -Confirm:$false -ErrorAction SilentlyContinue
 }
 '@
 
