@@ -43,22 +43,26 @@ try {
     # ------------------------------------------------------------
     # FUNCTIONS & CHOCOLATEY-FRAMEWORK
     # ------------------------------------------------------------
-    iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
-    iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions2.ps1)
+	iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions.ps1)
+	iex (irm raw.githubusercontent.com/JorgaWetzel/garytown/master/Dev/CloudScripts/Functions2.ps1)
 
-	
+	if (-not $env:ChocolateyInstall) {
+		$env:ChocolateyInstall = [Environment]::GetEnvironmentVariable('ChocolateyInstall','Machine')
+		if (-not $env:ChocolateyInstall) { throw "ChocolateyInstall ist nicht gesetzt." }
+	}
+	$choco = Join-Path $env:ChocolateyInstall 'choco.exe'
+
 	Write-Host -ForegroundColor Gray "**Add Cutomer Chocolatey Repository**"
 	$ErrorActionPreference = 'Stop'
-	$choco   = Join-Path $env:ChocolateyInstall 'choco.exe'  # z.B. C:\ProgramData\Chocolatey\choco.exe
+	# (die zweite Zuweisung an $choco ist doppelt; kann bleiben, ist aber nicht noetig)
+	#$choco   = Join-Path $env:ChocolateyInstall 'choco.exe'
 	$srcName = 'SRbach'
 	$srcUrl  = 'https://chocoserver:8443/repository/SRbach/'
 	$srcUser = 'SRbach'
-	$srcPass = 'TF2annC4sM4hMvMojT3RWQrAe'  # besser per Env-Var/Secret laden
+	$srcPass = 'TF2annC4sM4hMvMojT3RWQrAe'
 
 	Write-Host -ForegroundColor Gray 'Add Customer Chocolatey Repository'
-	& $choco source add -n=$srcName -s="$srcUrl" --user="$srcUser" --password="$srcPass" --priority=2 --allow-self-service
-
-	
+	& $choco source add -n=$srcName -s="$srcUrl" --user="$srcUser" --password="$srcPass" --priority=2 --allowselfservice
 	
     # ------------------------------------------------------------
     # SOFTWARE-INSTALLATIONEN
