@@ -219,6 +219,27 @@ exit
 
 $OOBECMD | Out-File -FilePath "$osdCloudDir\SetupComplete.cmd" -Encoding ascii -Force
 
+#================================================
+#  [PostOS] Autopilot Konfiguration schreiben
+#================================================
+
+try {
+    $src  = 'Z:\OSDCloud\SekRbachHybrid.json'
+    $dest = 'C:\Windows\Provisioning\Autopilot\AutoPilotConfigurationFile.json'
+
+    if (Test-Path -LiteralPath $src) {
+        New-Item -ItemType Directory -Path (Split-Path -Path $dest) -Force | Out-Null
+        Copy-Item -LiteralPath $src -Destination $dest -Force
+
+        Write-Host -ForegroundColor Green "AutoPilotConfigurationFile.json nach $dest kopiert (ACLs auf SYSTEM/Admins gesetzt)."
+    } else {
+        Write-Host -ForegroundColor Yellow "Quelle $src nicht gefunde"
+    }
+}
+catch {
+    Write-Host -ForegroundColor Yellow "Kopieren/ACL AutoPilotConfigurationFile.json fehlgeschlagen: $($_.Exception.Message)"
+}
+
 #=======================================================================
 #   Restart-Computer
 #=======================================================================
