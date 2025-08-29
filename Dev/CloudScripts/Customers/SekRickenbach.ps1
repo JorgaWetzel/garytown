@@ -72,7 +72,7 @@ $Global:MyOSDCloud = @{
     OSImageIndex      = 5 
     ClearDiskConfirm  = $false
     ZTI               = $true
-	Firmware          = $false
+	Firmware          = $true
     UpdateOS          = $false     
     UpdateDrivers     = $false 
 }
@@ -104,8 +104,8 @@ if ($DriverPack){
     $Global:MyOSDCloud.DriverPackName      = $DriverPack.Name
     $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true   # Driver-Pack aktiv
     $Global:MyOSDCloud.HPIAALL             = [bool]$false     # HPIA deaktivieren
-	if ($Product -ne '83B2' -or $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
-    if ($Product -ne '895E' -or $Model -notmatch "z2mini"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
+	#if ($Product -ne '83B2' -or $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
+    #if ($Product -ne '895E' -or $Model -notmatch "z2mini"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
 	
 }
 else{
