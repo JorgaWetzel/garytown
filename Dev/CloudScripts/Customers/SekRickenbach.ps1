@@ -19,7 +19,7 @@ if ((Get-MyComputerModel) -match 'Virtual') {
 # Aktuelle IP-Adresse aus ipconfig holen
 $CurrentIP = (ipconfig | Select-String "IPv4" | ForEach-Object {
     ($_ -split ":")[-1].Trim()
-} | Where-Object { $_ -match "^10\.10\.100\.|^192\.168\.83\.|^192\.168\.81\." } | Select-Object -First 1)
+} | Where-Object { $_ -match "^10\.10\.100\.|^192\.168\.83\.|^192\.168\.82\.|^192\.168\.81\.|^192\.168\.80\." } | Select-Object -First 1)
 
 if ($CurrentIP -match '^10\.10\.100\.') {
     # Konfiguration für 10.10.100.x
@@ -36,8 +36,24 @@ elseif ($CurrentIP -match '^192\.168\.83\.') {
     $PlainPwd    = 'R1ck3nb@ch'
 }
 
+elseif ($CurrentIP -match '^192\.168\.82\.') {
+    # Konfiguration für 192.168.82.x
+    $DeployShare = '\\192.168.85.5\DeploymentShare$'
+    $MapDrive    = 'Z:'
+    $UserName    = 'sekrickenbach\Administrator'
+    $PlainPwd    = 'R1ck3nb@ch'
+}
+
 elseif ($CurrentIP -match '^192\.168\.81\.') {
     # Konfiguration für 192.168.81.x
+    $DeployShare = '\\192.168.85.5\DeploymentShare$'
+    $MapDrive    = 'Z:'
+    $UserName    = 'sekrickenbach\Administrator'
+    $PlainPwd    = 'R1ck3nb@ch'
+}
+
+elseif ($CurrentIP -match '^192\.168\.80\.') {
+    # Konfiguration für 192.168.80.x
     $DeployShare = '\\192.168.85.5\DeploymentShare$'
     $MapDrive    = 'Z:'
     $UserName    = 'sekrickenbach\Administrator'
