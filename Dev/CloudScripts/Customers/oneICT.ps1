@@ -1,5 +1,7 @@
 $ScriptName = 'oneICT.ps1'
-$ScriptVersion = '02.10.2024'
+$ScriptVersion = '04.09.2025'
+Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
+
 iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
 
