@@ -1,28 +1,24 @@
-# Caritas.ps1 – Online-Config, OS offline vom USB (fest: D:\), Index 1, HP-DriverPacks erlaubt
+# Caritas.ps1 – OS offline vom USB (hart: D:\OSDCloud\OS\Win11_24H2_MUI.wim), Index 1
+# HP-DriverPacks sind erwuenscht -> keine "None"-Flags setzen
+
 Import-Module OSD -Force
 
-# 1) Fester Pfad auf D:\
 $WimPath = 'D:\OSDCloud\OS\Win11_24H2_MUI.wim'
 if (-not (Test-Path $WimPath)) {
-    Write-Error "Win11_24H2_MUI.wim nicht gefunden: $WimPath"
-    Write-Host "Kontrolliere, ob der Stick als D:\ gemountet ist und die Datei unter \OSDCloud\OS\ liegt."
+    Write-Error "WIM nicht gefunden: $WimPath"
+    Write-Host  "Bitte pruefen: Ist der Stick als D:\ gemountet? Liegt das WIM unter \OSDCloud\OS\ ?"
     pause
     exit 1
 }
 
-# 2) Globales OSDCloud-Hashtable initialisieren (PS 5.1 – kein ??)
-if (-not (Get-Variable -Name OSDCloud -Scope Global -ErrorAction SilentlyContinue)) {
-    Set-Variable -Name OSDCloud -Scope Global -Value @{}
-}
-if ($Global:OSDCloud -isnot [hashtable]) { $Global:OSDCloud = @{} }
+# Optional: sicherstellen, dass der Hersteller erkannt wird (fuer HP-DriverPacks)
+# (OSDCloud erkennt das normalerweise automatisch und zieht HP-Packs online)
+try { $null = Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Stop } catch { }
 
-# 3) Offline-Image + Index fest vorgeben
-$Global:OSDCloud.ImageFileOffline = $WimPath   # <- lokales WIM von D:\
-$Global:OSDCloud.ImageIndex       = 1          # <- WinPro auf Index 1
-$Global:OSDCloud.OSLanguage       = 'de-de'
-
-# WICHTIG: Keine "None"-Flags setzen -> HP-DriverPacks bleiben aktiv (online)
-# (also NICHT DriverPackName='None' und NICHT EnableSpecializeDriverPack=$false)
-
-# 4) Start (ruft intern Invoke-OSDCloud); ZTI + Reboot
-Start-OSDCloud -ZTI -Restart
+# **Deterministischer Start ueber die Engine:**
+# -> Explizites ImageFile + Index 1 erzwingen; so gibt es keinen OS-Download.
+Invoke-OSDCloud `
+    -ImageFile  $WimPath `
+    -ImageIndex 1 `
+    -OSLanguage 'de-de' `
+    -Restart
