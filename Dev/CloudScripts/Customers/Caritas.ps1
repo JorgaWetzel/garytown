@@ -1,26 +1,35 @@
-# Caritas.ps1 – Online-Config, OS offline vom USB, Index fix = 1
+# Caritas.ps1 – Online-Config, OS offline vom USB, Index fix = 1 (PS 5.1 kompatibel)
+
+# Modul sicher laden (WinPE hat OSD bereits, Force schadet nicht)
 Import-Module OSD -Force
 
-# WIM vom USB finden (D:–Z:, \OSDCloud\OS\)
-$wim = Get-PSDrive -PSProvider FileSystem |
-  ForEach-Object { Get-Item "$($_.Name):\OSDCloud\OS\Win11_24H2_MUI.wim" -ErrorAction SilentlyContinue } |
-  Select-Object -First 1
-
+# 1) WIM auf dem Stick finden (D:–Z:, \OSDCloud\OS\)
+$wim = $null
+Get-PSDrive -PSProvider FileSystem | ForEach-Object {
+    $p = Join-Path $_.Name 'OSDCloud\OS\Win11_24H2_MUI.wim'
+    if (Test-Path $p) { $wim = Get-Item $p }
+}
 if (-not $wim) {
-  Write-Error "Win11_24H2_MUI.wim nicht gefunden unter *:\OSDCloud\OS\"
-  pause
-  exit 1
+    Write-Error "Win11_24H2_MUI.wim nicht gefunden unter *:\OSDCloud\OS\"
+    pause
+    exit 1
 }
 
-# Variablen fuer OSDCloud setzen (Frontend uebergibt sie an Invoke-OSDCloud)
-$Global:OSDCloud = $Global:OSDCloud ?? @{}
-$Global:OSDCloud.ImageFileItem = $wim              # lokales WIM
-$Global:OSDCloud.ImageIndex    = 1                 # fix auf Index 1
-$Global:OSDCloud.OSLanguage    = 'de-de'
+# 2) Globales OSDCloud-Hashtable PS 5.1-konform vorbereiten (kein '??')
+if (-not (Get-Variable -Name OSDCloud -Scope Global -ErrorAction SilentlyContinue)) {
+    Set-Variable -Name OSDCloud -Scope Global -Value @{}
+}
+if ($Global:OSDCloud -isnot [hashtable]) { $Global:OSDCloud = @{} }
 
-# Optional: strikt offline bleiben
+# 3) Offline-Image & feste Auswahl setzen
+#    Diese Werte werden von Start-/Invoke-OSDCloud ausgewertet.
+$Global:OSDCloud.ImageFileOffline = $wim.FullName   # lokales WIM erzwingen
+$Global:OSDCloud.ImageIndex       = 1               # fix: Index 1 (WinPro)
+$Global:OSDCloud.OSLanguage       = 'de-de'
+
+# Optional strikt offline bleiben:
 # $Global:OSDCloud.DriverPackName = 'None'
 # $Global:OSDCloud.EnableSpecializeDriverPack = $false
 
-# Start (Frontend), ruft intern Invoke-OSDCloud mit obigen Variablen
+# 4) Start (Frontend), ruft intern Invoke-OSDCloud mit obigen Variablen
 Start-OSDCloud -ZTI -Restart
