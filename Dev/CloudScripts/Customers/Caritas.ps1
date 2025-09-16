@@ -12,6 +12,8 @@ function Get-OsdUsbRoot {
     if (-not $pick) { throw "Kein OSDCloud\OS Ordner gefunden." }
     return $pick
 }
+$usbRoot = Get-OsdUsbRoot
+Write-Host "OSD USB Root: $usbRoot"
 
 function Get-LocalWims($usbRoot) {
     $osPath = Join-Path $usbRoot 'OSDCloud\OS'
