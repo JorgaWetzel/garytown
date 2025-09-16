@@ -21,13 +21,18 @@ function Get-LocalWims($usbRoot) {
 function Get-FirstValidIndex($wimPath) {
     try {
         $imgs = Get-WindowsImage -ImagePath $wimPath -ErrorAction Stop
-        # Nimm Index 1, wenn vorhanden; sonst den ersten gueltigen
-        ($imgs | Where-Object { $_.ImageIndex -eq 1 } | Select-Object -First 1) `
-            ?? ($imgs | Select-Object -First 1)
+        # Erst versuchen, Index 1 zu nehmen
+        $img = $imgs | Where-Object { $_.ImageIndex -eq 1 } | Select-Object -First 1
+        if (-not $img) {
+            # wenn nicht vorhanden, nimm den ersten
+            $img = $imgs | Select-Object -First 1
+        }
+        return $img
     } catch {
-        $null
+        return $null
     }
 }
+
 
 # --- DEIN BEREITS VORHANDENER CODE (gekürzt) --------------------------------
 # Import-Module OSD -Force  # Falls noch nicht vorhanden, unten nochmal
