@@ -1,112 +1,61 @@
-# Caritas.ps1 (PowerShell 5.1–kompatibel) - GUI + Fallback auf lokale MUI-WIM
-# Version: 2025-09-16
+# ---------------- GUI + Fallback (ohne Funktionen, PS 5.1) ----------------
 
-# ----------------------------
-# Helper-Funktionen (müssen VOR dem Aufruf stehen)
-# ----------------------------
+try { Import-Module OSD -Force -ErrorAction Stop } catch { Write-Host -ForegroundColor Yellow "OSD Modul: $($_.Exception.Message)" }
 
-function Get-OsdUsbRoot {
-    try {
-        $candidates = Get-PSDrive -PSProvider FileSystem | ForEach-Object {
-            $root = Join-Path $_.Root 'OSDCloud\OS'
-            if (Test-Path $root) { $_.Root.TrimEnd('\') }
-        }
+$TemplateName      = 'Win11MUI'
+$PreferredWimName  = ''   # optional: z.B. 'Win11_24H2_MUI.wim'
 
-        # Bevorzuge Wechseldatenträger
-        $removable = @(Get-WmiObject Win32_LogicalDisk -ErrorAction SilentlyContinue | Where-Object { $_.DriveType -eq 2 } | Select-Object -Expand DeviceID)
-        $pick = $candidates | Sort-Object { if ($removable -contains $_) { 0 } else { 1 } } | Select-Object -First 1
-        if (-not $pick) { throw "Kein Laufwerk mit 'OSDCloud\\OS' gefunden." }
-        return $pick
-    } catch {
-        throw $_
-    }
-}
+# USB-Root finden: nehme Laufwerke mit \OSDCloud\OS, bevorzuge Wechseldatentraeger
+$removable = @(Get-WmiObject Win32_LogicalDisk -ErrorAction SilentlyContinue | Where-Object { $_.DriveType -eq 2 } | Select-Object -Expand DeviceID)
+$usbRoot = Get-PSDrive -PSProvider FileSystem | ForEach-Object {
+    $r = $_.Root.TrimEnd('\')
+    if (Test-Path (Join-Path $r 'OSDCloud\OS')) { $r }
+} | Sort-Object { if ($removable -contains $_) { 0 } else { 1 } } | Select-Object -First 1
 
-function Get-LocalWims {
-    param([Parameter(Mandatory=$true)][string]$UsbRoot)
-    $osPath = Join-Path $UsbRoot 'OSDCloud\OS'
-    Get-ChildItem -Path $osPath -Filter *.wim -File -Recurse -ErrorAction SilentlyContinue
-}
+if (-not $usbRoot) { throw "Kein Laufwerk mit 'OSDCloud\OS' gefunden." }
+Write-Host -ForegroundColor Cyan "OSD USB Root: $usbRoot"
 
-function Get-FirstValidIndex {
-    param([Parameter(Mandatory=$true)][string]$WimPath)
-    try {
-        $imgs = Get-WindowsImage -ImagePath $WimPath -ErrorAction Stop
-        $img = $imgs | Where-Object { $_.ImageIndex -eq 1 } | Select-Object -First 1
-        if (-not $img) { $img = $imgs | Select-Object -First 1 }
-        return $img
-    } catch {
-        return $null
-    }
-}
-
-# ----------------------------
-# Start: Import Modul / Basiskonfig
-# ----------------------------
-try { Import-Module OSD -Force -ErrorAction Stop } catch { Write-Host -ForegroundColor Yellow "OSD-Modul nicht vorab importiert: $($_.Exception.Message)" }
-
-# Für Logging
-$Host.UI.RawUI.WindowTitle = "Caritas OSDCloud (PS 5.1 kompatibel)"
-
-# Lokale Einstellungen wie im Template
-$TemplateName = 'Win11MUI'
-$InputLocale  = '0807:00000807'
-$Language     = 'de-de'
-$AllIntl      = 'de-de'
-
-# ----------------------------
-# GUI-Start + Fallback
-# ----------------------------
+# 1) Erst GUI probieren
 try {
-    $usbRoot = Get-OsdUsbRoot
-    Write-Host -ForegroundColor Cyan "OSD USB Root: $usbRoot"
-
-    # 1) GUI versuchen – listet Images aus USB, wenn sie unter \OSDCloud\OS liegen.
-    Write-Host -ForegroundColor Green "Starte OSDCloudGUI (Quelle: USB, Template: $TemplateName)"
-    try {
-        Start-OSDCloudGUI -OSDSources USB -Template $TemplateName
-        Write-Host -ForegroundColor Yellow "GUI beendet. Falls keine Installation erfolgte, Fallback aktiv."
-    } catch {
-        Write-Host -ForegroundColor Yellow "GUI konnte nicht gestartet werden: $($_.Exception.Message). Fallback wird genutzt."
-    }
-
-    # 2) Fallback: Lokale WIM(s) suchen und direkt installieren
-    $wims = Get-LocalWims -UsbRoot $usbRoot
-    if (-not $wims -or $wims.Count -eq 0) { throw "Keine *.wim unter $usbRoot\OSDCloud\OS gefunden." }
-
-    # Optional: Konkrete Datei erzwingen (hier nur als Beispiel auskommentiert):
-    # $wim = $wims | Where-Object { $_.Name -eq 'Win11_24H2_MUI.wim' } | Select-Object -First 1
-    $wim = $wims | Select-Object -First 1
-
-    $img = Get-FirstValidIndex -WimPath $wim.FullName
-    if (-not $img) { throw "Konnte keine Image-Infos aus $($wim.FullName) lesen." }
-
-    Write-Host -ForegroundColor Green "Nutze WIM: $($wim.Name) | Index: $($img.ImageIndex) | Name: $($img.ImageName)"
-
-    # MyOSDCloud vorbereiten
-    $Global:MyOSDCloud = @{
-        ImageFileFullName = $wim.FullName
-        ImageFileItem     = Get-Item $wim.FullName
-        ImageFileName     = [IO.Path]::GetFileName($wim.FullName)
-        OSImageIndex      = [int]$img.ImageIndex
-        ZTI               = $true
-        ClearDiskConfirm  = $false
-        UpdateOS          = $false
-        UpdateDrivers     = $false
-        SetInputLocale    = $InputLocale
-        Language          = $Language
-        SetAllIntl        = $AllIntl
-    }
-
-    Invoke-OSDCloud
-    Write-Output $Global:MyOSDCloud
-}
-catch {
-    Write-Host -ForegroundColor Red "Fehler im GUI/Fallback-Flow: $($_.Exception.Message)"
-    throw
+    Start-OSDCloudGUI -OSDSources USB -Template $TemplateName
+    Write-Host -ForegroundColor Yellow "GUI beendet. Fallback wird genutzt, falls nichts ausgefuehrt wurde."
+} catch {
+    Write-Host -ForegroundColor Yellow "GUI konnte nicht starten: $($_.Exception.Message)"
 }
 
-# ----------------------------
-# Nachgelagerte Schritte (Platzhalter) – hier kannst du OOBE/Autopilot etc. anhängen
-# ----------------------------
-# Write-Host -ForegroundColor Green "Post-Install Schritte hier ergänzen…"
+# 2) Fallback: lokale WIM suchen und direkt installieren
+$osPath = Join-Path $usbRoot 'OSDCloud\OS'
+$wims = Get-ChildItem -Path $osPath -Filter *.wim -File -Recurse -ErrorAction SilentlyContinue
+if (-not $wims -or $wims.Count -eq 0) { throw "Keine *.wim unter $osPath gefunden." }
+
+$wim = if ($PreferredWimName) { $wims | Where-Object { $_.Name -ieq $PreferredWimName } | Select-Object -First 1 } else { $null }
+if (-not $wim) { $wim = $wims | Select-Object -First 1 }
+
+try {
+    $imgs = Get-WindowsImage -ImagePath $wim.FullName -ErrorAction Stop
+    $img  = $imgs | Where-Object { $_.ImageIndex -eq 1 } | Select-Object -First 1
+    if (-not $img) { $img = $imgs | Select-Object -First 1 }
+} catch { $img = $null }
+
+if (-not $img) { throw "Konnte keine Image-Infos aus $($wim.FullName) lesen." }
+
+Write-Host -ForegroundColor Green "Nutze WIM: $($wim.Name) | Index: $($img.ImageIndex) | Name: $($img.ImageName)"
+
+$Global:MyOSDCloud = @{
+    ImageFileFullName = $wim.FullName
+    ImageFileItem     = Get-Item $wim.FullName
+    ImageFileName     = [IO.Path]::GetFileName($wim.FullName)
+    OSImageIndex      = [int]$img.ImageIndex
+    ZTI               = $true
+    ClearDiskConfirm  = $false
+    UpdateOS          = $false
+    UpdateDrivers     = $false
+    SetInputLocale    = '0807:00000807'
+    Language          = 'de-de'
+    SetAllIntl        = 'de-de'
+}
+
+Invoke-OSDCloud
+Write-Output $Global:MyOSDCloud
+
+# ---------------- Ende GUI + Fallback --------------------------------------
