@@ -34,7 +34,7 @@ function Get-FirstValidIndex($wimPath) {
 }
 
 
-# --- DEIN BEREITS VORHANDENER CODE (gekürzt) --------------------------------
+# --- DEIN BEREITS VORHANDENER CODE (gekrzt) --------------------------------
 # Import-Module OSD -Force  # Falls noch nicht vorhanden, unten nochmal
 
 # --- NEU: GUI-Modus mit Fallback --------------------------------------------
