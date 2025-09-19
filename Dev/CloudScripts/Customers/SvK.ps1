@@ -149,11 +149,11 @@ $AssignedComputerName = "SvK-2$lastFourChars"
 # Device assignment
 if ($Global:AutoPilot.TestGroup -eq $true){
     Write-DarkGrayHost "Adding device to DEV-Autopilot-Devices-Dynamic"
-    $AddToGroup = "DEV-Autopilot-Devices-Dynamic"
+    $AddToGroup = "DEV-Intune Pilot Devices"
 
 }
 else {
-    Write-DarkGrayHost "Adding device to Intune_DE_Device Group"
+    Write-DarkGrayHost "Adding device to DEV-Intune Pilot Devices"
     $AddToGroup = ""
 }
 
