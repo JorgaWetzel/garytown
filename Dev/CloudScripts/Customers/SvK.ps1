@@ -271,7 +271,7 @@ REM Execute Post Action Skript
 CALL powershell.exe -NoLogo -ExecutionPolicy Bypass -File C:\Windows\Setup\Scripts\PostActionTask.ps1
 
 REM Execute Cleanup Script
-start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\cleanup.ps1
+REM start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\cleanup.ps1
 
 REM Below a PS session for debug and testing in system context, # when not needed 
 REM start /wait powershell.exe -NoL -ExecutionPolicy Bypass
