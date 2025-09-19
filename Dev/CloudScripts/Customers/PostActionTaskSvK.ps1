@@ -45,18 +45,16 @@ try {
     #endregion
 	
 	# --- Neuer Abschnitt: Lokaler Administrator ---
-	Try {
-		$username = 'wksadmin'
-		$securePassword = ConvertTo-SecureString 'Local.67' -AsPlainText -Force
-		if (-Not (Get-LocalUser -Name $username -ErrorAction SilentlyContinue)) {
-			New-LocalUser -Name $username -Password $securePassword -Description 'Local administrator account' -PasswordNeverExpires $true
-		}
-		Add-LocalGroupMember -Group 'Administrators' -Member $username
-		Write-Host "Lokaler Admin-Benutzer '$username' erstellt oder existierte bereits."
-	}
-	Catch {
-		Write-Error "Fehler beim Anlegen des lokalen Admins: $_"
-	}
+	$username = 'wksadmin'
+	$securePassword = ConvertTo-SecureString 'Local.67' -AsPlainText -Force
+	# Benutzer anlegen
+	New-LocalUser -Name $username -Password $securePassword -Description 'Local administrator account'
+
+	# Passwort auf "niemals ablaufen" setzen
+	Set-LocalUser -Name $username -PasswordNeverExpires $true
+
+	Write-Host "Lokaler Admin-Benutzer '$username' erstellt oder existierte bereits."
+	Add-LocalGroupMember -Group 'Administratoren' -Member $username
 	# --- Ende Administrator-Sektion ---
 
     # Setup oneICT Chocolatey Framework
