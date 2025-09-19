@@ -488,8 +488,8 @@ $Params = @{
 	Online               = $true
 	AddToGroup           = $ImportAutopilotOOBE.AddToGroup
 	AssignedComputerName = $ImportAutopilotOOBE.AssignedComputerName
-	TenantID             = "ac18be77-b02e-43af-a43c-f4c864849161"
-	AppID                = "9d9a8bd8-1f84-4651-9363-739f04a1ab8d"
+	TenantID             = "add7761c-05cb-4807-8d77-5f28a290c029"
+	AppID                = "f11e2d76-c6dd-478b-b45f-a5a57015e9d4"
 }
 
 # Comment out after testing
