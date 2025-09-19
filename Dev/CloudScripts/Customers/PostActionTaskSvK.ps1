@@ -321,11 +321,11 @@ Enable-WindowsOptionalFeature -Online -FeatureName Printing-XPSServices-Features
 
     # Windows Updates
     Write-Host -ForegroundColor Gray "**Running Microsoft Defender Updates**"
-    Update-DefenderStack
+    # Update-DefenderStack
     Write-Host -ForegroundColor Gray "**Running Microsoft Windows Updates**"
-    Start-WindowsUpdate
+    # Start-WindowsUpdate
     Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
-    Start-WindowsUpdateDriver
+    # Start-WindowsUpdateDriver
 
     # Beende das Transkript
     $null = Stop-Transcript -ErrorAction Ignore
