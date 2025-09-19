@@ -65,6 +65,8 @@ try {
 
     $env:Path += ";C:\ProgramData\chocolatey\bin"
 
+	C:\ProgramData\chocolatey\bin\choco.exe source add --name="SvK" --source="https://chocoserver:8443/repository/SvK/" --allow-self-service --user="SvK" --password="VP2@RH&8B2zJ9onJ" --priority=2
+	Invoke-Expression "C:\ProgramData\chocolatey\bin\choco.exe search packagename -s=SvK"
     
     # Installation von Chocolatey-Software
     Write-Host -ForegroundColor Green "Office wird installiert"
@@ -327,10 +329,6 @@ Enable-WindowsOptionalFeature -Online -FeatureName Printing-XPSServices-Features
     Write-Host -ForegroundColor Gray "**Running Microsoft Driver Updates**"
     Start-WindowsUpdateDriver
 
-    # Entfernen von Verzeichnissen
-    # cmd /c "RD C:\OSDCloud\OS /S /Q"
-    # cmd /c "RD C:\Drivers /S /Q"
-
     # Beende das Transkript
     $null = Stop-Transcript -ErrorAction Ignore
 
@@ -344,7 +342,8 @@ catch {
 }
 '@
 
+# Datei schreiben
 Set-Content -Path $ScriptPath -Value $PostActionScript -Force -Encoding UTF8
 
-# Führe das Skript sofort aus
-$PostActionScript | Out-File -FilePath $ScriptPath -Force -Encoding UTF8
+# Skript jetzt sofort ausführen
+& $ScriptPath   # oder:  Start-Process powershell.exe -ArgumentList "-ExecutionPolicy Bypass -File `"$ScriptPath`"" -WindowStyle Hidden -Wait
