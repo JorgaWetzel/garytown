@@ -9,9 +9,6 @@ $env:LOCALAPPDATA = "C:\Windows\System32\Config\SystemProfile\AppData\Local"
 $Env:PSModulePath = $env:PSModulePath + ";C:\Program Files\WindowsPowerShell\Scripts"
 $env:Path = $env:Path + ";C:\Program Files\WindowsPowerShell\Scripts"
 
-Install-Module AutopilotOOBE -Force -Verbose
-Install-Module OSD -Force -Verbose
-
 Start-AutopilotOOBE
 
 <#

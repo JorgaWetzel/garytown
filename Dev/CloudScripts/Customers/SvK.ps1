@@ -239,7 +239,7 @@ Write-SectionHeader "[PostOS] OOBE CMD Command Line"
 #================================================
 Write-DarkGrayHost "Downloading Scripts for OOBE and specialize phase"
 
-Invoke-RestMethod https://raw.githubusercontent.com/oneictag/OSDPad/refs/heads/main/Autopilot.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\autopilot.ps1' -Encoding ascii -Force
+Invoke-RestMethod https://raw.githubusercontent.com/JorgaWetzel/garytown/refs/heads/master/Dev/CloudScripts/Customers/AutopilotSvK.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\autopilot.ps1' -Encoding ascii -Force
 Invoke-RestMethod https://raw.githubusercontent.com/oneictag/OSDPad/refs/heads/main/OOBE.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\oobe.ps1' -Encoding ascii -Force
 Invoke-RestMethod https://raw.githubusercontent.com/oneictag/OSDPad/refs/heads/main/start-autopilotoobe.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\start-autopilotoobe.ps1 ' -Encoding ascii -Force
 Invoke-RestMethod https://raw.githubusercontent.com/oneictag/OSDPad/refs/heads/main/CleanUp.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\cleanup.ps1' -Encoding ascii -Force
