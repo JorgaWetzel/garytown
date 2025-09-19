@@ -138,6 +138,14 @@ $Params = @{
 }
 Start-OSDCloud @Params
 
+#================================================
+Write-SectionHeader "[PostOS] Define Autopilot Attributes"
+#================================================
+Write-DarkGrayHost "Define Computername"
+$Serial = Get-WmiObject Win32_bios | Select-Object -ExpandProperty SerialNumber
+$lastFourChars = $serial.Substring($serial.Length - 4)
+$AssignedComputerName = "SvK-2$lastFourChars"
+
 # Device assignment
 if ($Global:AutoPilot.TestGroup -eq $true){
     Write-DarkGrayHost "Adding device to DEV-Autopilot-Devices-Dynamic"
