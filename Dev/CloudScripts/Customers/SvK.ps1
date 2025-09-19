@@ -280,7 +280,7 @@ New-Item -ItemType file -Force -Path $Tagpath | Out-Null
 Write-DarkGrayHost "Shift F10 disabled now!"
 
 #region Development
-if ($Global:WPNinjaCH.Development -eq $true){
+if ($Global:AutoPilot.Development -eq $true){
     #================================================
     Write-SectionHeader "[WINPE] DEVELOPMENT - Activate some debugging features"
     #================================================
@@ -340,7 +340,7 @@ if (-NOT (Test-Path 'C:\ProgramData\Microsoft\IntuneManagementExtension\Logs\OSD
 }	
 Get-ChildItem -Path X:\OSDCloud\Logs\ | Copy-Item -Destination 'C:\ProgramData\Microsoft\IntuneManagementExtension\Logs\OSD' -Force
 
-if ($Global:WPNinjaCH.Development -eq $false){
+if ($Global:AutoPilot.Development -eq $false){
     Write-DarkGrayHost "Restarting in 20 seconds!"
     Start-Sleep -Seconds 20
 
