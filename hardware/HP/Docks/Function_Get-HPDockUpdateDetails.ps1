@@ -2,9 +2,32 @@ function Get-HPDockUpdateDetails {
     
     <#
     .Author 
-    Gary Blok | HP Inc | @gwblok | GARYTOWN.COM
-    Dan Felman | HP Inc | @dan_felman 
+    Gary Blok | 2Pint Software | @gwblok| GARYTOWN.COM
+    Dan Felman | @dan_felman (Method for finding attached Dock) 
     
+
+    NOTES... if you have issues, please try to resolve them yourself and then send me the code to help others.  I do not work for HP and I don't have access to many of the docks.
+    What I have:
+    1) HP USB-C G5 Dock
+    2) HP Thunderbolt Dock G2
+    If you would like to donate other docks in help of support of this script, please reach out to me.
+
+
+    FYI, the official HP CMSL does support Docks now, so if you want a supported method, I'd recommend moving over to their script library for Dock management
+    
+    PS C:\Users\GaryBlok> Install-Module -Name HPCMSL -AcceptLicense -Force
+    PS C:\Users\GaryBlok> Get-Command -Module HP.Docks
+
+    CommandType     Name                                               Version    Source
+    -----------     ----                                               -------    ------
+    Cmdlet          Get-HPDock                                         1.8.2      HP.Docks
+    Cmdlet          Install-HPDockWmiProvider                          1.8.2      HP.Docks
+    Cmdlet          Update-HPDockFirmware                              1.8.2      HP.Docks
+
+    .SUPPORT
+    Please contact HP Support to get help with their docks and management of their docks.
+    Community support is offered via WinAdmins Discord.  I'd start in the OSDCloud or ConfigMgr channels
+
     .Synopsis
     HP Dock Updater Script
     
@@ -15,7 +38,7 @@ function Get-HPDockUpdateDetails {
     - make sure you set the $URL to the version of the firmware you want... as the of the day I write this, it's the latest one.
     
     .Requirements
-    PowerShell must have access to the interent to download the Firmware
+    PowerShell must have access to the internet to download the Firmware
     
     .Parameter UIExperience
     Sets the UI experience for the end user.  
@@ -75,6 +98,7 @@ function Get-HPDockUpdateDetails {
     24.09.05.01 - adding switch for IntuneApp to assist in deploying the updates via Intune.
     24.10.27.01 - updated USB-C G5 Dock Firmware
     25.01.21.01 - updated USB-C G5 Essential Dock Firmware, USB-C G5 Dock Firmware, USB-C Universal Dock G2 Firmware, and Thunderbolt G4 Firmware URLs
+    25.09.16.01 - updated USB-C G5 Dock Firmware, USB-C Universal Dock G2 Firmware, USB-C G5 Essential Dock Firmware, and Thunderbolt G4 Firmware URLs
 
     .Notes
     This will ONLY create a transcription log IF the dock is attached and it starts the process to test firmware.  If no dock is detected, no logging is created.
@@ -188,8 +212,8 @@ function Get-HPDockUpdateDetails {
         $ThunderBoltDriver = Get-SoftpaqList -Category Driver -Os $MaxOS -OsVer $MaxOSVer | Where-Object { $_.Name -match 'Thunderbolt' -and $_.Name -notmatch "Audio" }
         $InstalledTBDriver = Get-CimInstance -ClassName Win32_PnPSignedDriver | Where-Object { $_.Description -like "*Thunderbolt*Controller*" }
         if (($Null -ne $ThunderBoltDriver) -and ($Null -ne $InstalledTBDriver)) {
-            if ($ThunderBoltDriver.Version -eq $InstalledTBDriver.DriverVersion) {
-                if (($DebugOut) -or ($Transcript)) { write-host -ForegroundColor Green "TB Driver is Updated: Availble Softpaq: $($ThunderBoltDriver.Version) | Installed: $($InstalledTBDriver.DriverVersion)" }
+            if ($ThunderBoltDriver.Version -le $InstalledTBDriver.DriverVersion) {
+                if (($DebugOut) -or ($Transcript)) { write-host -ForegroundColor Green "TB Driver is Updated: Available Softpaq: $($ThunderBoltDriver.Version) | Installed: $($InstalledTBDriver.DriverVersion)" }
                 if ($UpdateControllerDriver) {
                     write-host -ForegroundColor Yellow " Skipping Requested Update of Drivers, already current"
                 }
@@ -213,19 +237,19 @@ function Get-HPDockUpdateDetails {
             
         # **** Hardcode URLs in case of no CMSL installed: ****
         #USB-C G5 Essential Dock
-        $Url_EssG5 = 'https://ftp.hp.com/pub/softpaq/sp158001-158500/sp158026.exe'  #  01.00.12.00 Rev.E | Apr 15, 2025
+        $Url_EssG5 = 'https://ftp.hp.com/pub/softpaq/sp161501-162000/sp161681.exe'  #  01.00.12.00 Rev.H | Apr 15, 2025
             
         #Thunderbolt G4
-        $Url_TBG4 = 'https://ftp.hp.com/pub/softpaq/sp155001-155500/sp155361.exe'   #  1.5.25.0 Rev.B | Oct 7, 2024
+        $Url_TBG4 = 'https://ftp.hp.com/pub/softpaq/sp158501-159000/sp158825.exe'   #  1.5.27.0 Rev.C | May 13, 2025
             
         #Thunderbolt G2
         $Url_TBG2 = 'https://ftp.hp.com/pub/softpaq/sp153501-154000/sp153722.exe'   #  1.0.71.1 RevD | July 29, 2024
             
         #USB-C Dock G5
-        $Url_UsbG5 = 'https://ftp.hp.com/pub/softpaq/sp156001-156500/sp156379.exe'  #  1.0.23.0 Rev.B | Dec 17, 2024
+        $Url_UsbG5 = 'https://ftp.hp.com/pub/softpaq/sp161501-162000/sp161510.exe'  #  1.0.25.0 Rev.C | Jul 18, 2025
             
         #USB-C Universal Dock G2
-        $Url_UniG2 = 'https://ftp.hp.com/pub/softpaq/sp156001-156500/sp156380.exe'  #  1.1.23.0 Rev.B | Dec 17, 2024
+        $Url_UniG2 = 'https://ftp.hp.com/pub/softpaq/sp161501-162000/sp161512.exe'  #  1.1.24.0 Rev.B | Jul 18, 2025
             
         #USB-C Dock G4
         $Url_UsbG4 = 'https://ftp.hp.com/pub/softpaq/sp88501-89000/sp88999.exe'     #  F.37 | Jul 15, 2018

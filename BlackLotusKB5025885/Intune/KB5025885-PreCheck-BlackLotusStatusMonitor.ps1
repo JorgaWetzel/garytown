@@ -1,4 +1,8 @@
 <#
+    Gary Blok & Mike Terrill
+    KB5025885 Monitoring Only Script-Intune
+    Version: 25.09.25
+
 This is a monitoring script for the remediation of KB5025885
 This will not make any changes, but only report on the status of the remediation for KB5025885
 It will exit with different error codes based on the status of the remediation
@@ -19,8 +23,8 @@ $CurrentOSInfo = Get-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVers
 $Build = $CurrentOSInfo.GetValue('CurrentBuild')
 [int]$UBR = $CurrentOSInfo.GetValue('UBR')
 
-#July 2024 UBRs
-$JulyPatch = @('19045.4651','22621.3880','22631.3880','26100.1150','26120.1','26200.1')
+#July 2025 UBRs
+$JulyPatch = @('19045.6093','22621.5624','22631.5624','26100.4652','26200.4652')
 $MatchedPatch = $JulyPatch | Where-Object {$_ -match $Build}
 if ($null -eq $MatchedPatch){
     Write-Output "The OS ($Build.$UBR) is not supported for this remediation."

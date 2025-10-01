@@ -531,6 +531,21 @@ function Install-PackageManagement {
     }
 }
 
+write-host -ForegroundColor Green "[+] Install-ExplorerPP"
+function Install-ExplorerPP {
+    $URL = "https://download.explorerplusplus.com/stable/1.4.0/explorerpp_x64.zip"
+
+    #Download the zip file to $env:\Temp, then extract to $env:systemroot
+    $DownloadPath = "$env:Temp\explorerpp_x64.zip"
+    $ExtractPath = "$env:systemroot"
+    Invoke-WebRequest -Uri $URL -OutFile $DownloadPath -UseBasicParsing
+    Expand-Archive -Path $DownloadPath -DestinationPath $ExtractPath -Force
+}
+
+Write-Host -ForegroundColor Green "[+] Install-OperaPortable"
+function Install-OperaPortable {
+    iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/AppCustomizations/Opera/Install-OperaW365.ps1)
+}
 Write-Host -ForegroundColor Green "[+] Install-WMIExplorer"
 function Install-WMIExplorer {
     iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Intune/Install-WMIExplorer-Remediate.ps1)
@@ -542,6 +557,9 @@ Write-Host -ForegroundColor Green "[+] Install-Git"
 Function Install-Git {
     iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Intune/Install-Git.ps1)
 }
+Write-Host -ForegroundColor Green "[+] Install-VSCode"
+iex (irm https://raw.githubusercontent.com/gwblok/2PintLabs/refs/heads/main/DeployR/TSScripts/Functions/Install-VSCode.ps1)
+
 Write-Host -ForegroundColor Green "[+] Install-PowerShell7"
 Function Install-PowerShell7 {
     iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Intune/Install-PowerShellMSI.ps1)

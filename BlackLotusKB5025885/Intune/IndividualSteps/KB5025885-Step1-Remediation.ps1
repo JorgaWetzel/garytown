@@ -1,8 +1,8 @@
 <# 
     Gary Blok & Mike Terrill
-    KB5025885 Remediation Script
+    KB5025885 Remediation Script-Intune
     Step 1 of 4
-    Version: 25.05.10
+    Version: 25.09.25
 #>
 
 #Function to help indicate a pending update
@@ -41,8 +41,8 @@ $CurrentOSInfo = Get-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVers
 $Build = $CurrentOSInfo.GetValue('CurrentBuild')
 [int]$UBR = $CurrentOSInfo.GetValue('UBR')
 
-#July 2024 UBRs
-$JulyPatch = @('19045.4651','22621.3880','22631.3880','26100.1150','26120.1','26200.1')
+#July 2025 UBRs
+$JulyPatch = @('19045.6093','22621.5624','22631.5624','26100.4652','26200.4652')
 $MatchedPatch = $JulyPatch | Where-Object {$_ -match $Build}
 if ($null -eq $MatchedPatch){
     Write-Output "The OS ($Build.$UBR) is not supported for this remediation."
