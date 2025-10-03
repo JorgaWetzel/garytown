@@ -10,4 +10,4 @@ Write-Host -ForegroundColor Green "Starte OSDCloud"
 
 #Start OSDCloudScriptPad
 Write-Host -ForegroundColor Green "Start OSDPad"
-Start-OSDPad -RepoOwner JorgaWetzel -RepoName garytown -RepoFolder garytown/Dev/CloudScripts/Testing -BrandingTitle 'VarioTrade Deployment'
+Start-OSDPad -RepoOwner JorgaWetzel -RepoName garytown -RepoFolder garytown/Dev/CloudScripts/Testing/ -BrandingTitle 'VarioTrade Deployment'
