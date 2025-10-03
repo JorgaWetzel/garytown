@@ -1,5 +1,5 @@
-Write-Host -ForegroundColor Green "Starting OSDCloud ZTI"
-Start-Sleep -Seconds 5
+Write-Host -ForegroundColor Green "Starte OSDCloud"
+# Start-Sleep -Seconds 5
 
 # Make sure I have the latest OSD Content
 # Write-Host -ForegroundColor Green "Updating OSD PowerShell Module"
