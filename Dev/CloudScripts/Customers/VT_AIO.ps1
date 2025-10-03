@@ -1,0 +1,1 @@
+& "X:\Bootdisk\KillDisk.exe" -wa -bm em=1
