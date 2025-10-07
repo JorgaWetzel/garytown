@@ -2,10 +2,8 @@
 try { Add-Type -AssemblyName Microsoft.VisualBasic -ErrorAction Stop } catch {}
 $to = [Microsoft.VisualBasic.Interaction]::InputBox("E-Mail-Adresse des Empfängers:","KillDisk Report","")
 
-# KillDisk starten (Pfad prüfen!) und warten
-$kd = 'X:\Bootdisk\KillDisk.exe'
-if (-not (Test-Path $kd)) { throw "KillDisk nicht gefunden: $kd" }
-$proc = Start-Process -FilePath $kd -WorkingDirectory (Split-Path $kd) -ArgumentList '-wa','-bm','em=1' -PassThru -ErrorAction Stop
+# KillDisk starten und warten bis Ende
+$proc = Start-Process 'X:\Bootdisk\KillDisk.exe' -ArgumentList '-wa','-bm','em=1' -PassThru
 $proc.WaitForExit()
 
 # PDFs einsammeln (Objekt behalten, dann .FullName nehmen)
