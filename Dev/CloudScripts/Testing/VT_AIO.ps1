@@ -7,7 +7,7 @@ $to = [Microsoft.VisualBasic.Interaction]::InputBox("E-Mail-Adresse des Empfäng
 & "X:\OSDCloud\Config\Bootdisk\KillDisk.exe" -wa -bm em=1
 
 # PDFs einsammeln
-$files = Get-ChildItem -Path "X:\OSDCloud\Config\Bootdisk\" -Filter *.pdf -File | Select-Object -Expand FullName
+$files = Get-ChildItem -Path "X:\OSDCloud\Config\Bootdisk\" -Filter Certificate*.pdf -File | Select-Object -Expand FullName
 
 # TLS 1.2 für O365 erzwingen
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
