@@ -1,14 +1,15 @@
 # --- Win11-Style Auswahlmenü für WinPE / OSDCloud ---------------------------------
 
-# WPF braucht STA – ggf. neu starten
+# WPF braucht STA – ggf. im STA-Modus neu starten
 if ([Threading.Thread]::CurrentThread.ApartmentState -ne 'STA') {
-  Start-Process powershell -ArgumentList "-ExecutionPolicy Bypass -NoLogo -NoProfile -File `"$PSCommandPath`"" -Wait
+  Start-Process powershell -ArgumentList "-sta -ExecutionPolicy Bypass -NoLogo -NoProfile -File `"$PSCommandPath`"" -Wait
   exit
 }
 
-# Probier WPF, sonst Fallback auf Konsole
+# WPF laden, sonst Fallback auf Konsole
 $wpfOK = $true
 try { Add-Type -AssemblyName PresentationFramework,PresentationCore } catch { $wpfOK = $false }
+
 
 # ---------- Aktionen ----------
 function Start-EraserAndMail {
@@ -69,13 +70,15 @@ function Start-InstallWin11 {
 }
 
 
-# ---------- GUI oder Fallback ----------
-if ($wpfOK) {
-  $xaml = @"
+# --- GUI laden (robust) ---
+Add-Type -AssemblyName PresentationFramework,PresentationCore
+
+$xaml = @'
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="VarioTrade – Service Portal" Width="520" Height="320"
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
-        Background="#F3F3F3" AllowsTransparency="False">
+        Background="#F3F3F3">
   <Grid Margin="24">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
@@ -87,46 +90,48 @@ if ($wpfOK) {
       <TextBlock Text="Bitte wählen Sie eine der folgenden Optionen." FontFamily="Segoe UI" FontSize="12" Foreground="#555"/>
     </StackPanel>
 
-    <UniformGrid Grid.Row="1" Rows="2" Columns="1" Margin="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+    <UniformGrid Grid.Row="1" Rows="2" Columns="1">
       <Button x:Name="btnErase" Margin="0,0,0,12" Height="90" FontFamily="Segoe UI" FontSize="18" Background="White" BorderBrush="#D0D0D0" BorderThickness="1">
         <StackPanel Orientation="Vertical" Margin="8">
-          <TextBlock Text="1 · System löschen & Zertifikat per E-Mail" FontWeight="SemiBold" />
+          <TextBlock Text="1 · System löschen & Zertifikat per E-Mail" FontWeight="SemiBold"/>
           <TextBlock Text="KillDisk ausführen und Report versenden" FontSize="12" Foreground="#666"/>
         </StackPanel>
       </Button>
       <Button x:Name="btnInstall" Height="90" FontFamily="Segoe UI" FontSize="18" Background="White" BorderBrush="#D0D0D0" BorderThickness="1">
         <StackPanel Orientation="Vertical" Margin="8">
           <TextBlock Text="2 · Windows 11 Pro installieren" FontWeight="SemiBold"/>
-          <TextBlock Text="Caritas.ps1 starten" FontSize="12" Foreground="#666"/>
+          <TextBlock Text="Caritas.ps1 starten (Download von GitHub)" FontSize="12" Foreground="#666"/>
         </StackPanel>
       </Button>
     </UniformGrid>
   </Grid>
 </Window>
-"@
+'@
 
-  $reader = New-Object System.Xml.XmlNodeReader ([xml]$xaml)
+# XAML parsen -> Window
+try {
+  $xml = [xml]$xaml
+  $reader = New-Object System.Xml.XmlNodeReader($xml)
   $win = [Windows.Markup.XamlReader]::Load($reader)
+} catch {
+  Write-Host "XAML-Fehler: $($_.Exception.Message)" -ForegroundColor Red
+  $win = $null
+}
 
+if ($win -ne $null) {
   ($win.FindName('btnErase')).Add_Click({
     $win.Close()
-    try { Start-EraserAndMail } catch { [System.Windows.MessageBox]::Show($_.Exception.Message,'Fehler') }
+    try { Start-EraserAndMail } catch { [System.Windows.MessageBox]::Show($_.Exception.Message,'Fehler') | Out-Null }
   })
   ($win.FindName('btnInstall')).Add_Click({
     $win.Close()
-    try { Start-InstallWin11 } catch { [System.Windows.MessageBox]::Show($_.Exception.Message,'Fehler') }
+    try { Start-InstallWin11 } catch { [System.Windows.MessageBox]::Show($_.Exception.Message,'Fehler') | Out-Null }
   })
-
-  # leichte „Win11“-Anmutung
-  $win.Effect = New-Object System.Windows.Media.Effects.DropShadowEffect -Property @{ BlurRadius=16; ShadowDepth=0; Opacity=0.25 }
   $win.ShowDialog() | Out-Null
-}
-else {
+} else {
+  # Fallback Konsole
   Write-Host "`nVarioTrade – Service Portal" -ForegroundColor Cyan
   Write-Host "1) System löschen & E-Mail" 
   Write-Host "2) Windows 11 Pro installieren"
-  $sel = Read-Host "Auswahl"
-  if ($sel -eq '1') { Start-EraserAndMail }
-  elseif ($sel -eq '2') { Start-InstallWin11 }
-  else { Write-Host 'Keine gültige Auswahl.' }
+  switch (Read-Host "Auswahl") { '1' { Start-EraserAndMail }; '2' { Start-InstallWin11 } default { 'Abbruch' } }
 }
