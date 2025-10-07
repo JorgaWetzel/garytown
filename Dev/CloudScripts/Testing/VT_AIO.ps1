@@ -3,7 +3,7 @@ try { Add-Type -AssemblyName Microsoft.VisualBasic -ErrorAction Stop } catch {}
 $to = [Microsoft.VisualBasic.Interaction]::InputBox("E-Mail-Adresse des Empfängers:","KillDisk Report","")
 
 # KillDisk starten und warten bis Ende
-$proc = Start-Process 'X:\Bootdisk\KillDisk.exe' -ArgumentList '-wa','-bm','em=1' -PassThru
+$proc = Start-Process 'X:\OSDCloud\Config\Bootdisk\KillDisk.exe' -ArgumentList '-wa','-bm','em=1' -PassThru
 $proc.WaitForExit()
 
 # PDFs einsammeln (Objekt behalten, dann .FullName nehmen)
