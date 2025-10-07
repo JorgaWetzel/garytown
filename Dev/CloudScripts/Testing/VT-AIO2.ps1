@@ -71,6 +71,7 @@ function Start-InstallWin11 {
 
 
 # --- GUI laden (robust) ---
+# --- GUI laden (STA-Block & Add-Type wie besprochen beibehalten) ---
 Add-Type -AssemblyName PresentationFramework,PresentationCore
 
 $xaml = @'
@@ -93,7 +94,7 @@ $xaml = @'
     <UniformGrid Grid.Row="1" Rows="2" Columns="1">
       <Button x:Name="btnErase" Margin="0,0,0,12" Height="90" FontFamily="Segoe UI" FontSize="18" Background="White" BorderBrush="#D0D0D0" BorderThickness="1">
         <StackPanel Orientation="Vertical" Margin="8">
-          <TextBlock Text="1 · System löschen & Zertifikat per E-Mail" FontWeight="SemiBold"/>
+          <TextBlock Text="1 · System löschen &amp; Zertifikat per E-Mail" FontWeight="SemiBold"/>
           <TextBlock Text="KillDisk ausführen und Report versenden" FontSize="12" Foreground="#666"/>
         </StackPanel>
       </Button>
@@ -108,17 +109,15 @@ $xaml = @'
 </Window>
 '@
 
-# XAML parsen -> Window
+# XAML direkt parsen (ohne [xml]-Cast)
 try {
-  $xml = [xml]$xaml
-  $reader = New-Object System.Xml.XmlNodeReader($xml)
-  $win = [Windows.Markup.XamlReader]::Load($reader)
+  $win = [Windows.Markup.XamlReader]::Parse($xaml)
 } catch {
   Write-Host "XAML-Fehler: $($_.Exception.Message)" -ForegroundColor Red
   $win = $null
 }
 
-if ($win -ne $null) {
+if ($win) {
   ($win.FindName('btnErase')).Add_Click({
     $win.Close()
     try { Start-EraserAndMail } catch { [System.Windows.MessageBox]::Show($_.Exception.Message,'Fehler') | Out-Null }
@@ -129,9 +128,8 @@ if ($win -ne $null) {
   })
   $win.ShowDialog() | Out-Null
 } else {
-  # Fallback Konsole
   Write-Host "`nVarioTrade – Service Portal" -ForegroundColor Cyan
-  Write-Host "1) System löschen & E-Mail" 
+  Write-Host "1) System löschen & E-Mail"
   Write-Host "2) Windows 11 Pro installieren"
   switch (Read-Host "Auswahl") { '1' { Start-EraserAndMail }; '2' { Start-InstallWin11 } default { 'Abbruch' } }
 }
