@@ -1,4 +1,4 @@
-# 99-Deployment.ps1  –  StartNet-Hook, minimal
+# 99-Deployment.ps1  â€“  StartNet-Hook, minimal
 # ==== Quiet-on-error flag (controls Splash suppression in WinPE) ====
 $Global:VarioQuietFlagDir  = "X:\OSDCloud\Flags"
 $Global:VarioQuietFlagFile = Join-Path $Global:VarioQuietFlagDir "SilentSplashOff.txt"
@@ -8,7 +8,7 @@ function Set-QuietSplash {
             New-Item -ItemType Directory -Path $Global:VarioQuietFlagDir -Force | Out-Null
         }
         New-Item -Path $Global:VarioQuietFlagFile -ItemType File -Force | Out-Null
-        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] QuietSplash Flag gesetzt – Splash wird beim nächsten Start übersprungen."
+        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] QuietSplash Flag gesetzt â€“ Splash wird beim nÃ¤chsten Start Ã¼bersprungen."
     } catch {
         Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Konnte QuietSplash Flag nicht setzen: $($_.Exception.Message)"
     }
@@ -49,14 +49,14 @@ $CurrentIP = (ipconfig | Select-String "IPv4" | ForEach-Object {
 } | Where-Object { $_ -match "^10\.10\.100\.|^192\.168\.2\." } | Select-Object -First 1)
 
 if ($CurrentIP -match '^10\.10\.100\.') {
-    # Konfiguration für 10.10.100.x
+    # Konfiguration fÃ¼r 10.10.100.x
     $DeployShare = '\\10.10.100.100\Daten'
     $MapDrive    = 'Z:'
     $UserName    = 'Jorga'
     $PlainPwd    = 'Dont4getme'
 }
 elseif ($CurrentIP -match '^192\.168\.2\.') {
-    # Konfiguration für 192.168.2.x
+    # Konfiguration fÃ¼r 192.168.2.x
     $DeployShare = '\\192.168.2.15\DeploymentShare$'
     $MapDrive    = 'Z:'
     $UserName    = 'VARIODEPLOY\Administrator'
@@ -86,7 +86,7 @@ if (-not (Test-Path -Path $MapDrive)) {
 $Global:MyOSDCloud = @{
     ImageFileFullName = $SrcWim
     ImageFileItem     = Get-Item $SrcWim
-    ImageFileName     = 'Win11_24H2_MUI.wim'
+    ImageFileName     = 'Win11_25H2_MUI.wim'
     OSImageIndex      = 1  
     ClearDiskConfirm  = $false
     ZTI               = $true
@@ -97,7 +97,7 @@ $Global:MyOSDCloud = @{
     # --- Image / Installation ---
     # ImageFileFullName = 'Pfad zur WIM-Datei'
     # ImageFileItem     = Get-Item 'Pfad zur WIM'
-    # ImageFileName     = 'Win11_24H2_MUI.wim'
+    # ImageFileName     = 'Win11_25H2_MUI.wim'
     # OSImageIndex      = 1
     # Edition           = 'Enterprise'
     # Language          = 'de-CH'
@@ -108,23 +108,23 @@ $Global:MyOSDCloud = @{
     # --- Firmware / Hardware ---
     # Firmware          = $true      # BIOS/Firmware-Update aktivieren
     # TPMUpdate         = $true      # TPM-Update aktivieren
-    # SkipBitLocker     = $true      # BitLocker-Enable überspringen
+    # SkipBitLocker     = $true      # BitLocker-Enable Ã¼berspringen
     # DriverPackName    = 'HP EliteBook x360 G7'
     # DriverPackLatest  = $true      # immer neueste DriverPacks von OSDCloud
-    # HPCMSLDriverPackLatest = $true # für HP: CMSL-Treiber immer aktuell
+    # HPCMSLDriverPackLatest = $true # fÃ¼r HP: CMSL-Treiber immer aktuell
 
     # --- Windows Updates ---
     # UpdateOS          = $true      # Windows Quality Updates nach Deployment
-    # UpdateDrivers     = $true      # Treiber über Windows Update
-    # UpdateFirmware    = $true      # Firmware-Updates über Windows Update
+    # UpdateDrivers     = $true      # Treiber Ã¼ber Windows Update
+    # UpdateFirmware    = $true      # Firmware-Updates Ã¼ber Windows Update
     # UpdateMicrosoft365= $true      # Office/M365 Updates ziehen
-    # UpdateDotNet      = $true      # .NET Updates über Windows Update
+    # UpdateDotNet      = $true      # .NET Updates Ã¼ber Windows Update
     # UpdateFeature     = $true      # Feature Updates (Versionssprung) zulassen
     # UpdateCumulative  = $true      # Cumulative Updates nach Deployment
     # UpdateSecurity    = $true      # Security Patches separat erzwingen
 
     # --- OOBE / Autopilot ---
-    # SkipOOBE          = $true      # OOBE-Dialog überspringen
+    # SkipOOBE          = $true      # OOBE-Dialog Ã¼berspringen
     # SkipAutopilot     = $true      # Autopilot-Registrierung deaktivieren
     # AutopilotJSON     = 'C:\OSDCloud\AutopilotProfile.json' 
     #                     # Profil explizit angeben (statt automatisch suchen)
@@ -136,12 +136,12 @@ $Global:MyOSDCloud = @{
     # EnableHyperV      = $true      # Hyper-V gleich aktivieren
     # EnableRSAT        = $true      # RSAT-Tools mitinstallieren
     # EnableWSL         = $true      # Windows Subsystem for Linux aktivieren
-    # AddLanguages      = @('fr-CH','it-CH') # weitere Sprachen hinzufügen
+    # AddLanguages      = @('fr-CH','it-CH') # weitere Sprachen hinzufÃ¼gen
 
     # --- WinPE / Setup ---
     # UpdateWinPE       = $true      # WinPE vorab aktualisieren
     # Wallpaper         = "$OSDCloudWorkspace\wallpaper.jpg"
-    # SkipReboot        = $true      # Reboot am Ende unterdrücken (Testzwecke)	
+    # SkipReboot        = $true      # Reboot am Ende unterdrÃ¼cken (Testzwecke)	
 }
 
 # ================================================================
@@ -167,7 +167,7 @@ if ($DriverPack){
 
 # ---------------- Driver package first, HPIA as fallback --------------------
 if ($DriverPack){
-    Write-Host -ForegroundColor Cyan "Driver pack located – applying driver pack only."
+    Write-Host -ForegroundColor Cyan "Driver pack located â€“ applying driver pack only."
     $Global:MyOSDCloud.DriverPackName      = $DriverPack.Name
     $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true   # Driver-Pack aktiv
     $Global:MyOSDCloud.HPIAALL             = [bool]$false     # HPIA deaktivieren
@@ -176,7 +176,7 @@ if ($DriverPack){
 	
 }
 else{
-    Write-Host -ForegroundColor Yellow "No driver pack found – falling back to HPIA."
+    Write-Host -ForegroundColor Yellow "No driver pack found â€“ falling back to HPIA."
     if (Test-HPIASupport){ $Global:MyOSDCloud.HPIAALL = [bool]$true }
 }
 
@@ -204,7 +204,7 @@ public class FakeTSEnv {
 }
 Ensure-TSEnv
 
-# Dein Block bleibt aktiv – jetzt ohne Fehler:
+# Dein Block bleibt aktiv â€“ jetzt ohne Fehler:
 if (Test-HPIASupport){
     $Global:MyOSDCloud.HPTPMUpdate  = $true
     $Global:MyOSDCloud.HPBIOSUpdate = $true
@@ -285,7 +285,7 @@ try {
 
         Write-Host -ForegroundColor Green "[VarioTradeMUI] GraphApp.json nach $dest kopiert (ACLs auf SYSTEM/Admins gesetzt)."
     } else {
-        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Quelle $src nicht gefunden – Preflight meldet sonst Code 22."
+        Write-Host -ForegroundColor Yellow "[VarioTradeMUI] Quelle $src nicht gefunden â€“ Preflight meldet sonst Code 22."
     }
 }
 catch {
