@@ -67,7 +67,7 @@ else {
     return
 }
 
-$SrcWim = 'Z:\OSDCloud\OS\Win11_24H2_MUI.wim'
+$SrcWim = 'Z:\OSDCloud\OS\Win11_25H2_MUI.wim'
 
 # Share verbinden
 if (-not (Test-Path -Path $MapDrive)){
