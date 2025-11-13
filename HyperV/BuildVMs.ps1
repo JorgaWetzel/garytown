@@ -27,61 +27,170 @@ This script will...
 
 # REQUIRED INPUT VARIABLES:
 [int]$DesiredVMs = 1  #The Number of VMs that are going to be created this run.
+[int]$WaitBetweenNext = 15 #Time in Minutes before starting the next VM - works nice if you don't want to kill your WAN while creating OSDCloud machines.
 
-[int64]$StartingMemory = 4 * 1024 * 1024 * 1024  #4GB
-[int64]$DynamicMemoryLow = 4 * 1024 * 1024 * 1024 #4GB
-[int64]$DynamicMemoryHigh = 6 * 1024 * 1024 * 1024 #6GB
+[int64]$StartingMemory = 4 * 1024 * 1024 * 1024  #4GB - Static Memory (not dynamic)
+#[int64]$DynamicMemoryLow = 4 * 1024 * 1024 * 1024 #4GB - Not used (static memory)
+#[int64]$DynamicMemoryHigh = 4 * 1024 * 1024 * 1024 #6GB - Not used (static memory)
 [int64]$DriveSize = 100 * 1024 * 1024 * 1024 #100GB
 [int]$ProcessorCount = 4
 
-$VMPath = "D:\HyperVLab-Clients" #The location on the Host you want the VMs to be created and stored
-$VMNamePreFix = "VM-CM-5180-"  #The VM will start with this name
-$ISOFolderPath = "C:\HyperV"
+# Search for HyperVLab-Clients folder across all available volumes
+$availableVolumes = Get-Volume | Where-Object {$_.DriveLetter -and $_.DriveType -eq 'Fixed'} | Sort-Object DriveLetter
+$foundPaths = @()
 
+foreach ($volume in $availableVolumes) {
+    $testPath = "$($volume.DriveLetter):\HyperVLab-Clients"
+    if (Test-Path -Path $testPath) {
+        $foundPaths += [PSCustomObject]@{
+            DriveLetter = $volume.DriveLetter
+            VMPath = $testPath
+            HyperVHostRootPath = "$($volume.DriveLetter):\HyperV"
+        }
+    }
+}
+
+if ($foundPaths.Count -gt 1) {
+    # Check if only C and D drives exist
+    $driveLetters = ($availableVolumes | Select-Object -ExpandProperty DriveLetter) | Sort-Object
+    if (($driveLetters.Count -eq 2) -and ($driveLetters -contains 'C') -and ($driveLetters -contains 'D')) {
+        # Auto-default to D drive
+        $selectedPath = $foundPaths | Where-Object {$_.DriveLetter -eq 'D'}
+        Write-Host "Auto-selecting D:\HyperVLab-Clients (C & D drives detected)" -ForegroundColor Yellow
+    }
+    else {
+        # Prompt user to select
+        Write-Host "Multiple HyperVLab-Clients folders found:" -ForegroundColor Yellow
+        $selectedPath = $foundPaths | Out-GridView -Title "Select HyperVLab-Clients Location" -PassThru
+    }
+    $VMPath = $selectedPath.VMPath
+    $HyperVHostRootPath = $selectedPath.HyperVHostRootPath
+}
+elseif ($foundPaths.Count -eq 1) {
+    # Only one found, use it
+    $VMPath = $foundPaths[0].VMPath
+    $HyperVHostRootPath = $foundPaths[0].HyperVHostRootPath
+}
+else {
+    # No existing folders found, create default based on available drives
+    if (Test-Path -Path "D:\") {
+        $VMPath = "D:\HyperVLab-Clients"
+        $HyperVHostRootPath = "D:\HyperV"
+    }
+    elseif (Test-Path -Path "E:\") {
+        $VMPath = "E:\HyperVLab-Clients"
+        $HyperVHostRootPath = "E:\HyperV"
+    }
+    else {
+        $VMPath = "C:\HyperVLab-Clients"
+        $HyperVHostRootPath = "C:\HyperV"
+    }
+}
+
+$ISOFolderPath = $HyperVHostRootPath
+Write-Host "HyperV Lab Clients Path: $VMPath" -ForegroundColor Green
+Write-Host "HyperV Root Tools Path: $HyperVHostRootPath" -ForegroundColor Green
+Write-Host "ISO Path: $ISOFolderPath" -ForegroundColor Green
 try {
     [void][System.IO.Directory]::CreateDirectory($VMPath)
-    [void][System.IO.Directory]::CreateDirectory($ISOFolderPath)
+    [void][System.IO.Directory]::CreateDirectory($HyperVHostRootPath)
 }
 catch {throw}
 
-$BootISO = "C:\HyperV\StifleR_24H2_x64_Automated.iso"  #If you're booting to an ISO, put the location here.
-if (Test-Path -Path $BootISO){
-    $ISList = Get-ChildItem -Path $ISOFolderPath -Filter *.iso | Out-GridView -Title "Pick Boot Media ISO" -PassThru
-    if ($ISList){$BootISO = $ISList[0].FullName}
-    #Get Sitecode from ISO name
-    $ProviderMachineName = ($BootISO.Split("_")[5]).replace("iso","2p.garytown.com")
+
+$CMModulePath = "$HyperVHostRootPath\CMConsolePosh\ConfigurationManager.psd1"
+
+$VMNamePreFix = "VM-CM-"  #The VM will start with this name
+
+
+
+#$BootISO = "C:\HyperV\StifleR_24H2_x64_Automated.iso"  #If you're booting to an ISO, put the location here.
+$ISList = Get-ChildItem -Path $ISOFolderPath -Filter *.iso | Out-GridView -Title "Pick Boot Media ISO" -PassThru
+
+if ($ISList) {
+    $BootISO = $ISList[0].FullName
+}
+else {
+    Write-Host "No ISO selected or found. Continuing without boot ISO." -ForegroundColor Yellow
+    $BootISO = $null
+}
+
+#Get Sitecode from ISO name
+#$ProviderMachineName = ($BootISO.Split("_")[5]).replace("iso","2p.garytown.com")
+$ProviderMachineName = "2CM.2p.garytown.com"
+
+if ($BootISO) {
     $SiteCode = $BootISO.Split("_")[3]
 }
-
-
 if (!($sitecode)){
-    $SiteCode = "PS1" #ConfigMgr Site Code
+    $SiteCode = "2CM" #ConfigMgr Site Code
 }
-if (!($ProviderMachineName)){
-    $ProviderMachineName = "CM01.CORP.VIAMONSTRA.COM"
-}
+
 
 Write-Host "CM Server: $ProviderMachineName" -ForegroundColor Green
 Write-Host "SiteCode:  $SiteCode" -ForegroundColor Green
 
 #$VirtualNameAdapterName = "192.168.1.X Lab Network" #The Actual Name of the Hyper-V Virtual Network you want to assign to the VM.
 $RequiredDeploymentCollectionName = "OSD Required Deployment" #Whatever Collection you deployed the Task Sequence too
+$AvailableDeploymentCollectionName = "OSD Available Deployment Client"
+
 [int]$StartNumber = 1
 [int]$EndNumber = 20
 [int]$TimeBetweenKickoff = 300 #Time between each VM being turned on by Hyper-V, helps prevent host from being overwhelmed.
 
 
-$CMModulePath = "C:\HyperV\CMConsolePosh\ConfigurationManager.psd1"
+
 $CMConnected = $null
 
 $Purpose = "AutoPilot", "ConfigMgr", "MikesLab", "Other" | Out-GridView -Title "Select the Build you want to update" -PassThru #Automated includes SMSTSPreferredAdvertID, and AllowUnattended
 
-if ($Purpose -eq "AutoPilot"){
-    $Tenant = "CM","GARYTOWN", "OSDCloud" | Out-GridView -Title "Select the Tenant you want to Join" -PassThru
-    if ($Tenant -eq "GARYTOWN"){$VMNamePreFix = "VM-GT-"}
-    elseif ($Tenant -eq "OSDCloud"){$VMNamePreFix = "VM-OSDC-"}
-    }
+$HostName = $env:COMPUTERNAME
+if ($HostName -match "HPED800G6-HOST"){
+    $HostName = '800G6'
+}
+elseif ($HostName -eq "D-P-5810-VMHOST"){
+    $HostName = 'P5180'
+}
+elseif ($HostName -eq "HP-Z2-SFF-G5"){
+    $HostName = 'Z2G5'
+}
+elseif ($HostName -eq "UGREEN"){
+    $HostName = 'UGNAS'
+}
+elseif ($HostName -eq "BEELINK-HOST"){
+    $HostName = 'BLink'
+}
+elseif ($HostName -eq "MS01"){
+    $HostName = 'MS01'
+}
+elseif ($HostName -eq "HPZbookSG10GARY"){
+    $HostName = 'ZBG10'
+}
+elseif ($HostName -match "AURA"){
+    $HostName = 'AURA'
+}
+elseif ($HostName -match "R640"){
+    $HostName = 'R640'
+}
+elseif ($HostName -match "HPZBSG10-GWB"){
+    $HostName = 'ZBG10'
+}
+elseif ($HostName -eq "DELL-P7920"){
+    $HostName = 'P7920'
+}
+else{
+    $HostName = 'HVHst'
+}
 
+if ($Purpose -eq "AutoPilot"){
+    $Tenant = "GARYTOWN", "2PintLab" | Out-GridView -Title "Select the Tenant you want to Join" -PassThru
+    if ($Tenant -eq "GARYTOWN"){$VMNamePreFix = "VM-$HostName-GT-"; $ExtraNotes = "Environment = GTIntune"}
+    elseif ($Tenant -eq "2PintLab"){$VMNamePreFix = "VM-$HostName-2P-"; $ExtraNotes = "Environment = 2PIntune"}
+    }
+if ($Purpose -eq "Other"){
+    $VMNamePreFix = "VM-$HostName-"
+
+    }
 if (!(Test-Path -Path $VMPath))
     {
     Write-Host "HyperV Path not Set correctly!" -ForegroundColor Red
@@ -107,30 +216,19 @@ else
     {
     Write-Host "All Pre-Req Paths are Set to something that appears ok"  -ForegroundColor Green
     if ($Purpose -eq "ConfigMgr"){
-        Import-Module $CMModulePath  #Where you have access to the CM Commandlets
+        $Files = Get-ChildItem -Path ($CMModulePath |Split-Path)  -Recurse
+        foreach ($File in $Files){
+            Unblock-File -Path $File.FullName
         }
+        Import-Module $CMModulePath  #Where you have access to the CM Commandlets
     }
+}
 
 #SCRIPT FUNCTIONS BELOW
 $Usable = $null
 $NameTable = @()
 
-$HostName = $env:COMPUTERNAME
-if ($HostName -match "HPED800G6-HOST"){
-    $HostName = '800G6'
-}
-elseif ($HostName -eq "D-P-5810-VMHOST"){
-    $HostName = 'P5180'
-}
-elseif ($HostName -eq "HP-Z2-SFF-G5"){
-    $HostName = 'Z2G5'
-}
-elseif ($Hostname -eq "HPZ2SFFG4-HOST") {
-    $HostName = 'Z2G4'
-}
-else{
-    $HostName = 'HVHost'
-}
+
 
 if ($Purpose -eq "ConfigMgr"){
 
@@ -254,8 +352,8 @@ else
         #If you want this to boot from ISO, change "NetworkAdapter to CD"
         #$NewVM = New-VM -Name $VMName -Path $VMPath -MemorystartupBytes 1024MB  -BootDevice NetworkAdapter  -SwitchName $VMSwitch.Name -Generation 2
         $NewVM = New-VM -Name $VMName -Path $VMPath -MemorystartupBytes $StartingMemory   -BootDevice CD -SwitchName $VMSwitch.Name -Generation 2
-        Write-Host "  Setting Memory to Dynamic, $DynamicMemoryLow - $DynamicMemoryHigh" -ForegroundColor Green
-        set-vm -Name $VMName -DynamicMemory -MemoryMinimumBytes $DynamicMemoryLow -MemoryMaximumBytes $DynamicMemoryHigh
+        Write-Host "  Setting Memory to Static 4GB" -ForegroundColor Green
+        Set-VMMemory -VMName $VMName -DynamicMemoryEnabled $false -StartupBytes $StartingMemory
         Write-Host "  Setting VHDx to Dynamic, $DriveSize located here: $VHDxFile" -ForegroundColor Green
         $NewVHD = New-VHD -Path $VHDxFile  -SizeBytes $DriveSize -Dynamic
         Add-VMHardDiskDrive -VMName $VMName -Path $VHDxFile
@@ -264,24 +362,50 @@ else
 
         #If Host is able, then set TPM on VM
         if ((Get-TPM).TpmPresent -eq $true -and (Get-TPM).TpmReady -eq $true){
-        Write-Host "  Enabling TPM on VM" -ForegroundColor Green
-        Set-VMSecurity -VMName $VMName -VirtualizationBasedSecurityOptOut:$false
-        Set-VMKeyProtector -VMName $VMName -NewLocalKeyProtector
-        Enable-VMTPM -VMName $VMName}
+            Write-Host "  Enabling TPM on VM" -ForegroundColor Green
+            Set-VMSecurity -VMName $VMName -VirtualizationBasedSecurityOptOut:$false
+            Set-VMKeyProtector -VMName $VMName -NewLocalKeyProtector
+            Enable-VMTPM -VMName $VMName
+        }
         Write-Host "  Setting Processors to $ProcessorCount" -ForegroundColor Green
         Set-VMProcessor -VMName $VMName -Count $ProcessorCount        
-        Write-Host "  Setting Resolution to 1280x800" -ForegroundColor Green
-        Set-VMVideo -VMName $VMName -ComputerName $env:COMPUTERNAME -ResolutionType Single -HorizontalResolution 1280 -VerticalResolution 800
+        write-host "  Setting Video Resolution to 1600x900 (16:9)" -ForegroundColor Green
+        Set-VMVideo -VMName $VMName -ComputerName $env:COMPUTERNAME -ResolutionType Single -HorizontalResolution 1600 -VerticalResolution 900
 
-        if ($Purpose -eq "MikesLab"){
-            Write-Host "  Disable Secure Boot for iPXE" -ForegroundColor Green
-            Set-VMFirmware -EnableSecureBoot Off
+        if ($Purpose -eq "ConfigMgr"){
+            Write-Host "  Setting Secure Boot to Off" -ForegroundColor Green
+            Set-VMFirmware -EnableSecureBoot Off -VMName $VMName
+            #Set-VMFirmware -VMName $VMName -FirstBootDevice $vmNetworkAdapter
+            $vmNetworkAdapter = Get-VMNetworkAdapter -VMName $VMName
+            Set-VMFirmware -FirstBootDevice  $vmNetworkAdapter -VMName $VMName
+            $CurrentNotes = Get-VM -Name $VMname | Select-Object -ExpandProperty Notes
+            $AddNotes = "Environment = CMLAB"
+            $NewNotes = $CurrentNotes + "`n" + $AddNotes
+            Get-VM -Name $VMname | Set-VM -Notes $NewNotes
         }
-        #THis line below is commented out because I'm skipping adding the ISO and just having it boot to Network Adapter
-        if (Test-Path -path $BootISO){ 
+        elseif ($Purpose -eq "AutoPilot"){ 
+            Write-Host "  Setting Secure Boot to Off, with Microsoft UEFI Certificate Authority" -ForegroundColor Green
+            Set-VMFirmware -EnableSecureBoot Off -VMName $VMName
+            Write-Host "  Setting Test Lab Specific Configurations" -ForegroundColor Green
+            Write-Host " Setting First Boot Device to Network Adapter" -ForegroundColor Green
+            $vmNetworkAdapter = Get-VMNetworkAdapter -VMName $VMName
+            Set-VMFirmware -FirstBootDevice  $vmNetworkAdapter -VMName $VMName
+            # Add any Test Lab specific configurations here
+        }
+        else{
             Write-Host "  Setting Boot ISO to $BootISO" -ForegroundColor Green
             Set-VMDvdDrive -VMName $VMName -Path $BootISO
+            
+            if ($ExtraNotes){
+                $CurrentNotes = Get-VM -Name $VMname | Select-Object -ExpandProperty Notes
+                $NewNotes = $CurrentNotes + "`n" + $ExtraNotes
+                Get-VM -Name $VMname | Set-VM -Notes $NewNotes
+            }
+
+
         }
+        #THis line below is commented out because I'm skipping adding the ISO and just having it boot to Network Adapter
+        
         Write-Host "  Setting CheckPoints to Standard" -ForegroundColor Green
         set-vm -Name $VMName -AutomaticCheckpointsEnabled $false
         set-vm -Name $VMName -CheckpointType Standard
@@ -305,7 +429,7 @@ else
             Else
                 {
             
-                $ImportDevice = Import-CMComputerInformation -ComputerName $VMName -CollectionName $RequiredDeploymentCollectionName -MacAddress $MAC
+                $ImportDevice = Import-CMComputerInformation -ComputerName $VMName -CollectionName $AvailableDeploymentCollectionName -MacAddress $MAC
                 $CMDevice = Get-CMDevice -Name $VMName -Resource
 
                 if (($CMDevice.MACAddresses).replace(":","") -eq $MAC)
@@ -325,9 +449,13 @@ else
             #$AllSystemCollection = Get-WmiObject -ComputerName $ProviderMachineName -ClassName SMS_Collection -Namespace root\SMS\site_PS2 | Where-Object {$_.Name -eq "All Systems"}
             #$AllSystemCollection.InvokeMethod("RequestRefresh",$null)
             Start-Sleep -Seconds 15
-            Write-Host "Triggering Collection Eval on $RequiredDeploymentCollectionName"
-            $OSDCollection = Get-CMCollection -Name "$RequiredDeploymentCollectionName"
+            #Write-Host "Triggering Collection Eval on $RequiredDeploymentCollectionName"
+            #$OSDCollection = Get-CMCollection -Name "$RequiredDeploymentCollectionName"
+            #$OSDCollection.ExecuteMethod("RequestRefresh", $null)
+            Write-Host "Triggering Collection Eval on $AvailableDeploymentCollectionName"
+            $OSDCollection = Get-CMCollection -Name "$AvailableDeploymentCollectionName"
             $OSDCollection.ExecuteMethod("RequestRefresh", $null)
+
             #$OSDCollection = Get-WmiObject -ComputerName $ProviderMachineName -ClassName SMS_Collection -Namespace root\SMS\site_PS2 | Where-Object {$_.Name -eq "OSD Required Deployment"}
             #$OSDCollection.InvokeMethod("RequestRefresh",$null)
 
@@ -336,6 +464,12 @@ else
             Start-Sleep -Seconds 90
             start-vm -Name $VMName
             }
+        else{
+            start-vm -Name $VMName
+            if ($WaitBetweenNext){
+                Start-Sleep -Seconds ($WaitBetweenNext * 60)
+            }
+        }
 
         <#
         foreach ($VMName in $NameTable)
