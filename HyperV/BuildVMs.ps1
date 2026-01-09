@@ -97,8 +97,14 @@ try {
 }
 catch {throw}
 
-
+#Set the CMModule Path, I have it copied to my local machine:
 $CMModulePath = "$HyperVHostRootPath\CMConsolePosh\ConfigurationManager.psd1"
+
+#Test My Personal Server to see if the Module is there:
+if (Test-Path "\\src\src$\Apps\Microsoft\ConfigurationManager\CMConsolePosh\ConfigurationManager.psd1")
+    {
+    $CMModulePath = "\\src\src$\Apps\Microsoft\ConfigurationManager\CMConsolePosh\ConfigurationManager.psd1"
+}
 
 $VMNamePreFix = "VM-CM-"  #The VM will start with this name
 
@@ -165,6 +171,9 @@ elseif ($HostName -eq "MS01"){
 }
 elseif ($HostName -eq "HPZbookSG10GARY"){
     $HostName = 'ZBG10'
+}
+elseif ($HostName -eq "HPZBStudiox360G"){
+    $HostName = 'ZBSG5'
 }
 elseif ($HostName -match "AURA"){
     $HostName = 'AURA'

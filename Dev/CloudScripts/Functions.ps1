@@ -238,6 +238,42 @@ iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Bla
 Write-Host -ForegroundColor Green "[+] Function Invoke-BlackLotusKB5025885Compliance"
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/BlackLotusKB5025885/Invoke-BlackLotusKB5025885Compliance.ps1)
 
+Write-Host -ForegroundColor Green "[+] Function Get-WindowsOEMProductKey"
+function Get-WindowsOEMProductKey {
+    $ProductKey = (Get-CimInstance -ClassName SoftwareLicensingService).OA3xOriginalProductKey
+    return $ProductKey
+}
+Write-Host -ForegroundColor Green "[+] Function Set-WindowsOEMActivation"
+function Set-WindowsOEMActivation {
+    $ProductKey = Get-WindowsOEMProductKey
+    Write-Output "Starting Process to Set Windows Licence to OEM Value in BIOS"
+    if ($ProductKey) {
+        try {
+            Write-Output " Setting Key: $ProductKey" 
+            $service = Get-CimInstance -ClassName SoftwareLicensingService
+            if ($service){
+                $result = Invoke-CimMethod -InputObject $service -MethodName InstallProductKey -Arguments @{ProductKey = $ProductKey}
+                if ($result.ReturnValue -eq 0) {
+                    Invoke-CimMethod -InputObject $service -MethodName RefreshLicenseStatus | Out-Null
+                    Write-Output  " Successfully Applied Key"
+                }
+                else {
+                    Write-Output " Failed to install key. Return code: $($result.ReturnValue)"
+                }
+            }
+            else {
+                Write-Output " Failed to connect to Service to Apply Key"
+            }
+        }
+        catch {
+            Write-Output " Failed to Apply Key: $($_.Exception.Message)"
+            Write-Output " Error Details: $($_.Exception.InnerException)"
+        }
+    }
+    else{
+	    Write-Output ' Key not found!'
+    }
+}
 
 write-host -ForegroundColor DarkGray "========================================================="
 write-host -ForegroundColor Cyan "Update Functions"
@@ -1183,7 +1219,11 @@ function Install-StifleRClient210Dev {
     iex (irm 'https://raw.githubusercontent.com/gwblok/2PintLabs/refs/heads/main/GARYTOWN/210/StifleR_Client_Wrapper_Dev.ps1')
 }
 Write-Host -ForegroundColor Green "[+] Function Install-StifleRClient214"
-function Install-StifleRClient214 {
+function Install-StifleRClient30 {
     iex (irm 'https://raw.githubusercontent.com/gwblok/2PintLabs/refs/heads/main/GARYTOWN/30/StifleR_Client_Wrapper30.ps1')
 }
 
+Write-Host -ForegroundColor Green "[+] Function Install-StifleRClient"
+Write-Host -ForegroundColor Gray "     Params: ForceVersion, UseCurrentStifleRServer, STIFLERSERVERS, etc"
+iex (irm 'https://raw.githubusercontent.com/gwblok/2PintLabs/refs/heads/main/GARYTOWN/30/StifleR_Client_Wrapper_Combo.ps1')
+    
